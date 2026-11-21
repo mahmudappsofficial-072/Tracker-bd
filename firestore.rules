@@ -1,0 +1,217 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for zero-trust user authentication & schema validation
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isNonNegNumber(val) {
+      return (val is int || val is float) && val >= 0;
+    }
+
+    function isBoundedString(val, maxLen) {
+      return val is string && val.size() <= maxLen;
+    }
+
+    function isValidUserProfileData(data) {
+      return data.keys().hasOnly([
+        'userName', 'companyName', 'designation', 'workerId', 'grade',
+        'isCustomSalary', 'basicSalary', 'houseRent', 'medicalAllowance',
+        'conveyanceAllowance', 'foodAllowance', 'attendanceBonus',
+        'maxAbsentForBonus', 'maxLeaveForBonus', 'nightBillRate',
+        'tiffinBillRate', 'customOtRate', 'monthlyOtTargetHours',
+        'language', 'lastSyncTime', 'hasAcceptedPrivacyPolicy',
+        'privacyPolicyAcceptedAt', 'consentAudit'
+      ])
+      && (!('userName' in data) || isBoundedString(data.userName, 120))
+      && (!('companyName' in data) || isBoundedString(data.companyName, 150))
+      && (!('designation' in data) || isBoundedString(data.designation, 120))
+      && (!('workerId' in data) || isBoundedString(data.workerId, 80))
+      && (!('grade' in data) || isBoundedString(data.grade, 60))
+      && (!('isCustomSalary' in data) || data.isCustomSalary is bool)
+      && (!('basicSalary' in data) || isNonNegNumber(data.basicSalary))
+      && (!('houseRent' in data) || isNonNegNumber(data.houseRent))
+      && (!('medicalAllowance' in data) || isNonNegNumber(data.medicalAllowance))
+      && (!('conveyanceAllowance' in data) || isNonNegNumber(data.conveyanceAllowance))
+      && (!('foodAllowance' in data) || isNonNegNumber(data.foodAllowance))
+      && (!('attendanceBonus' in data) || isNonNegNumber(data.attendanceBonus))
+      && (!('maxAbsentForBonus' in data) || (data.maxAbsentForBonus is int && data.maxAbsentForBonus >= 0 && data.maxAbsentForBonus <= 31))
+      && (!('maxLeaveForBonus' in data) || (data.maxLeaveForBonus is int && data.maxLeaveForBonus >= -1 && data.maxLeaveForBonus <= 31))
+      && (!('nightBillRate' in data) || isNonNegNumber(data.nightBillRate))
+      && (!('tiffinBillRate' in data) || isNonNegNumber(data.tiffinBillRate))
+      && (!('customOtRate' in data) || isNonNegNumber(data.customOtRate))
+      && (!('monthlyOtTargetHours' in data) || isNonNegNumber(data.monthlyOtTargetHours))
+      && (!('language' in data) || data.language in ['bn', 'en'])
+      && (!('lastSyncTime' in data) || isNonNegNumber(data.lastSyncTime))
+      && (!('hasAcceptedPrivacyPolicy' in data) || data.hasAcceptedPrivacyPolicy is bool)
+      && (!('privacyPolicyAcceptedAt' in data) || isNonNegNumber(data.privacyPolicyAcceptedAt))
+      && (!('consentAudit' in data) || data.consentAudit is map);
+    }
+
+    function isValidOvertimeData(data) {
+      return data.keys().hasOnly([
+        'id', 'date', 'yearMonth', 'otHours', 'hasNightBill', 'hasTiffinBill',
+        'isHoliday', 'shiftType', 'note', 'hourlyRateSnapshot',
+        'calculatedAmount', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasAll(['date', 'yearMonth', 'otHours', 'shiftType'])
+      && isBoundedString(data.date, 20) && data.date.size() >= 8
+      && isBoundedString(data.yearMonth, 10) && data.yearMonth.size() >= 7
+      && isNonNegNumber(data.otHours) && data.otHours <= 24
+      && (!('id' in data) || isNonNegNumber(data.id))
+      && (!('hasNightBill' in data) || data.hasNightBill is bool)
+      && (!('hasTiffinBill' in data) || data.hasTiffinBill is bool)
+      && (!('isHoliday' in data) || data.isHoliday is bool)
+      && data.shiftType in ['REGULAR', 'DAY', 'NIGHT', 'HOLIDAY', 'LEAVE', 'ABSENT', 'WEEKLY_OFF']
+      && (!('note' in data) || isBoundedString(data.note, 500))
+      && (!('hourlyRateSnapshot' in data) || isNonNegNumber(data.hourlyRateSnapshot))
+      && (!('calculatedAmount' in data) || isNonNegNumber(data.calculatedAmount))
+      && (!('createdAt' in data) || isNonNegNumber(data.createdAt))
+      && (!('updatedAt' in data) || isNonNegNumber(data.updatedAt));
+    }
+
+    function isValidPieceRateData(data) {
+      return data.keys().hasOnly([
+        'id', 'date', 'yearMonth', 'itemName', 'pieceCount',
+        'ratePerPiece', 'totalAmount', 'note', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasAll(['date', 'yearMonth', 'itemName', 'pieceCount', 'ratePerPiece', 'totalAmount'])
+      && isBoundedString(data.date, 20) && data.date.size() >= 8
+      && isBoundedString(data.yearMonth, 10) && data.yearMonth.size() >= 7
+      && isBoundedString(data.itemName, 200)
+      && data.pieceCount is int && data.pieceCount >= 0
+      && isNonNegNumber(data.ratePerPiece)
+      && isNonNegNumber(data.totalAmount)
+      && (!('id' in data) || isNonNegNumber(data.id))
+      && (!('note' in data) || isBoundedString(data.note, 500))
+      && (!('createdAt' in data) || isNonNegNumber(data.createdAt))
+      && (!('updatedAt' in data) || isNonNegNumber(data.updatedAt));
+    }
+
+    function isValidMonthlySalaryData(data) {
+      return data.keys().hasOnly([
+        'yearMonth', 'basicSalary', 'houseRent', 'medicalAllowance',
+        'conveyanceAllowance', 'foodAllowance', 'grossSalary', 'hourlyOtRate',
+        'attendanceBonus', 'maxAbsentForBonus', 'maxLeaveForBonus',
+        'nightBillRate', 'tiffinBillRate', 'isCustomSalary',
+        'userName', 'companyName', 'designation', 'workerId', 'grade',
+        'customOtRate', 'monthlyOtTargetHours', 'isLocked', 'lockedAt', 'updatedAt'
+      ])
+      && data.keys().hasAll(['yearMonth'])
+      && isBoundedString(data.yearMonth, 10) && data.yearMonth.size() >= 7
+      && (!('basicSalary' in data) || isNonNegNumber(data.basicSalary))
+      && (!('houseRent' in data) || isNonNegNumber(data.houseRent))
+      && (!('medicalAllowance' in data) || isNonNegNumber(data.medicalAllowance))
+      && (!('conveyanceAllowance' in data) || isNonNegNumber(data.conveyanceAllowance))
+      && (!('foodAllowance' in data) || isNonNegNumber(data.foodAllowance))
+      && (!('grossSalary' in data) || isNonNegNumber(data.grossSalary))
+      && (!('hourlyOtRate' in data) || isNonNegNumber(data.hourlyOtRate))
+      && (!('attendanceBonus' in data) || isNonNegNumber(data.attendanceBonus))
+      && (!('maxAbsentForBonus' in data) || (data.maxAbsentForBonus is int && data.maxAbsentForBonus >= 0 && data.maxAbsentForBonus <= 31))
+      && (!('maxLeaveForBonus' in data) || (data.maxLeaveForBonus is int && data.maxLeaveForBonus >= -1 && data.maxLeaveForBonus <= 31))
+      && (!('nightBillRate' in data) || isNonNegNumber(data.nightBillRate))
+      && (!('tiffinBillRate' in data) || isNonNegNumber(data.tiffinBillRate))
+      && (!('isCustomSalary' in data) || data.isCustomSalary is bool)
+      && (!('userName' in data) || isBoundedString(data.userName, 120))
+      && (!('companyName' in data) || isBoundedString(data.companyName, 150))
+      && (!('designation' in data) || isBoundedString(data.designation, 120))
+      && (!('workerId' in data) || isBoundedString(data.workerId, 80))
+      && (!('grade' in data) || isBoundedString(data.grade, 60))
+      && (!('customOtRate' in data) || isNonNegNumber(data.customOtRate))
+      && (!('monthlyOtTargetHours' in data) || isNonNegNumber(data.monthlyOtTargetHours))
+      && (!('isLocked' in data) || data.isLocked is bool)
+      && (!('lockedAt' in data) || isNonNegNumber(data.lockedAt))
+      && (!('updatedAt' in data) || isNonNegNumber(data.updatedAt));
+    }
+
+    function isValidDeductionData(data) {
+      return data.keys().hasOnly([
+        'id', 'type', 'date', 'yearMonth', 'amount', 'description', 'createdAt'
+      ])
+      && data.keys().hasAll(['type', 'date', 'yearMonth', 'amount'])
+      && data.type in ['ADVANCE', 'APON_BAZAR', 'DEDUCTION']
+      && isBoundedString(data.date, 20) && data.date.size() >= 8
+      && isBoundedString(data.yearMonth, 10) && data.yearMonth.size() >= 7
+      && isNonNegNumber(data.amount)
+      && (!('id' in data) || isNonNegNumber(data.id))
+      && (!('description' in data) || isBoundedString(data.description, 500))
+      && (!('createdAt' in data) || isNonNegNumber(data.createdAt));
+    }
+
+    function isValidTrashData(data) {
+      return data.keys().hasOnly([
+        'id', 'itemType', 'originalId', 'title', 'subtitle',
+        'date', 'jsonData', 'deletedAt', 'expireAt'
+      ])
+      && data.keys().hasAll(['itemType', 'jsonData', 'deletedAt'])
+      && data.itemType in ['OT', 'PIECE', 'ADVANCE', 'APON_BAZAR', 'DEDUCTION']
+      && (!('id' in data) || isNonNegNumber(data.id))
+      && (!('originalId' in data) || isNonNegNumber(data.originalId))
+      && (!('title' in data) || isBoundedString(data.title, 300))
+      && (!('subtitle' in data) || isBoundedString(data.subtitle, 300))
+      && (!('date' in data) || isBoundedString(data.date, 20))
+      && isBoundedString(data.jsonData, 5000)
+      && isNonNegNumber(data.deletedAt)
+      && (!('expireAt' in data) || isNonNegNumber(data.expireAt));
+    }
+
+    // 1. Root user profile & privacy consent document
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUserProfileData(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      // 2. Daily Overtime and Duty records
+      match /overtime_records/{recordId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidOvertimeData(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // 3. Piece Rate production records
+      match /piece_rate_records/{recordId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidPieceRateData(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // 4. Monthly salary and rate snapshots
+      match /monthly_salary_settings/{yearMonth} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidMonthlySalaryData(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // 5. Advance & Apon Bazar deduction records
+      match /deduction_records/{recordId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidDeductionData(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // 6. Recycle bin / Trash records
+      match /trash_records/{trashId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidTrashData(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Public read-only application configuration (version control, force update)
+    match /app_config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Deny access to any other unspecified path by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

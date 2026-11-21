@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "User": {
+      "path": "users/{userId}",
+      "fields": {
+        "userName": { "type": "string" },
+        "companyName": { "type": "string" },
+        "designation": { "type": "string" },
+        "workerId": { "type": "string" },
+        "grade": { "type": "string" },
+        "isCustomSalary": { "type": "boolean" },
+        "basicSalary": { "type": "number" },
+        "houseRent": { "type": "number" },
+        "medicalAllowance": { "type": "number" },
+        "conveyanceAllowance": { "type": "number" },
+        "foodAllowance": { "type": "number" },
+        "attendanceBonus": { "type": "number" },
+        "maxAbsentForBonus": { "type": "number" },
+        "maxLeaveForBonus": { "type": "number" },
+        "nightBillRate": { "type": "number" },
+        "tiffinBillRate": { "type": "number" },
+        "customOtRate": { "type": "number" },
+        "monthlyOtTargetHours": { "type": "number" },
+        "language": { "type": "string" },
+        "lastSyncTime": { "type": "number" },
+        "hasAcceptedPrivacyPolicy": { "type": "boolean" },
+        "privacyPolicyAcceptedAt": { "type": "number" },
+        "consentAudit": { "type": "object" }
+      }
+    },
+    "OvertimeRecord": {
+      "path": "users/{userId}/overtime_records/{recordId}",
+      "fields": {
+        "id": { "type": "number" },
+        "date": { "type": "string" },
+        "yearMonth": { "type": "string" },
+        "otHours": { "type": "number" },
+        "hasNightBill": { "type": "boolean" },
+        "hasTiffinBill": { "type": "boolean" },
+        "isHoliday": { "type": "boolean" },
+        "shiftType": { "type": "string" },
+        "note": { "type": "string" },
+        "hourlyRateSnapshot": { "type": "number" },
+        "calculatedAmount": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "PieceRateRecord": {
+      "path": "users/{userId}/piece_rate_records/{recordId}",
+      "fields": {
+        "id": { "type": "number" },
+        "date": { "type": "string" },
+        "yearMonth": { "type": "string" },
+        "itemName": { "type": "string" },
+        "pieceCount": { "type": "number" },
+        "ratePerPiece": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "note": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "MonthlySalarySettings": {
+      "path": "users/{userId}/monthly_salary_settings/{yearMonth}",
+      "fields": {
+        "yearMonth": { "type": "string" },
+        "basicSalary": { "type": "number" },
+        "houseRent": { "type": "number" },
+        "medicalAllowance": { "type": "number" },
+        "conveyanceAllowance": { "type": "number" },
+        "foodAllowance": { "type": "number" },
+        "grossSalary": { "type": "number" },
+        "hourlyOtRate": { "type": "number" },
+        "attendanceBonus": { "type": "number" },
+        "maxAbsentForBonus": { "type": "number" },
+        "maxLeaveForBonus": { "type": "number" },
+        "nightBillRate": { "type": "number" },
+        "tiffinBillRate": { "type": "number" },
+        "isCustomSalary": { "type": "boolean" },
+        "userName": { "type": "string" },
+        "companyName": { "type": "string" },
+        "designation": { "type": "string" },
+        "workerId": { "type": "string" },
+        "grade": { "type": "string" },
+        "customOtRate": { "type": "number" },
+        "monthlyOtTargetHours": { "type": "number" },
+        "isLocked": { "type": "boolean" },
+        "lockedAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "DeductionRecord": {
+      "path": "users/{userId}/deduction_records/{recordId}",
+      "fields": {
+        "id": { "type": "number" },
+        "type": { "type": "string" },
+        "date": { "type": "string" },
+        "yearMonth": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "TrashRecord": {
+      "path": "users/{userId}/trash_records/{trashId}",
+      "fields": {
+        "id": { "type": "number" },
+        "itemType": { "type": "string" },
+        "originalId": { "type": "number" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "date": { "type": "string" },
+        "jsonData": { "type": "string" },
+        "deletedAt": { "type": "number" },
+        "expireAt": { "type": "number" }
+      }
+    }
+  }
+}

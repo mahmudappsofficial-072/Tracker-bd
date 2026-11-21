@@ -1,0 +1,58 @@
+package com.example.data.local
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import com.example.data.model.OvertimeRecord
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface OvertimeDao {
+    @Query("SELECT * FROM overtime_records WHERE id IN (SELECT MAX(id) FROM overtime_records GROUP BY date) ORDER BY date DESC, id DESC")
+    fun getAllRecords(): Flow<List<OvertimeRecord>>
+
+    @Query("SELECT * FROM overtime_records WHERE yearMonth = :yearMonth AND id IN (SELECT MAX(id) FROM overtime_records GROUP BY date) ORDER BY date DESC, id DESC")
+    fun getRecordsByMonth(yearMonth: String): Flow<List<OvertimeRecord>>
+
+    @Query("SELECT * FROM overtime_records WHERE yearMonth = :yearMonth AND id IN (SELECT MAX(id) FROM overtime_records GROUP BY date) ORDER BY date DESC, id DESC")
+    suspend fun getRecordsByMonthOnce(yearMonth: String): List<OvertimeRecord>
+
+    @Query("SELECT * FROM overtime_records WHERE date = :date ORDER BY id DESC LIMIT 1")
+    suspend fun getRecordByDate(date: String): OvertimeRecord?
+
+    @Query("SELECT * FROM overtime_records WHERE id = :id LIMIT 1")
+    suspend fun getRecordById(id: Long): OvertimeRecord?
+
+    @Query("SELECT * FROM overtime_records ORDER BY date ASC")
+    suspend fun getAllRecordsList(): List<OvertimeRecord>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecord(record: OvertimeRecord): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecords(records: List<OvertimeRecord>)
+
+    @Update
+    suspend fun updateRecord(record: OvertimeRecord)
+
+    @Delete
+    suspend fun deleteRecord(record: OvertimeRecord)
+
+    @Query("DELETE FROM overtime_records WHERE id = :id")
+    suspend fun deleteRecordById(id: Long)
+
+    @Query("DELETE FROM overtime_records WHERE id NOT IN (SELECT MAX(id) FROM overtime_records GROUP BY date)")
+    suspend fun cleanupDuplicateDates()
+
+    @Query("SELECT SUM(otHours) FROM overtime_records WHERE yearMonth = :yearMonth AND id IN (SELECT MAX(id) FROM overtime_records GROUP BY date)")
+    fun getTotalOtHoursByMonth(yearMonth: String): Flow<Double?>
+
+    @Query("SELECT DISTINCT yearMonth FROM overtime_records ORDER BY yearMonth ASC")
+    suspend fun getAllYearMonths(): List<String>
+
+    @Query("DELETE FROM overtime_records")
+    suspend fun deleteAllRecords()
+}

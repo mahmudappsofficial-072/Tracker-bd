@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "259151216518",
+    "project_id": "overtime-tracker-bd-76e60",
+    "storage_bucket": "overtime-tracker-bd-76e60.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259151216518:android:5fc9a4cb212bb619def607",
+        "android_client_info": {
+          "package_name": "com.overtime.bd"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "259151216518-1glsfb2r25oct1h0eff48eun1sec99sn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.overtime.bd",
+            "certificate_hash": "41540c5a87cdf9899b654f5c0d0b98db5add4898"
+          }
+        },
+        {
+          "client_id": "259151216518-b0a92jml28hig6vc0t96n5ct0ufeasci.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.overtime.bd",
+            "certificate_hash": "93162e4b9b4e34658133b1f1e445312a63bbe7c7"
+          }
+        },
+        {
+          "client_id": "259151216518-9dc92cd0por9n5emi280be9enc5ki75v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlh4D0GzGrCQl75_kD8KeG7dR4i6qtaZg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "259151216518-9dc92cd0por9n5emi280be9enc5ki75v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
