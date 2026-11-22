@@ -483,4 +483,20 @@
     <string name="signout_connection_lost">انقطع الاتصال بالإنترنت. تم إلغاء تسجيل الخروج لحماية بياناتك.</string>
     <string name="signout_success">تمت مزامنة البيانات وتسجيل الخروج بنجاح</string>
     <string name="signout_failed_fmt">فشلت المزامنة السحابية (%1$s). تم إلغاء تسجيل الخروج لحماية بياناتك.</string>
+
+    <!-- Profile Hub & Categorized Settings -->
+    <string name="edit_identity_title">تعديل البيانات الشخصية</string>
+    <string name="setup_edit_salary_btn">إعداد / تعديل هيكل الراتب</string>
+    <string name="salary_not_configured_hint">انقر أدناه لإعداد الراتب ومعدل الإضافي والبدلات</string>
+    <string name="account_and_app_section">الحساب والتطبيق</string>
+    <string name="settings_general_section">عام</string>
+    <string name="settings_account_backup_section">الحساب والنسخ الاحتياطي السحابي</string>
+    <string name="settings_data_support_section">البيانات والدعم والسياسات</string>
+    <string name="settings_danger_zone_section">منطقة الخطر</string>
+    <string name="settings_subtitle">اللغة، النسخ السحابي، الدعم وإعادة التعيين</string>
+    <string name="sign_in_sync_subtitle">سجل الدخول لحفظ ومزامنة سجلاتك بأمان</string>
+    <string name="save_identity_btn">حفظ البيانات</string>
+    <string name="save_salary_btn">حفظ قواعد الراتب</string>
+    <string name="identity_saved_toast">تم حفظ البيانات الشخصية!</string>
+    <string name="salary_saved_toast">تم حفظ هيكل الراتب!</string>
 </resources>

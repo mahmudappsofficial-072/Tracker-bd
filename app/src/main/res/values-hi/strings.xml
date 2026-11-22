@@ -483,4 +483,20 @@
     <string name="signout_connection_lost">इंटरनेट कनेक्शन टूट गया। डेटा सुरक्षा के लिए साइन आउट रद्द किया गया।</string>
     <string name="signout_success">क्लाउड पर डेटा सिंक करके सफलतापूर्वक साइन आउट हो गया</string>
     <string name="signout_failed_fmt">क्लाउड सिंक विफल (%1$s)। डेटा सुरक्षा के लिए साइन आउट रद्द किया गया।</string>
+
+    <!-- Profile Hub & Categorized Settings -->
+    <string name="edit_identity_title">व्यक्तिगत जानकारी संपादित करें</string>
+    <string name="setup_edit_salary_btn">वेतन संरचना सेटअप / संपादित करें</string>
+    <string name="salary_not_configured_hint">अपना वेतन, ओटी दर और भत्ते सेट करने के लिए नीचे टैप करें</string>
+    <string name="account_and_app_section">खाता और ऐप</string>
+    <string name="settings_general_section">सामान्य</string>
+    <string name="settings_account_backup_section">खाता और क्लाउड बैकअप</string>
+    <string name="settings_data_support_section">डेटा, सहायता और नीतियां</string>
+    <string name="settings_danger_zone_section">डेंजर ज़ोन</string>
+    <string name="settings_subtitle">भाषा, क्लाउड बैकअप, सहायता और डेटा रीसेट</string>
+    <string name="sign_in_sync_subtitle">अपने रिकॉर्ड बैकअप और सिंक करने के लिए साइन इन करें</string>
+    <string name="save_identity_btn">जानकारी सहेजें</string>
+    <string name="save_salary_btn">वेतन नियम सहेजें</string>
+    <string name="identity_saved_toast">व्यक्तिगत जानकारी सहेजी गई!</string>
+    <string name="salary_saved_toast">वेतन संरचना सहेजी गई!</string>
 </resources>

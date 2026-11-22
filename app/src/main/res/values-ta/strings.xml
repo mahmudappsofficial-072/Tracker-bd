@@ -483,4 +483,20 @@
     <string name="signout_connection_lost">இணைய இணைப்பு துண்டிக்கப்பட்டது. தரவுப் பாதுகாப்பிற்காக வெளியேறுதல் ரத்து செய்யப்பட்டது.</string>
     <string name="signout_success">கிளவுடில் தரவு ஒத்திசைக்கப்பட்டு வெற்றிகரமாக வெளியேறியது</string>
     <string name="signout_failed_fmt">கிளவுட் ஒத்திசைவு தோல்வி (%1$s). தரவுப் பாதுகாப்பிற்காக வெளியேறுதல் ரத்து செய்யப்பட்டது.</string>
+
+    <!-- Profile Hub & Categorized Settings -->
+    <string name="edit_identity_title">தனிப்பட்ட தகவலைத் திருத்து</string>
+    <string name="setup_edit_salary_btn">சம்பள அமைப்பை அமை / திருத்து</string>
+    <string name="salary_not_configured_hint">உங்கள் சம்பளம், OT விகிதம் மற்றும் படிகளை அமைக்க கீழே தட்டவும்</string>
+    <string name="account_and_app_section">கணக்கு மற்றும் ஆப்</string>
+    <string name="settings_general_section">பொது</string>
+    <string name="settings_account_backup_section">கணக்கு மற்றும் கிளவுட் காப்புப்பிரதி</string>
+    <string name="settings_data_support_section">தரவு, உதவி மற்றும் கொள்கை</string>
+    <string name="settings_danger_zone_section">ஆபத்து பகுதி</string>
+    <string name="settings_subtitle">மொழி, கிளவுட் காப்புப்பிரதி, உதவி மற்றும் மீட்டமைப்பு</string>
+    <string name="sign_in_sync_subtitle">பதிவுகளைப் பாதுகாப்பாக காப்புப்பிரதி எடுக்க உள்நுழையவும்</string>
+    <string name="save_identity_btn">தகவலைச் சேமி</string>
+    <string name="save_salary_btn">சம்பள விதிகளைச் சேமி</string>
+    <string name="identity_saved_toast">தனிப்பட்ட தகவல் சேமிக்கப்பட்டது!</string>
+    <string name="salary_saved_toast">சம்பள அமைப்பு சேமிக்கப்பட்டது!</string>
 </resources>

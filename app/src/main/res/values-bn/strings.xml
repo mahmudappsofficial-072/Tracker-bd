@@ -483,4 +483,20 @@
     <string name="signout_connection_lost">ইন্টারনেট সংযোগ বিচ্ছিন্ন হয়েছে। ডেটা সুরক্ষায় লগআউট বাতিল করা হয়েছে।</string>
     <string name="signout_success">ক্লাউডে ডেটা সিঙ্ক করে সফলভাবে লগআউট করা হয়েছে</string>
     <string name="signout_failed_fmt">ক্লাউড সিঙ্ক ব্যর্থ হয়েছে (%1$s)। ডেটা সুরক্ষায় লগআউট বাতিল করা হয়েছে।</string>
+
+    <!-- Profile Hub & Categorized Settings -->
+    <string name="edit_identity_title">ব্যক্তিগত তথ্য পরিবর্তন</string>
+    <string name="setup_edit_salary_btn">বেতন কাঠামো সেটআপ / পরিবর্তন</string>
+    <string name="salary_not_configured_hint">আপনার বেতন, ওটি রেট ও ভাতা সেট করতে নিচে ট্যাপ করুন</string>
+    <string name="account_and_app_section">অ্যাকাউন্ট ও অ্যাপ</string>
+    <string name="settings_general_section">সাধারণ (General)</string>
+    <string name="settings_account_backup_section">অ্যাকাউন্ট ও ক্লাউড ব্যাকআপ</string>
+    <string name="settings_data_support_section">ডাটা, সহায়তা ও নীতিমালা</string>
+    <string name="settings_danger_zone_section">ডেঞ্জার জোন (Danger Zone)</string>
+    <string name="settings_subtitle">ভাষা, ক্লাউড ব্যাকআপ, সাপোর্ট ও ডাটা রিসেট</string>
+    <string name="sign_in_sync_subtitle">সব হিসাব নিরাপদে ব্যাকআপ রাখতে সাইন-ইন করুন</string>
+    <string name="save_identity_btn">তথ্য সংরক্ষণ করুন</string>
+    <string name="save_salary_btn">বেতন নিয়ম সংরক্ষণ করুন</string>
+    <string name="identity_saved_toast">ব্যক্তিগত তথ্য সংরক্ষিত হয়েছে!</string>
+    <string name="salary_saved_toast">বেতন কাঠামো সংরক্ষিত হয়েছে!</string>
 </resources>
