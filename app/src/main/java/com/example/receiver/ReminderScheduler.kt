@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.example.R
+import com.example.util.LanguageManager
 import java.util.Calendar
 
 object ReminderScheduler {
@@ -17,10 +19,11 @@ object ReminderScheduler {
     const val REQUEST_CODE_715 = 1001
     const val REQUEST_CODE_930 = 1002
 
-    fun createNotificationChannel(context: Context, isBn: Boolean = true) {
+    fun createNotificationChannel(context: Context, langTag: String? = null) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = if (isBn) "দৈনিক ওটি রিমাইন্ডার" else "Daily OT Reminders"
-            val descriptionText = if (isBn) "ওভারটাইম ও ডিউটির দৈনিক হিসাব রাখার নোটিফিকেশন" else "Daily notifications to log your overtime and duty records"
+            val localizedCtx = LanguageManager.getLocalizedContext(context, langTag)
+            val name = localizedCtx.getString(R.string.notif_channel_daily_name)
+            val descriptionText = localizedCtx.getString(R.string.notif_channel_daily_desc)
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
@@ -32,8 +35,8 @@ object ReminderScheduler {
         }
     }
 
-    fun scheduleDailyReminders(context: Context, isBn: Boolean = true) {
-        createNotificationChannel(context, isBn)
+    fun scheduleDailyReminders(context: Context, langTag: String? = null) {
+        createNotificationChannel(context, langTag)
         scheduleSpecificReminder(context, 19, 15, REQUEST_CODE_715, 1)
         scheduleSpecificReminder(context, 21, 30, REQUEST_CODE_930, 2)
     }

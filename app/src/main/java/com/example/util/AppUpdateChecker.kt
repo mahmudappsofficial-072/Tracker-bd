@@ -6,6 +6,7 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
 import com.example.BuildConfig
+import com.example.R
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.Dispatchers
@@ -17,42 +18,55 @@ data class AppUpdateInfo(
     val isForceUpdate: Boolean,
     val minVersionCode: Long,
     val latestVersionCode: Long,
-    val titleBn: String,
-    val descBn: String,
-    val titleEn: String,
-    val descEn: String,
+    val localizedTitles: Map<String, String> = emptyMap(),
+    val localizedDescs: Map<String, String> = emptyMap(),
+    val localizedUpdateBtns: Map<String, String> = emptyMap(),
+    val localizedDismissBtns: Map<String, String> = emptyMap(),
     val updateUrl: String = "",
-    val playStoreUrl: String = "",
-    val updateBtnTextBn: String = "",
-    val updateBtnTextEn: String = "",
-    val dismissBtnTextBn: String = "",
-    val dismissBtnTextEn: String = ""
+    val playStoreUrl: String = ""
 ) {
     fun getEffectiveUrl(): String {
         return updateUrl.ifBlank { playStoreUrl }.trim()
     }
 
-    fun getEffectiveUpdateBtnText(isBn: Boolean): String {
-        return if (isBn) {
-            updateBtnTextBn.ifBlank {
-                if (isForceUpdate) "গুগল প্লে-স্টোর থেকে আপডেট করুন" else "এখনই আপডেট করুন"
-            }
-        } else {
-            updateBtnTextEn.ifBlank {
-                if (isForceUpdate) "Update from Google Play Store" else "Update Now"
-            }
-        }
+    fun getEffectiveTitle(context: Context, langTag: String): String {
+        val tag = LanguageManager.resolveSupportedTag(langTag)
+        val remote = localizedTitles[tag]?.takeIf { it.isNotBlank() }
+        if (remote != null) return remote
+        val lctx = LanguageManager.getLocalizedContext(context, tag)
+        return lctx.getString(
+            if (isForceUpdate) R.string.update_force_title_fallback else R.string.update_optional_title_fallback
+        )
     }
 
-    fun getEffectiveDismissBtnText(isBn: Boolean): String {
+    fun getEffectiveDesc(context: Context, langTag: String): String {
+        val tag = LanguageManager.resolveSupportedTag(langTag)
+        val remote = localizedDescs[tag]?.takeIf { it.isNotBlank() }
+        if (remote != null) return remote
+        val lctx = LanguageManager.getLocalizedContext(context, tag)
+        return lctx.getString(
+            if (isForceUpdate) R.string.update_force_desc_fallback else R.string.update_optional_desc_fallback
+        )
+    }
+
+    fun getEffectiveUpdateBtnText(context: Context, langTag: String): String {
+        val tag = LanguageManager.resolveSupportedTag(langTag)
+        val remote = localizedUpdateBtns[tag]?.takeIf { it.isNotBlank() }
+        if (remote != null) return remote
+        val lctx = LanguageManager.getLocalizedContext(context, tag)
+        return lctx.getString(
+            if (isForceUpdate) R.string.update_btn_play_store_fallback else R.string.update_btn_now_fallback
+        )
+    }
+
+    fun getEffectiveDismissBtnText(context: Context, langTag: String): String {
+        val tag = LanguageManager.resolveSupportedTag(langTag)
+        val lctx = LanguageManager.getLocalizedContext(context, tag)
         if (isForceUpdate) {
-            return if (isBn) "অ্যাপ থেকে বের হন" else "Exit App"
+            return lctx.getString(R.string.update_btn_exit_app)
         }
-        return if (isBn) {
-            dismissBtnTextBn.ifBlank { "এখন নয় / পরে" }
-        } else {
-            dismissBtnTextEn.ifBlank { "Not Now / Later" }
-        }
+        val remote = localizedDismissBtns[tag]?.takeIf { it.isNotBlank() }
+        return remote ?: lctx.getString(R.string.update_btn_not_now_fallback)
     }
 }
 
@@ -168,80 +182,66 @@ object AppUpdateChecker {
             }
 
             if (doc != null && doc.exists()) {
-                    val minVersionCode = when (val v = doc.get("min_version_code")) {
-                        is Number -> v.toLong()
-                        is String -> v.trim().toLongOrNull() ?: 0L
-                        else -> 0L
+                val minVersionCode = when (val v = doc.get("min_version_code")) {
+                    is Number -> v.toLong()
+                    is String -> v.trim().toLongOrNull() ?: 0L
+                    else -> 0L
+                }
+                val latestVersionCode = when (val v = doc.get("latest_version_code")) {
+                    is Number -> v.toLong()
+                    is String -> v.trim().toLongOrNull() ?: minVersionCode
+                    else -> minVersionCode
+                }
+                val isForceUpdateFlag = when (val f = doc.get("force_update")) {
+                    is Boolean -> f
+                    is String -> f.trim().equals("true", ignoreCase = true)
+                    is Number -> f.toInt() == 1
+                    else -> false
+                }
+
+                val currentVersionCode = BuildConfig.VERSION_CODE.toLong()
+
+                Log.d(TAG, "Installed: $currentVersionCode, MinRequired: $minVersionCode, Latest: $latestVersionCode, ForceFlag: $isForceUpdateFlag")
+
+                // 1. Mandatory / Force update condition
+                val isMandatory = (currentVersionCode < minVersionCode) || (isForceUpdateFlag && currentVersionCode < latestVersionCode)
+
+                // 2. Optional / Flexible update condition
+                val isOptional = !isMandatory && (currentVersionCode < latestVersionCode)
+
+                if (isMandatory || isOptional) {
+                    if (isOptional && !ignoreSnooze && isOptionalUpdateSnoozed(context, latestVersionCode)) {
+                        Log.d(TAG, "Optional update for version $latestVersionCode is snoozed. Skipping.")
+                        return@withContext null
                     }
-                    val latestVersionCode = when (val v = doc.get("latest_version_code")) {
-                        is Number -> v.toLong()
-                        is String -> v.trim().toLongOrNull() ?: minVersionCode
-                        else -> minVersionCode
+
+                    val titles = mutableMapOf<String, String>()
+                    val descs = mutableMapOf<String, String>()
+                    val updateBtns = mutableMapOf<String, String>()
+                    val dismissBtns = mutableMapOf<String, String>()
+
+                    for (tag in LanguageManager.SUPPORTED_LANG_TAGS) {
+                        doc.getString("update_title_$tag")?.takeIf { it.isNotBlank() }?.let { titles[tag] = it }
+                        doc.getString("update_desc_$tag")?.takeIf { it.isNotBlank() }?.let { descs[tag] = it }
+                        doc.getString("update_btn_text_$tag")?.takeIf { it.isNotBlank() }?.let { updateBtns[tag] = it }
+                        doc.getString("dismiss_btn_text_$tag")?.takeIf { it.isNotBlank() }?.let { dismissBtns[tag] = it }
                     }
-                    val isForceUpdateFlag = when (val f = doc.get("force_update")) {
-                        is Boolean -> f
-                        is String -> f.trim().equals("true", ignoreCase = true)
-                        is Number -> f.toInt() == 1
-                        else -> false
-                    }
 
-                    val currentVersionCode = BuildConfig.VERSION_CODE.toLong()
+                    val updateUrl = doc.getString("update_url") ?: ""
+                    val playStoreUrl = doc.getString("play_store_url") ?: ""
 
-                    Log.d(TAG, "Installed: $currentVersionCode, MinRequired: $minVersionCode, Latest: $latestVersionCode, ForceFlag: $isForceUpdateFlag")
-
-                    // 1. Mandatory / Force update condition
-                    val isMandatory = (currentVersionCode < minVersionCode) || (isForceUpdateFlag && currentVersionCode < latestVersionCode)
-
-                    // 2. Optional / Flexible update condition
-                    val isOptional = !isMandatory && (currentVersionCode < latestVersionCode)
-
-                    if (isMandatory || isOptional) {
-                        // For optional updates, check if user dismissed within last 24h
-                        if (isOptional && !ignoreSnooze && isOptionalUpdateSnoozed(context, latestVersionCode)) {
-                            Log.d(TAG, "Optional update for version $latestVersionCode is snoozed. Skipping.")
-                            return@withContext null
-                        }
-
-                        val titleBn = doc.getString("update_title_bn")?.takeIf { it.isNotBlank() }
-                            ?: if (isMandatory) "নতুন আপডেট আবশ্যক!" else "নতুন আপডেট উপলব্ধ!"
-                        val descBn = doc.getString("update_desc_bn")?.takeIf { it.isNotBlank() }
-                            ?: if (isMandatory) {
-                                "ওভারটাইম ট্র্যাকার বিডি অ্যাপটিতে নতুন ফিচার ও গুরুত্বপূর্ণ সংশোধন যুক্ত করা হয়েছে। অ্যাপটি ব্যবহার চালিয়ে যেতে অনুগ্রহ করে গুগল প্লে-স্টোর থেকে এখনই আপডেট করে নিন।"
-                            } else {
-                                "ওভারটাইম ট্র্যাকার বিডি অ্যাপের নতুন ভার্সন এসেছে। নতুন সুবিধা ও স্মুথ পারফরম্যান্স পেতে অনুগ্রহ করে অ্যাপটি আপডেট করে নিন।"
-                            }
-                        val titleEn = doc.getString("update_title_en")?.takeIf { it.isNotBlank() }
-                            ?: if (isMandatory) "Update Required!" else "New Update Available!"
-                        val descEn = doc.getString("update_desc_en")?.takeIf { it.isNotBlank() }
-                            ?: if (isMandatory) {
-                                "A new version of Overtime Tracker BD is available with important improvements. Please update from Google Play Store to continue."
-                            } else {
-                                "A new update of Overtime Tracker BD is available. Update now to enjoy the latest features and performance improvements."
-                            }
-
-                        val updateUrl = doc.getString("update_url") ?: ""
-                        val playStoreUrl = doc.getString("play_store_url") ?: ""
-                        val updateBtnTextBn = doc.getString("update_btn_text_bn") ?: ""
-                        val updateBtnTextEn = doc.getString("update_btn_text_en") ?: ""
-                        val dismissBtnTextBn = doc.getString("dismiss_btn_text_bn") ?: ""
-                        val dismissBtnTextEn = doc.getString("dismiss_btn_text_en") ?: ""
-
-                        return@withContext AppUpdateInfo(
-                            isForceUpdate = isMandatory,
-                            minVersionCode = minVersionCode,
-                            latestVersionCode = latestVersionCode,
-                            titleBn = titleBn,
-                            descBn = descBn,
-                            titleEn = titleEn,
-                            descEn = descEn,
-                            updateUrl = updateUrl,
-                            playStoreUrl = playStoreUrl,
-                            updateBtnTextBn = updateBtnTextBn,
-                            updateBtnTextEn = updateBtnTextEn,
-                            dismissBtnTextBn = dismissBtnTextBn,
-                            dismissBtnTextEn = dismissBtnTextEn
-                        )
-                    }
+                    return@withContext AppUpdateInfo(
+                        isForceUpdate = isMandatory,
+                        minVersionCode = minVersionCode,
+                        latestVersionCode = latestVersionCode,
+                        localizedTitles = titles,
+                        localizedDescs = descs,
+                        localizedUpdateBtns = updateBtns,
+                        localizedDismissBtns = dismissBtns,
+                        updateUrl = updateUrl,
+                        playStoreUrl = playStoreUrl
+                    )
+                }
             }
             null
         } catch (e: Exception) {

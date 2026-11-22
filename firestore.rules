@@ -47,7 +47,7 @@ service cloud.firestore {
       && (!('tiffinBillRate' in data) || isNonNegNumber(data.tiffinBillRate))
       && (!('customOtRate' in data) || isNonNegNumber(data.customOtRate))
       && (!('monthlyOtTargetHours' in data) || isNonNegNumber(data.monthlyOtTargetHours))
-      && (!('language' in data) || data.language in ['bn', 'en'])
+      && (!('language' in data) || data.language in ['bn', 'en', 'hi', 'ta', 'ar', 'system'])
       && (!('lastSyncTime' in data) || isNonNegNumber(data.lastSyncTime))
       && (!('hasAcceptedPrivacyPolicy' in data) || data.hasAcceptedPrivacyPolicy is bool)
       && (!('privacyPolicyAcceptedAt' in data) || isNonNegNumber(data.privacyPolicyAcceptedAt))

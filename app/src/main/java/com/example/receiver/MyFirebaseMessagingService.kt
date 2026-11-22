@@ -74,10 +74,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         const val FCM_CHANNEL_ID = "fcm_announcements_channel"
 
-        fun createFcmChannel(context: Context, isBn: Boolean = true) {
+        fun createFcmChannel(context: Context, langTag: String? = null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val name = if (isBn) "গুরুত্বপূর্ণ ঘোষণা ও বার্তা" else "Announcements & Notices"
-                val descriptionText = if (isBn) "ফায়ারবেস থেকে পাঠানো নোটিশ ও বিশেষ নোটিফিকেশন" else "Important updates and announcements"
+                val localizedCtx = com.example.util.LanguageManager.getLocalizedContext(context, langTag)
+                val name = localizedCtx.getString(R.string.notif_channel_fcm_name)
+                val descriptionText = localizedCtx.getString(R.string.notif_channel_fcm_desc)
                 val importance = NotificationManager.IMPORTANCE_HIGH
                 val channel = NotificationChannel(FCM_CHANNEL_ID, name, importance).apply {
                     description = descriptionText

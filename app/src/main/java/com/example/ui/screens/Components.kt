@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,16 +25,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.OvertimeRecord
 import com.example.ui.theme.WarningOrange
 import com.example.util.LaborLawCalculator
@@ -44,22 +54,202 @@ import java.util.Locale
 
 enum class ShiftType(
     val code: String,
-    val labelBn: String,
-    val labelEn: String,
+    @param:StringRes val labelRes: Int,
     val color: Color
 ) {
-    REGULAR("REGULAR", "নিয়মিত", "Regular", Color(0xFF059669)),
-    DAY("DAY", "দিন", "Day", Color(0xFFD97706)),
-    NIGHT("NIGHT", "রাত", "Night", Color(0xFF2563EB)),
-    HOLIDAY("HOLIDAY", "ছুটির দিন", "Holiday", Color(0xFF9333EA)),
-    WEEKLY_OFF("WEEKLY_OFF", "সাপ্তাহিক ছুটি", "Weekly Off", Color(0xFF0D9488)),
-    LEAVE("LEAVE", "সাময়িক ছুটি", "Leave", Color(0xFF0284C7)),
-    ABSENT("ABSENT", "অনুপস্থিত", "Absent", Color(0xFFDC2626));
+    REGULAR("REGULAR", R.string.shift_regular, Color(0xFF059669)),
+    DAY("DAY", R.string.shift_day, Color(0xFFD97706)),
+    NIGHT("NIGHT", R.string.shift_night, Color(0xFF2563EB)),
+    HOLIDAY("HOLIDAY", R.string.shift_holiday, Color(0xFF9333EA)),
+    WEEKLY_OFF("WEEKLY_OFF", R.string.shift_weekly_off, Color(0xFF0D9488)),
+    LEAVE("LEAVE", R.string.shift_leave, Color(0xFF0284C7)),
+    ABSENT("ABSENT", R.string.shift_absent, Color(0xFFDC2626));
 
-    fun getLabel(isBn: Boolean) = if (isBn) labelBn else labelEn
+    @Composable
+    fun getLabel(): String = stringResource(labelRes)
+
+    fun getLabel(context: Context, langTag: String): String =
+        LanguageManager.getLocalizedContext(context, langTag).getString(labelRes)
 
     companion object {
         fun fromCode(code: String): ShiftType = entries.firstOrNull { it.code == code } ?: REGULAR
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LanguagePickerBottomSheet(
+    selectedSettingTag: String,
+    onSelectLanguage: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val systemEffectiveTag = remember { LanguageManager.getSystemEffectiveTag() }
+    val systemResolvedLabel = remember(systemEffectiveTag) {
+        LanguageManager.getDisplayName(LanguageManager.SYSTEM_TAG, systemEffectiveTag)
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag("language_picker_sheet"),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.app_language_label),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(R.string.language_picker_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+            // Option 0: System Default (auto-detect with English fallback)
+            val isSystemSelected = selectedSettingTag == LanguageManager.SYSTEM_TAG
+            Surface(
+                onClick = {
+                    onSelectLanguage(LanguageManager.SYSTEM_TAG)
+                    onDismiss()
+                },
+                shape = RoundedCornerShape(14.dp),
+                color = if (isSystemSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                border = if (isSystemSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("language_option_system")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhoneAndroid,
+                            contentDescription = null,
+                            tint = if (isSystemSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = stringResource(R.string.system_default_title),
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.system_default_subtitle_fmt, systemResolvedLabel),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    RadioButton(
+                        selected = isSystemSelected,
+                        onClick = {
+                            onSelectLanguage(LanguageManager.SYSTEM_TAG)
+                            onDismiss()
+                        }
+                    )
+                }
+            }
+
+            // Explicit Language Options: EN, BN, HI, TA, AR
+            LanguageManager.SupportedLanguage.entries.forEach { option ->
+                val isSelected = selectedSettingTag == option.tag
+                Surface(
+                    onClick = {
+                        onSelectLanguage(option.tag)
+                        onDismiss()
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("language_option_${option.tag}")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = option.flagEmoji,
+                                fontSize = 22.sp
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = option.nativeLabel,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = option.englishLabel,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = {
+                                onSelectLanguage(option.tag)
+                                onDismiss()
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -92,7 +282,7 @@ internal fun formatUtcMillisToDate(millis: Long): String {
 fun ProfessionalDatePickerField(
     selectedDate: String, // "YYYY-MM-DD"
     onDateSelected: (String) -> Unit,
-    isBn: Boolean,
+    lang: String,
     modifier: Modifier = Modifier
 ) {
     var showDatePickerDialog by remember { mutableStateOf(false) }
@@ -103,6 +293,10 @@ fun ProfessionalDatePickerField(
         keyboardController?.hide()
     }
 
+    val resolvedTag = LanguageManager.resolveSupportedTag(lang)
+    val isBnDigits = resolvedTag == "bn"
+    val displayLocale = remember(resolvedTag) { LanguageManager.localeForTag(resolvedTag) }
+
     val sdf = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
     val todayDateStr = remember { sdf.format(Date()) }
     val yesterdayDateStr = remember {
@@ -111,39 +305,29 @@ fun ProfessionalDatePickerField(
         sdf.format(cal.time)
     }
 
-    // Format display string
-    val formattedDisplayDate = remember(selectedDate, isBn) {
+    val todaySuffix = stringResource(R.string.suffix_today)
+    val yesterdaySuffix = stringResource(R.string.suffix_yesterday)
+
+    val formattedDisplayDate = remember(selectedDate, resolvedTag, todaySuffix, yesterdaySuffix) {
         try {
             val parsed = sdf.parse(selectedDate)
             if (parsed != null) {
-                val cal = Calendar.getInstance().apply { time = parsed }
-                val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
-                val dayName = when (dayOfWeek) {
-                    Calendar.SATURDAY -> if (isBn) "শনিবার" else "Saturday"
-                    Calendar.SUNDAY -> if (isBn) "রবিবার" else "Sunday"
-                    Calendar.MONDAY -> if (isBn) "সোমবার" else "Monday"
-                    Calendar.TUESDAY -> if (isBn) "মঙ্গলবার" else "Tuesday"
-                    Calendar.WEDNESDAY -> if (isBn) "বুধবার" else "Wednesday"
-                    Calendar.THURSDAY -> if (isBn) "বৃহস্পতিবার" else "Thursday"
-                    Calendar.FRIDAY -> if (isBn) "শুক্রবার" else "Friday"
-                    else -> ""
-                }
-                val formatted = SimpleDateFormat("dd MMMM yyyy", if (isBn) Locale.forLanguageTag("bn-BD") else Locale.US).format(parsed)
-                val display = if (isBn) LaborLawCalculator.toBengaliDigits(formatted) else formatted
+                val dayName = SimpleDateFormat("EEEE", displayLocale).format(parsed)
+                val formatted = SimpleDateFormat("dd MMMM yyyy", displayLocale).format(parsed)
+                val display = if (isBnDigits) LaborLawCalculator.toBengaliDigits(formatted) else formatted
                 val suffix = when (selectedDate) {
-                    todayDateStr -> if (isBn) " • আজকের দিন" else " • Today"
-                    yesterdayDateStr -> if (isBn) " • গতকাল" else " • Yesterday"
+                    todayDateStr -> todaySuffix
+                    yesterdayDateStr -> yesterdaySuffix
                     else -> ""
                 }
                 "$display ($dayName)$suffix"
             } else selectedDate
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             selectedDate
         }
     }
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        // Quick Action Chips: [ 📌 আজ ], [ ⏪ গতকাল ], [ 📅 ক্যালেন্ডার ]
         @OptIn(ExperimentalLayoutApi::class)
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
@@ -156,7 +340,7 @@ fun ProfessionalDatePickerField(
                     hideKeyboard()
                     onDateSelected(todayDateStr)
                 },
-                label = { Text(if (isBn) "📌 আজ" else "📌 Today", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.date_chip_today), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -170,7 +354,7 @@ fun ProfessionalDatePickerField(
                     hideKeyboard()
                     onDateSelected(yesterdayDateStr)
                 },
-                label = { Text(if (isBn) "⏪ গতকাল" else "⏪ Yesterday", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.date_chip_yesterday), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -183,7 +367,7 @@ fun ProfessionalDatePickerField(
                     hideKeyboard()
                     showDatePickerDialog = true
                 },
-                label = { Text(if (isBn) "📅 ক্যালেন্ডার" else "📅 Calendar", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.date_chip_calendar), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
                 modifier = Modifier.testTag("date_chip_calendar")
             )
         }
@@ -210,14 +394,14 @@ fun ProfessionalDatePickerField(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
-                        contentDescription = "Select Date",
+                        contentDescription = stringResource(R.string.cd_select_date),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = if (isBn) "নির্বাচিত তারিখ (চাপুন):" else "Selected Date (Tap):",
+                            text = stringResource(R.string.selected_date_tap_label),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -235,7 +419,7 @@ fun ProfessionalDatePickerField(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Text(
-                        text = if (isBn) "বদলান" else "Change",
+                        text = stringResource(R.string.change),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -263,12 +447,12 @@ fun ProfessionalDatePickerField(
                         showDatePickerDialog = false
                     }
                 ) {
-                    Text(if (isBn) "ঠিক আছে" else "OK", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePickerDialog = false }) {
-                    Text(if (isBn) "বাতিল" else "Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         ) {
@@ -276,7 +460,7 @@ fun ProfessionalDatePickerField(
                 state = datePickerState,
                 title = {
                     Text(
-                        text = if (isBn) "তারিখ বেছে নিন" else "Select Date",
+                        text = stringResource(R.string.select_date_dialog_title),
                         modifier = Modifier.padding(start = 24.dp, top = 16.dp),
                         fontWeight = FontWeight.Bold
                     )
@@ -297,7 +481,7 @@ fun QuickOtEntryDialog(
     onNavigateToProfile: (String) -> Unit = {},
     onSave: (date: String, hours: Double, nightBill: Boolean, tiffinBill: Boolean, isHoliday: Boolean, shiftType: String, note: String) -> Unit
 ) {
-    val isBn = lang == "bn"
+    val isBnDigits = LanguageManager.isBengaliDigits(lang)
     val todayStr = remember {
         initialRecord?.date ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
     }
@@ -381,7 +565,10 @@ fun QuickOtEntryDialog(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = if (initialRecord != null && initialRecord.id != 0L) (if (isBn) "ওটি তথ্য সম্পাদন" else "Edit OT Entry") else LanguageManager.get("quick_ot_entry", lang),
+                            text = stringResource(
+                                if (initialRecord != null && initialRecord.id != 0L) R.string.edit_ot_entry_title
+                                else R.string.quick_ot_entry_title
+                            ),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -395,7 +582,7 @@ fun QuickOtEntryDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = LanguageManager.get("cancel", lang)
+                            contentDescription = stringResource(R.string.cancel)
                         )
                     }
                 }
@@ -410,16 +597,14 @@ fun QuickOtEntryDialog(
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Professional Date Picker Field with Quick Chips
                 ProfessionalDatePickerField(
                     selectedDate = date,
                     onDateSelected = { date = it },
-                    isBn = isBn
+                    lang = lang
                 )
 
-                // Shift Selector Section
                 Text(
-                    text = if (isBn) "শিফট / উপস্থিতির ধরন:" else "Shift / Attendance Type:",
+                    text = stringResource(R.string.shift_type_label),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -431,15 +616,7 @@ fun QuickOtEntryDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    listOf(
-                        ShiftType.REGULAR,
-                        ShiftType.DAY,
-                        ShiftType.NIGHT,
-                        ShiftType.HOLIDAY,
-                        ShiftType.WEEKLY_OFF,
-                        ShiftType.LEAVE,
-                        ShiftType.ABSENT
-                    ).forEach { shift ->
+                    ShiftType.entries.forEach { shift ->
                         val isSelected = selectedShift == shift.code
                         FilterChip(
                             selected = isSelected,
@@ -456,12 +633,8 @@ fun QuickOtEntryDialog(
                                         }
                                     }
                                     ShiftType.HOLIDAY -> isHoliday = true
-                                    ShiftType.DAY -> {
-                                        isHoliday = false
-                                    }
-                                    ShiftType.REGULAR -> {
-                                        isHoliday = false
-                                    }
+                                    ShiftType.DAY -> isHoliday = false
+                                    ShiftType.REGULAR -> isHoliday = false
                                     ShiftType.WEEKLY_OFF -> isHoliday = true
                                     ShiftType.LEAVE, ShiftType.ABSENT -> {
                                         hoursText = "0.0"
@@ -472,7 +645,7 @@ fun QuickOtEntryDialog(
                             },
                             label = {
                                 Text(
-                                    text = shift.getLabel(isBn),
+                                    text = shift.getLabel(),
                                     fontSize = 11.sp,
                                     maxLines = 1,
                                     softWrap = false
@@ -486,10 +659,9 @@ fun QuickOtEntryDialog(
                     }
                 }
 
-                // When shift is Weekly Off, Leave, or Absent, hide all OT inputs and show status info
                 val isOffOrLeaveShift = selectedShift == ShiftType.WEEKLY_OFF.code ||
-                        selectedShift == ShiftType.LEAVE.code ||
-                        selectedShift == ShiftType.ABSENT.code
+                    selectedShift == ShiftType.LEAVE.code ||
+                    selectedShift == ShiftType.ABSENT.code
 
                 if (isOffOrLeaveShift) {
                     Surface(
@@ -504,20 +676,13 @@ fun QuickOtEntryDialog(
                             .padding(vertical = 8.dp)
                     ) {
                         Text(
-                            text = when (selectedShift) {
-                                ShiftType.ABSENT.code -> if (isBn)
-                                    "⚠️ আজকের দিনটি অনুপস্থিত হিসেবে রেকর্ড হবে (দৈনিক বেতন কর্তন হবে এবং শর্তানুযায়ী হাজিরা বোনাস হিসাব হবে)।"
-                                else
-                                    "⚠️ Marked as Absent (Daily salary deducted; attendance bonus evaluated per policy)."
-                                ShiftType.LEAVE.code -> if (isBn)
-                                    "🏖️ আজকের দিনটি ছুটি হিসেবে গণ্য হবে (হাজিরা কাটা যাবে না)।"
-                                else
-                                    "🏖️ Marked as Leave (Attendance bonus preserved)."
-                                else -> if (isBn)
-                                    "🌴 আজকের দিনটি সাপ্তাহিক ছুটি হিসেবে সংরক্ষিত হবে (ওটি প্রযোজ্য নয়)।"
-                                else
-                                    "🌴 Marked as Weekly Off (No OT applicable)."
-                            },
+                            text = stringResource(
+                                when (selectedShift) {
+                                    ShiftType.ABSENT.code -> R.string.shift_info_absent
+                                    ShiftType.LEAVE.code -> R.string.shift_info_leave
+                                    else -> R.string.shift_info_weekly_off
+                                }
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = when (selectedShift) {
@@ -533,8 +698,8 @@ fun QuickOtEntryDialog(
                         OutlinedTextField(
                             value = note,
                             onValueChange = { note = it },
-                            label = { Text(if (isBn) "ছুটির কারণ" else "Reason for Leave") },
-                            placeholder = { Text(if (isBn) "যেমন: অসুস্থতা, গ্রামের বাড়ি যাওয়া, পারিবারিক কাজ" else "e.g. Sick leave, Personal emergency") },
+                            label = { Text(stringResource(R.string.leave_reason_label)) },
+                            placeholder = { Text(stringResource(R.string.leave_reason_placeholder)) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
@@ -552,14 +717,12 @@ fun QuickOtEntryDialog(
                         )
                     }
                 } else {
-                    // Regular OT Inputs (Visible only for regular/work shifts)
-
-                    // Preset hour chips
                     Text(
-                        text = if (isBn) "দ্রুত ওটি ঘণ্টা নির্বাচন:" else "Quick OT Hours Selection:",
+                        text = stringResource(R.string.quick_ot_hours_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    val hrsShort = stringResource(R.string.hours_short)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -573,7 +736,7 @@ fun QuickOtEntryDialog(
                                 },
                                 label = {
                                     Text(
-                                        text = "${LaborLawCalculator.formatNumber(h, isBn, 0)} ${if (isBn) "ঘ" else "h"}",
+                                        text = "${LaborLawCalculator.formatNumber(h, isBnDigits, 0)} $hrsShort",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
@@ -601,7 +764,7 @@ fun QuickOtEntryDialog(
                                 },
                                 label = {
                                     Text(
-                                        text = "${LaborLawCalculator.formatNumber(h, isBn, 0)} ${if (isBn) "ঘ" else "h"}",
+                                        text = "${LaborLawCalculator.formatNumber(h, isBnDigits, 0)} $hrsShort",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
@@ -617,11 +780,10 @@ fun QuickOtEntryDialog(
                         }
                     }
 
-                    // Hours custom input
                     OutlinedTextField(
                         value = hoursText,
                         onValueChange = { hoursText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true) },
-                        label = { Text(LanguageManager.get("hours", lang)) },
+                        label = { Text(stringResource(R.string.hours_input_label)) },
                         placeholder = { Text("0") },
                         modifier = Modifier.fillMaxWidth().testTag("ot_hours_input"),
                         singleLine = true,
@@ -633,14 +795,16 @@ fun QuickOtEntryDialog(
                         leadingIcon = { Icon(Icons.Default.Timer, contentDescription = null) },
                         supportingText = {
                             Text(
-                                text = if (isBn) "আনুমানিক ওটি টাকা: ${LaborLawCalculator.formatCurrency(calculatedAmount, isBn)}" else "Est. OT Amount: ${LaborLawCalculator.formatCurrency(calculatedAmount, isBn)}",
+                                text = stringResource(
+                                    R.string.est_ot_amount_fmt,
+                                    LaborLawCalculator.formatCurrency(calculatedAmount, isBnDigits)
+                                ),
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
                     )
 
-                    // Additional Checkboxes
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         shape = RoundedCornerShape(12.dp)
@@ -681,7 +845,7 @@ fun QuickOtEntryDialog(
                                     modifier = Modifier.testTag("night_bill_checkbox")
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(LanguageManager.get("night_bill", lang), style = MaterialTheme.typography.bodyMedium)
+                                Text(stringResource(R.string.night_bill_check), style = MaterialTheme.typography.bodyMedium)
                             }
 
                             Row(
@@ -719,7 +883,7 @@ fun QuickOtEntryDialog(
                                     modifier = Modifier.testTag("tiffin_bill_checkbox")
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(LanguageManager.get("tiffin_bill", lang), style = MaterialTheme.typography.bodyMedium)
+                                Text(stringResource(R.string.tiffin_bill_check), style = MaterialTheme.typography.bodyMedium)
                             }
 
                             Row(
@@ -741,16 +905,15 @@ fun QuickOtEntryDialog(
                                     modifier = Modifier.testTag("holiday_checkbox")
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(LanguageManager.get("holiday_ot", lang), style = MaterialTheme.typography.bodyMedium)
+                                Text(stringResource(R.string.holiday_ot_check), style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
 
-                    // Note input
                     OutlinedTextField(
                         value = note,
                         onValueChange = { note = it },
-                        label = { Text(LanguageManager.get("note", lang)) },
+                        label = { Text(stringResource(R.string.note_label)) },
                         modifier = Modifier.fillMaxWidth().testTag("ot_note_input"),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { hideKeyboard() }),
@@ -780,30 +943,26 @@ fun QuickOtEntryDialog(
                             .weight(1f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text(LanguageManager.get("cancel", lang))
+                        Text(stringResource(R.string.cancel))
                     }
                     Button(
                         onClick = {
                             hideKeyboard()
                             val finalHours = LaborLawCalculator.parseLocalizedDouble(hoursText)
-                            // Validation 1: If hours > 0 but basic salary or hourlyRate <= 0
                             if (finalHours > 0.0 && hourlyRate <= 0.0 && (profile?.basicSalary ?: 0.0) <= 0.0) {
                                 missingFieldWarning = "SALARY"
                                 return@Button
                             }
-                            // Validation 2: If night bill selected but rate <= 0
                             if (hasNightBill && (profile?.nightBillRate ?: 0.0) <= 0.0) {
                                 missingFieldWarning = "NIGHT_BILL"
                                 return@Button
                             }
-                            // Validation 3: If tiffin bill selected but rate <= 0
                             if (hasTiffinBill && (profile?.tiffinBillRate ?: 0.0) <= 0.0) {
                                 missingFieldWarning = "TIFFIN_BILL"
                                 return@Button
                             }
 
                             if (finalHours >= 0.0 && date.isNotBlank()) {
-                                // Check if an existing different record exists on the chosen date
                                 val existingOnDate = existingRecords.find { it.date == date }
                                 if (existingOnDate != null && initialRecord?.id != existingOnDate.id) {
                                     pendingOverwriteRecord = existingOnDate
@@ -818,14 +977,13 @@ fun QuickOtEntryDialog(
                             .heightIn(min = 48.dp)
                             .testTag("save_ot_button")
                     ) {
-                        Text(LanguageManager.get("save", lang))
+                        Text(stringResource(R.string.save))
                     }
                 }
             }
         }
     }
 
-    // Interactive Alert Dialog when required rates are missing in profile
     if (missingFieldWarning != null) {
         val warningType = missingFieldWarning
         AlertDialog(
@@ -840,11 +998,13 @@ fun QuickOtEntryDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = when (warningType) {
-                            "NIGHT_BILL" -> if (isBn) "নাইট বিল রেট যোগ করা নেই!" else "Night Bill Rate Missing!"
-                            "TIFFIN_BILL" -> if (isBn) "টিফিন বিল রেট যোগ করা নেই!" else "Tiffin Bill Rate Missing!"
-                            else -> if (isBn) "বেতন কাঠামো যোগ করা নেই!" else "Salary Setup Missing!"
-                        },
+                        text = stringResource(
+                            when (warningType) {
+                                "NIGHT_BILL" -> R.string.missing_night_bill_title
+                                "TIFFIN_BILL" -> R.string.missing_tiffin_bill_title
+                                else -> R.string.missing_salary_title
+                            }
+                        ),
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -852,20 +1012,13 @@ fun QuickOtEntryDialog(
             },
             text = {
                 Text(
-                    text = when (warningType) {
-                        "NIGHT_BILL" -> if (isBn)
-                            "আপনার প্রোফাইলে এখনও প্রতি রাতের নাইট বিল রেট যোগ করা হয়নি। দয়া করে প্রোফাইলে গিয়ে নাইট বিলের রেট বসিয়ে নিন।"
-                        else
-                            "Night bill rate is not configured in your profile. Please add your night bill rate in profile settings."
-                        "TIFFIN_BILL" -> if (isBn)
-                            "আপনার প্রোফাইলে এখনও প্রতি দিনের টিফিন বিল রেট যোগ করা হয়নি। দয়া করে প্রোফাইলে গিয়ে টিফিন বিল রেট বসিয়ে নিন।"
-                        else
-                            "Tiffin bill rate is not configured in your profile. Please add your tiffin bill rate in profile settings."
-                        else -> if (isBn)
-                            "আপনার প্রোফাইলে এখনও মোট বেতন বা ওটি রেট যোগ করা হয়নি। ওটি যোগ করার আগে দয়া করে প্রোফাইলে গিয়ে বেতন কাঠামো নির্ধারণ করুন, অন্যথায় ওটি টাকা হিসাব করা যাবে না।"
-                        else
-                            "Salary or OT rate is not configured in your profile. Please set up your salary in profile settings first."
-                    },
+                    text = stringResource(
+                        when (warningType) {
+                            "NIGHT_BILL" -> R.string.missing_night_bill_msg
+                            "TIFFIN_BILL" -> R.string.missing_tiffin_bill_msg
+                            else -> R.string.missing_salary_msg
+                        }
+                    ),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -877,22 +1030,21 @@ fun QuickOtEntryDialog(
                         onNavigateToProfile(target)
                     }
                 ) {
-                    Text(if (isBn) "প্রোফাইলে যান" else "Go to Profile")
+                    Text(stringResource(R.string.go_to_profile))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { missingFieldWarning = null }) {
-                    Text(if (isBn) "বাতিল" else "Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
     }
 
-    // Overwrite Confirmation Alert Dialog
     if (pendingOverwriteRecord != null) {
         val oldRec = pendingOverwriteRecord!!
-        val oldShift = ShiftType.fromCode(oldRec.shiftType).getLabel(isBn)
-        val newShift = ShiftType.fromCode(selectedShift).getLabel(isBn)
+        val oldShift = ShiftType.fromCode(oldRec.shiftType).getLabel()
+        val newShift = ShiftType.fromCode(selectedShift).getLabel()
         val finalHours = LaborLawCalculator.parseLocalizedDouble(hoursText)
 
         AlertDialog(
@@ -907,7 +1059,7 @@ fun QuickOtEntryDialog(
             },
             title = {
                 Text(
-                    text = if (isBn) "এই তারিখে ইতিমধ্যে ওটি তথ্য আছে!" else "Entry already exists for this date!",
+                    text = stringResource(R.string.overwrite_title),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -915,10 +1067,7 @@ fun QuickOtEntryDialog(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = if (isBn)
-                            "আপনি $date তারিখের পূর্ববর্তী তথ্য পরিবর্তন করতে যাচ্ছেন:"
-                        else
-                            "You are about to overwrite existing data for $date:",
+                        text = stringResource(R.string.overwrite_msg_fmt, date),
                         style = MaterialTheme.typography.bodyMedium
                     )
 
@@ -929,19 +1078,21 @@ fun QuickOtEntryDialog(
                     ) {
                         Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                text = if (isBn)
-                                    "• আগের তথ্য: ${LaborLawCalculator.formatNumber(oldRec.otHours, isBn)} ঘণ্টা ($oldShift)"
-                                else
-                                    "• Current: ${oldRec.otHours} hrs ($oldShift)",
+                                text = stringResource(
+                                    R.string.overwrite_current_fmt,
+                                    LaborLawCalculator.formatNumber(oldRec.otHours, isBnDigits),
+                                    oldShift
+                                ),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.error
                             )
                             Text(
-                                text = if (isBn)
-                                    "• নতুন তথ্য: ${LaborLawCalculator.formatNumber(finalHours, isBn)} ঘণ্টা ($newShift)"
-                                else
-                                    "• New: $finalHours hrs ($newShift)",
+                                text = stringResource(
+                                    R.string.overwrite_new_fmt,
+                                    LaborLawCalculator.formatNumber(finalHours, isBnDigits),
+                                    newShift
+                                ),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -950,10 +1101,7 @@ fun QuickOtEntryDialog(
                     }
 
                     Text(
-                        text = if (isBn)
-                            "আপনি কি নিশ্চিতভাবে আগের তথ্যটি পরিবর্তন (ওভাররাইট) করতে চান?"
-                        else
-                            "Are you sure you want to overwrite the previous entry?",
+                        text = stringResource(R.string.overwrite_confirm_prompt),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -967,12 +1115,12 @@ fun QuickOtEntryDialog(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(if (isBn) "পরিবর্তন নিশ্চিত করুন" else "Confirm Overwrite")
+                    Text(stringResource(R.string.overwrite_confirm_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { pendingOverwriteRecord = null }) {
-                    Text(if (isBn) "বাতিল (আগেরটি রাখুন)" else "Cancel (Keep Current)")
+                    Text(stringResource(R.string.overwrite_keep_btn))
                 }
             }
         )
@@ -1001,12 +1149,12 @@ fun AddPieceRateDialog(
     val rate = LaborLawCalculator.parseLocalizedDouble(rateText)
     val total = count * rate
 
-    val isBn = lang == "bn"
-    val popularItems = if (isBn) {
-        listOf("কলার তৈরি", "পকেট জয়েন্ট", "স্লিভ এটাচ", "বটম হেম", "বাটন স্টিচ")
-    } else {
-        listOf("Collar Making", "Pocket Joint", "Sleeve Attach", "Bottom Hem", "Button Stitch")
-    }
+    val isBnDigits = LanguageManager.isBengaliDigits(lang)
+    val popularItems = listOf(
+        stringResource(R.string.piece_suggestion_collar),
+        stringResource(R.string.piece_suggestion_pocket),
+        stringResource(R.string.piece_suggestion_sleeve)
+    )
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -1063,7 +1211,7 @@ fun AddPieceRateDialog(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = LanguageManager.get("add_piece_work", lang),
+                            text = stringResource(R.string.add_piece_work_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -1074,7 +1222,7 @@ fun AddPieceRateDialog(
                     }) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = LanguageManager.get("cancel", lang)
+                            contentDescription = stringResource(R.string.cancel)
                         )
                     }
                 }
@@ -1089,20 +1237,18 @@ fun AddPieceRateDialog(
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Professional Date Picker Field with Quick Chips
                 ProfessionalDatePickerField(
                     selectedDate = date,
                     onDateSelected = { date = it },
-                    isBn = isBn
+                    lang = lang
                 )
 
-                // Quick item suggestions
-                Text(if (isBn) "জনপ্রিয় কাজের নাম:" else "Popular Task Suggestions:", style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.popular_tasks_label), style = MaterialTheme.typography.labelSmall)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    popularItems.take(3).forEach { item ->
+                    popularItems.forEach { item ->
                         AssistChip(
                             onClick = {
                                 hideKeyboard()
@@ -1120,15 +1266,15 @@ fun AddPieceRateDialog(
                         itemName = it
                         itemNameError = false
                     },
-                    label = { Text(LanguageManager.get("item_name", lang)) },
+                    label = { Text(stringResource(R.string.item_name_label)) },
                     modifier = Modifier.fillMaxWidth().testTag("piece_name_input"),
-                    placeholder = { Text(if (isBn) "যেমন: শার্ট কলার জয়েন্ট" else "e.g. Shirt Collar Joint") },
+                    placeholder = { Text(stringResource(R.string.item_name_placeholder)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) }),
                     singleLine = true,
                     isError = itemNameError,
                     supportingText = if (itemNameError) {
-                        { Text(if (isBn) "কাজের নাম লিখুন" else "Enter item name") }
+                        { Text(stringResource(R.string.item_name_error)) }
                     } else null
                 )
 
@@ -1142,7 +1288,7 @@ fun AddPieceRateDialog(
                             countText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = false)
                             countError = false
                         },
-                        label = { Text(LanguageManager.get("piece_count", lang)) },
+                        label = { Text(stringResource(R.string.piece_count_label)) },
                         placeholder = { Text("0") },
                         modifier = Modifier.weight(1f).testTag("piece_count_input"),
                         keyboardOptions = KeyboardOptions(
@@ -1153,7 +1299,7 @@ fun AddPieceRateDialog(
                         singleLine = true,
                         isError = countError,
                         supportingText = if (countError) {
-                            { Text(if (isBn) "পিস সংখ্যা দিন" else "Enter count") }
+                            { Text(stringResource(R.string.piece_count_error)) }
                         } else null
                     )
                     OutlinedTextField(
@@ -1162,7 +1308,7 @@ fun AddPieceRateDialog(
                             rateText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true)
                             rateError = false
                         },
-                        label = { Text(LanguageManager.get("rate_per_piece", lang)) },
+                        label = { Text(stringResource(R.string.rate_per_piece_label)) },
                         placeholder = { Text("0") },
                         modifier = Modifier.weight(1f).testTag("piece_rate_input"),
                         keyboardOptions = KeyboardOptions(
@@ -1173,7 +1319,7 @@ fun AddPieceRateDialog(
                         singleLine = true,
                         isError = rateError,
                         supportingText = if (rateError) {
-                            { Text(if (isBn) "সঠিক দর দিন" else "Enter rate") }
+                            { Text(stringResource(R.string.rate_per_piece_error)) }
                         } else null
                     )
                 }
@@ -1183,7 +1329,10 @@ fun AddPieceRateDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = if (isBn) "মোট পিস রেট আয়: ${LaborLawCalculator.formatCurrency(total, true)}" else "Total Piece Income: ${LaborLawCalculator.formatCurrency(total, false)}",
+                        text = stringResource(
+                            R.string.total_piece_income_fmt,
+                            LaborLawCalculator.formatCurrency(total, isBnDigits)
+                        ),
                         modifier = Modifier.padding(12.dp),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -1193,7 +1342,7 @@ fun AddPieceRateDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text(LanguageManager.get("note", lang)) },
+                    label = { Text(stringResource(R.string.note_label)) },
                     modifier = Modifier.fillMaxWidth().testTag("piece_note_input"),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { hideKeyboard() }),
@@ -1222,7 +1371,7 @@ fun AddPieceRateDialog(
                             .weight(1f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text(LanguageManager.get("cancel", lang))
+                        Text(stringResource(R.string.cancel))
                     }
                     Button(
                         onClick = {
@@ -1242,7 +1391,7 @@ fun AddPieceRateDialog(
                             .heightIn(min = 48.dp)
                             .testTag("save_piece_button")
                     ) {
-                        Text(LanguageManager.get("save", lang))
+                        Text(stringResource(R.string.save))
                     }
                 }
             }
@@ -1263,7 +1412,7 @@ fun TargetGoalDialog(
     onDismiss: () -> Unit,
     onSave: (Double) -> Unit
 ) {
-    val isBn = lang == "bn"
+    val isBnDigits = LanguageManager.isBengaliDigits(lang)
     var targetText by remember { mutableStateOf(LaborLawCalculator.formatEditableNumber(currentTarget)) }
 
     val focusManager = LocalFocusManager.current
@@ -1321,7 +1470,7 @@ fun TargetGoalDialog(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = LanguageManager.get("target_hours", lang),
+                            text = stringResource(R.string.set_target_hours_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -1332,7 +1481,7 @@ fun TargetGoalDialog(
                     }) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = LanguageManager.get("cancel", lang)
+                            contentDescription = stringResource(R.string.cancel)
                         )
                     }
                 }
@@ -1348,16 +1497,13 @@ fun TargetGoalDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = if (isBn)
-                        "মাসে আপনি মোট কত ঘণ্টা ওভারটাইম করার পরিকল্পনা করছেন? লক্ষ্য নির্ধারণ করলে প্রতিদিনের হিসাব সহজ হয়।"
-                    else
-                        "How many hours of overtime do you plan to do this month? Setting a target helps track daily progress.",
+                    text = stringResource(R.string.target_goal_intro),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 OutlinedTextField(
                     value = targetText,
                     onValueChange = { targetText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true) },
-                    label = { Text(if (isBn) "লক্ষ্যমাত্রা (ঘণ্টা)" else "Target (Hours)") },
+                    label = { Text(stringResource(R.string.target_hours_input_label)) },
                     placeholder = { Text("0") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
@@ -1367,6 +1513,7 @@ fun TargetGoalDialog(
                     modifier = Modifier.fillMaxWidth().testTag("target_hours_input"),
                     singleLine = true
                 )
+                val hrsShort = stringResource(R.string.hours_short)
                 @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1380,12 +1527,11 @@ fun TargetGoalDialog(
                                 hideKeyboard()
                                 targetText = preset.toString()
                             },
-                            label = { Text("${LaborLawCalculator.formatNumber(preset.toDouble(), isBn, 0)} ${if (isBn) "ঘ" else "h"}") }
+                            label = { Text("${LaborLawCalculator.formatNumber(preset.toDouble(), isBnDigits, 0)} $hrsShort") }
                         )
                     }
                 }
 
-                // Live calculation card
                 val parsedHours = LaborLawCalculator.parseLocalizedDouble(targetText)
                 val estimatedEarnings = parsedHours * hourlyRate
 
@@ -1405,7 +1551,7 @@ fun TargetGoalDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (isBn) "সম্ভাব্য ওটি আয়" else "Est. OT Earnings",
+                                text = stringResource(R.string.est_ot_earnings_label),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1415,8 +1561,10 @@ fun TargetGoalDialog(
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                 ) {
                                     Text(
-                                        text = if (isBn) "রেট: ${LaborLawCalculator.formatCurrency(hourlyRate, isBn)}/ঘণ্টা"
-                                        else "Rate: ${LaborLawCalculator.formatCurrency(hourlyRate, isBn)}/hr",
+                                        text = stringResource(
+                                            R.string.rate_per_hour_fmt,
+                                            LaborLawCalculator.formatCurrency(hourlyRate, isBnDigits)
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
@@ -1428,9 +1576,9 @@ fun TargetGoalDialog(
 
                         Text(
                             text = if (hourlyRate > 0) {
-                                LaborLawCalculator.formatCurrency(estimatedEarnings, isBn)
+                                LaborLawCalculator.formatCurrency(estimatedEarnings, isBnDigits)
                             } else {
-                                if (isBn) "বেতন সেট করা নেই" else "Basic salary not set"
+                                stringResource(R.string.salary_not_set_short)
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
@@ -1439,17 +1587,12 @@ fun TargetGoalDialog(
 
                         Text(
                             text = if (hourlyRate > 0) {
-                                if (isBn) {
-                                    "${LaborLawCalculator.formatNumber(parsedHours, isBn, 0)} ঘণ্টা ওটি সম্পন্ন করলে এই টাকা আয় হবে।"
-                                } else {
-                                    "Earning for completing ${LaborLawCalculator.formatNumber(parsedHours, isBn, 0)} OT hours."
-                                }
+                                stringResource(
+                                    R.string.target_hours_earning_fmt,
+                                    LaborLawCalculator.formatNumber(parsedHours, isBnDigits, 0)
+                                )
                             } else {
-                                if (isBn) {
-                                    "প্রোফাইলে মূল বেতন সেট করলে ওটি আয়ের হিসাব দেখা যাবে।"
-                                } else {
-                                    "Set basic salary in profile to see earnings calculation."
-                                }
+                                stringResource(R.string.target_salary_unset_hint)
                             },
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1463,9 +1606,9 @@ fun TargetGoalDialog(
                         )
                         val isNegativeProjected = projectedMonthEndTotal < 0.0
                         val formattedProjected = if (isNegativeProjected) {
-                            "- ${LaborLawCalculator.formatCurrency(-projectedMonthEndTotal, isBn)}"
+                            "- ${LaborLawCalculator.formatCurrency(-projectedMonthEndTotal, isBnDigits)}"
                         } else {
-                            LaborLawCalculator.formatCurrency(projectedMonthEndTotal, isBn)
+                            LaborLawCalculator.formatCurrency(projectedMonthEndTotal, isBnDigits)
                         }
 
                         HorizontalDivider(
@@ -1479,7 +1622,7 @@ fun TargetGoalDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (isBn) "সব মিলিয়ে মাস শেষে সম্ভাব্য আয়" else "Est. Month-End Total Pay",
+                                text = stringResource(R.string.est_month_end_total_pay),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -1501,23 +1644,13 @@ fun TargetGoalDialog(
                         }
 
                         Text(
-                            text = when {
-                                isNegativeProjected -> if (isBn) {
-                                    "সতর্কতা: বর্তমান কর্তন মোট আয়ের চেয়ে বেশি।"
-                                } else {
-                                    "Note: Current deductions exceed total earnings."
+                            text = stringResource(
+                                when {
+                                    isNegativeProjected -> R.string.target_negative_warning
+                                    grossSalary <= 0.0 -> R.string.target_salary_unset_short_hint
+                                    else -> R.string.target_formula_summary
                                 }
-                                grossSalary <= 0.0 -> if (isBn) {
-                                    "বেতন সেট না থাকায় কেবল ওটি, বোনাস ও কর্তনের হিসাব দেখাচ্ছে।"
-                                } else {
-                                    "Salary not set; showing OT, bonus & deductions only."
-                                }
-                                else -> if (isBn) {
-                                    "বেতন + টার্গেট ওটি + বোনাস/বিল/পিস − কর্তন"
-                                } else {
-                                    "Salary + Target OT + Bonus/Bills/Piece − Deductions"
-                                }
-                            },
+                            ),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isNegativeProjected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1530,11 +1663,10 @@ fun TargetGoalDialog(
                             ) {
                                 if (totalDeductions > 0.0) {
                                     Text(
-                                        text = if (isBn) {
-                                            "কর্তন: -${LaborLawCalculator.formatCurrency(totalDeductions, true)}"
-                                        } else {
-                                            "Deductions: -${LaborLawCalculator.formatCurrency(totalDeductions, false)}"
-                                        },
+                                        text = stringResource(
+                                            R.string.deductions_summary_fmt,
+                                            LaborLawCalculator.formatCurrency(totalDeductions, isBnDigits)
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.error,
@@ -1548,7 +1680,7 @@ fun TargetGoalDialog(
                                         color = WarningOrange.copy(alpha = 0.14f)
                                     ) {
                                         Text(
-                                            text = if (isBn) "হাজিরা বোনাস বাতিল" else "Bonus Lost",
+                                            text = stringResource(R.string.bonus_lost_badge),
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = WarningOrange,
@@ -1583,7 +1715,7 @@ fun TargetGoalDialog(
                             .weight(1f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text(LanguageManager.get("cancel", lang))
+                        Text(stringResource(R.string.cancel))
                     }
                     Button(
                         onClick = {
@@ -1596,7 +1728,7 @@ fun TargetGoalDialog(
                             .heightIn(min = 48.dp)
                             .testTag("save_target_button")
                     ) {
-                        Text(LanguageManager.get("save", lang))
+                        Text(stringResource(R.string.save))
                     }
                 }
             }
@@ -1606,7 +1738,6 @@ fun TargetGoalDialog(
 
 @Composable
 fun InitialPrivacyConsentDialog(
-    lang: String,
     onAgree: () -> Unit,
     onDecline: () -> Unit,
     onViewFullPolicy: () -> Unit,
@@ -1614,7 +1745,10 @@ fun InitialPrivacyConsentDialog(
     confirmButtonText: String? = null,
     dismissButtonText: String? = null
 ) {
-    val isBn = lang == "bn"
+    val prefix = stringResource(R.string.privacy_consent_prefix)
+    val linkText = stringResource(R.string.privacy_consent_link_text)
+    val suffix = stringResource(R.string.privacy_consent_suffix)
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     AlertDialog(
         onDismissRequest = onDecline,
@@ -1641,12 +1775,12 @@ fun InitialPrivacyConsentDialog(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = titleText ?: if (isBn) "গোপনীয়তা নীতিমালায় সম্মতি" else "Privacy Policy Consent",
+                        text = titleText ?: stringResource(R.string.privacy_consent_title),
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = if (isBn) "ওভারটাইম ট্র্যাকার বিডি" else "Overtime Tracker BD",
+                        text = stringResource(R.string.app_display_name),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1654,41 +1788,24 @@ fun InitialPrivacyConsentDialog(
             }
         },
         text = {
-            val annotatedText = androidx.compose.ui.text.buildAnnotatedString {
-                if (isBn) {
-                    append("সাইন ইন করার মাধ্যমে আপনি আমাদের ")
-                    val link = androidx.compose.ui.text.LinkAnnotation.Clickable(
+            val annotatedText = remember(prefix, linkText, suffix, primaryColor) {
+                buildAnnotatedString {
+                    append(prefix)
+                    val link = LinkAnnotation.Clickable(
                         tag = "privacy_policy",
-                        styles = androidx.compose.ui.text.TextLinkStyles(
-                            style = androidx.compose.ui.text.SpanStyle(
-                                color = MaterialTheme.colorScheme.primary,
+                        styles = TextLinkStyles(
+                            style = SpanStyle(
+                                color = primaryColor,
                                 fontWeight = FontWeight.Bold,
-                                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+                                textDecoration = TextDecoration.Underline
                             )
                         ),
                         linkInteractionListener = { _ -> onViewFullPolicy() }
                     )
                     pushLink(link)
-                    append("গোপনীয়তা নীতিমালা")
+                    append(linkText)
                     pop()
-                    append(" পড়েছেন এবং তাতে সম্মতি দিচ্ছেন।")
-                } else {
-                    append("By signing in, you confirm that you have read and agree to our ")
-                    val link = androidx.compose.ui.text.LinkAnnotation.Clickable(
-                        tag = "privacy_policy",
-                        styles = androidx.compose.ui.text.TextLinkStyles(
-                            style = androidx.compose.ui.text.SpanStyle(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
-                            )
-                        ),
-                        linkInteractionListener = { _ -> onViewFullPolicy() }
-                    )
-                    pushLink(link)
-                    append("Privacy Policy")
-                    pop()
-                    append(".")
+                    append(suffix)
                 }
             }
 
@@ -1719,7 +1836,7 @@ fun InitialPrivacyConsentDialog(
                 modifier = Modifier.testTag("consent_agree_button")
             ) {
                 Text(
-                    text = confirmButtonText ?: if (isBn) "সম্মত আছি ও প্রবেশ করুন" else "Agree & Continue",
+                    text = confirmButtonText ?: stringResource(R.string.privacy_consent_confirm_default),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -1731,7 +1848,7 @@ fun InitialPrivacyConsentDialog(
                 modifier = Modifier.testTag("consent_decline_button")
             ) {
                 Text(
-                    text = dismissButtonText ?: if (isBn) "বাতিল (বেরিয়ে যান)" else "Decline & Exit"
+                    text = dismissButtonText ?: stringResource(R.string.privacy_consent_decline_default)
                 )
             }
         }
@@ -1742,7 +1859,6 @@ fun InitialPrivacyConsentDialog(
 fun PastMonthLockBanner(
     selectedMonth: String,
     isLocked: Boolean,
-    isBn: Boolean,
     onUnlockClick: () -> Unit,
     onLockClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -1778,11 +1894,13 @@ fun PastMonthLockBanner(
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                text = when {
-                    isLocked -> if (isBn) "বিগত মাসের হিসাব ও স্ন্যাপশট সংরক্ষিত (লকড)" else "Past month records & snapshot locked"
-                    isGracePeriod -> if (isBn) "বকেয়া এন্ট্রির জন্য ৫ তারিখ পর্যন্ত খোলা আছে" else "Open until the 5th for missed entries"
-                    else -> if (isBn) "সাময়িক আনলকড — কাজ শেষে লক করুন" else "Temporarily unlocked — lock when done"
-                },
+                text = stringResource(
+                    when {
+                        isLocked -> R.string.past_month_locked_banner
+                        isGracePeriod -> R.string.past_month_grace_banner
+                        else -> R.string.past_month_temp_unlocked_banner
+                    }
+                ),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = contentColor,
@@ -1803,7 +1921,7 @@ fun PastMonthLockBanner(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isBn) "আনলক" else "Unlock",
+                        text = stringResource(R.string.unlock),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -1825,7 +1943,7 @@ fun PastMonthLockBanner(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isBn) "লক করুন" else "Lock",
+                        text = stringResource(R.string.lock),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -1841,7 +1959,6 @@ fun PastMonthLockBanner(
 fun MonthLockedInfoAndUnlockDialogs(
     showLockedInfo: Boolean,
     showUnlockConfirm: Boolean,
-    isBn: Boolean,
     onDismissLockedInfo: () -> Unit,
     onRequestUnlock: () -> Unit,
     onDismissUnlockConfirm: () -> Unit,
@@ -1851,16 +1968,11 @@ fun MonthLockedInfoAndUnlockDialogs(
         AlertDialog(
             onDismissRequest = onDismissLockedInfo,
             icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text(if (isBn) "মাসিক হিসাব লকড" else "Month Record Locked") },
-            text = {
-                Text(
-                    if (isBn) "মাস সমাপ্ত হওয়ায় এই মাসের ওটি ও বেতনের চূড়ান্ত স্ন্যাপশট সংরক্ষিত ও লকড করা হয়েছে। বাদ পড়া ওটি বা তথ্য যোগ/সংশোধন করতে চাইলে সাময়িকভাবে আনলক করতে পারেন।"
-                    else "Since the month has ended, this month's OT and salary snapshot is locked. You can temporarily unlock it if you need to add or fix a missed entry."
-                )
-            },
+            title = { Text(stringResource(R.string.month_locked_dialog_title)) },
+            text = { Text(stringResource(R.string.month_locked_dialog_msg)) },
             confirmButton = {
                 Button(onClick = onDismissLockedInfo) {
-                    Text(if (isBn) "ঠিক আছে" else "OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             dismissButton = {
@@ -1874,7 +1986,7 @@ fun MonthLockedInfoAndUnlockDialogs(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (isBn) "সাময়িকভাবে আনলক করুন" else "Unlock Temporarily")
+                    Text(stringResource(R.string.unlock_temporarily_btn))
                 }
             }
         )
@@ -1884,28 +1996,21 @@ fun MonthLockedInfoAndUnlockDialogs(
         AlertDialog(
             onDismissRequest = onDismissUnlockConfirm,
             icon = { Icon(Icons.Default.LockOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text(if (isBn) "মাসটি আনলক করবেন?" else "Unlock This Month?") },
-            text = {
-                Text(
-                    if (isBn) "বাদ পড়া ওটি বা তথ্য যোগ/সংশোধনের জন্য মাসটি সাময়িকভাবে আনলক হবে। ওই মাসের মূল বেতন ও ওটি রেট অপরিবর্তিত থাকবে। কাজ শেষে নিরাপত্তার জন্য আবার লক করে দিন।"
-                    else "This month will be temporarily unlocked for adding or editing missed entries. The month's original salary and OT rate remain preserved. Please lock it again when finished."
-                )
-            },
+            title = { Text(stringResource(R.string.unlock_confirm_dialog_title)) },
+            text = { Text(stringResource(R.string.unlock_confirm_dialog_msg)) },
             confirmButton = {
                 Button(
                     onClick = onConfirmUnlock,
                     modifier = Modifier.testTag("confirm_unlock_month_button")
                 ) {
-                    Text(if (isBn) "আনলক করুন" else "Unlock")
+                    Text(stringResource(R.string.unlock))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissUnlockConfirm) {
-                    Text(if (isBn) "বাতিল" else "Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
     }
 }
-
-

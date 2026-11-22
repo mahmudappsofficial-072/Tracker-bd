@@ -64,6 +64,10 @@ android {
     includeInApk = false
     includeInBundle = true
   }
+  androidResources {
+    generateLocaleConfig = true
+    localeFilters += listOf("en", "bn", "hi", "ta", "ar")
+  }
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
@@ -82,6 +86,7 @@ dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
+  implementation(libs.androidx.appcompat)
   implementation(libs.androidx.activity.compose)
   // implementation(libs.androidx.camera.camera2)
   // implementation(libs.androidx.camera.core)

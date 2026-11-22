@@ -21,25 +21,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.example.R
 import com.example.util.AppUpdateInfo
 
 @Composable
 fun ForceUpdateDialog(
     updateInfo: AppUpdateInfo,
-    lang: String = "bn",
+    lang: String = "en",
     onDismissOptional: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
-    val isBn = lang.startsWith("bn")
     val isForce = updateInfo.isForceUpdate
 
-    // If force update: Back button exits app.
-    // If optional update: Back button simply closes the dialog and lets user continue.
     BackHandler {
         if (isForce) {
             activity?.finish()
@@ -83,7 +82,7 @@ fun ForceUpdateDialog(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = if (isBn) updateInfo.titleBn else updateInfo.titleEn,
+                    text = updateInfo.getEffectiveTitle(context, lang),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -94,11 +93,9 @@ fun ForceUpdateDialog(
                     else MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Text(
-                        text = if (isForce) {
-                            if (isBn) "জরুরি আপডেট" else "Required Update"
-                        } else {
-                            if (isBn) "নতুন ভার্সন" else "New Version"
-                        },
+                        text = stringResource(
+                            if (isForce) R.string.update_required_badge else R.string.update_new_version_badge
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isForce) MaterialTheme.colorScheme.onErrorContainer
                         else MaterialTheme.colorScheme.onSecondaryContainer,
@@ -115,7 +112,7 @@ fun ForceUpdateDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = if (isBn) updateInfo.descBn else updateInfo.descEn,
+                    text = updateInfo.getEffectiveDesc(context, lang),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -127,17 +124,9 @@ fun ForceUpdateDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = if (isForce) {
-                            if (isBn)
-                                "💡 আপডেট সম্পন্ন না করা পর্যন্ত অ্যাপটি ব্যবহার করা যাবে না। গুগল প্লে-স্টোর থেকে নিরাপদ ও সর্বশেষ ভার্সন ইন্সটল করুন।"
-                            else
-                                "💡 You must update the app to continue. Install the latest official version from Google Play Store."
-                        } else {
-                            if (isBn)
-                                "💡 এখনই আপডেট না করলেও অ্যাপটি ব্যবহার করতে পারবেন, তবে নতুন ফিচার পেতে আপডেট করে নেওয়া উত্তম।"
-                            else
-                                "💡 You can continue using the app, but updating is recommended for new features and bug fixes."
-                        },
+                        text = stringResource(
+                            if (isForce) R.string.update_force_hint else R.string.update_optional_hint
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(10.dp),
@@ -149,7 +138,7 @@ fun ForceUpdateDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    openPlayStore(context, updateInfo.getEffectiveUrl())
+                    openPlayStore(context, updateInfo.getEffectiveUrl(), lang)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,7 +148,7 @@ fun ForceUpdateDialog(
                 Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = updateInfo.getEffectiveUpdateBtnText(isBn),
+                    text = updateInfo.getEffectiveUpdateBtnText(context, lang),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -178,7 +167,7 @@ fun ForceUpdateDialog(
                     .testTag("update_dialog_dismiss_button")
             ) {
                 Text(
-                    text = updateInfo.getEffectiveDismissBtnText(isBn),
+                    text = updateInfo.getEffectiveDismissBtnText(context, lang),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -204,7 +193,7 @@ internal fun resolveSafePlayStoreUri(customUrl: String, packageName: String): Ur
     }
 }
 
-private fun openPlayStore(context: Context, customUrl: String = "") {
+private fun openPlayStore(context: Context, customUrl: String = "", langTag: String = "en") {
     val packageName = context.packageName
     val targetUri = resolveSafePlayStoreUri(customUrl, packageName)
 
@@ -223,9 +212,10 @@ private fun openPlayStore(context: Context, customUrl: String = "") {
             }
             context.startActivity(webIntent)
         } catch (_: Exception) {
+            val lctx = com.example.util.LanguageManager.getLocalizedContext(context, langTag)
             android.widget.Toast.makeText(
                 context,
-                "Google Play Store / Browser not found",
+                lctx.getString(R.string.play_store_not_found_toast),
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         }

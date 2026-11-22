@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,13 +43,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.OvertimeRecord
+import com.example.util.LaborLawCalculator
+import com.example.util.LanguageManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -109,17 +115,13 @@ object MissingOtDetector {
         return missingList
     }
 
-    /**
-     * Formats date string (yyyy-MM-dd) to human-readable Bengali/English display format
-     * with special indicator for "গতকাল (Yesterday)".
-     */
     fun formatDisplayDate(dateStr: String, isBn: Boolean): String {
         return try {
             val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateStr) ?: return dateStr
             val cal = Calendar.getInstance().apply { time = parsed }
             val yesterdayCal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
             val isYesterday = cal.get(Calendar.YEAR) == yesterdayCal.get(Calendar.YEAR) &&
-                    cal.get(Calendar.DAY_OF_YEAR) == yesterdayCal.get(Calendar.DAY_OF_YEAR)
+                cal.get(Calendar.DAY_OF_YEAR) == yesterdayCal.get(Calendar.DAY_OF_YEAR)
 
             val locale = if (isBn) Locale.forLanguageTag("bn-BD") else Locale.US
             val formattedDate = SimpleDateFormat("dd MMMM, EEEE", locale).format(parsed)
@@ -133,18 +135,42 @@ object MissingOtDetector {
             dateStr
         }
     }
+
+    fun formatDisplayDate(context: Context, dateStr: String, langTag: String): String {
+        return try {
+            val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateStr) ?: return dateStr
+            val cal = Calendar.getInstance().apply { time = parsed }
+            val yesterdayCal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+            val isYesterday = cal.get(Calendar.YEAR) == yesterdayCal.get(Calendar.YEAR) &&
+                cal.get(Calendar.DAY_OF_YEAR) == yesterdayCal.get(Calendar.DAY_OF_YEAR)
+
+            val resolvedTag = LanguageManager.resolveSupportedTag(langTag)
+            val locale = LanguageManager.localeForTag(resolvedTag)
+            val rawFormatted = SimpleDateFormat("dd MMMM, EEEE", locale).format(parsed)
+            val formattedDate = if (resolvedTag == "bn") LaborLawCalculator.toBengaliDigits(rawFormatted) else rawFormatted
+
+            if (isYesterday) {
+                val lctx = LanguageManager.getLocalizedContext(context, resolvedTag)
+                lctx.getString(R.string.yesterday_fmt, formattedDate)
+            } else {
+                formattedDate
+            }
+        } catch (_: Exception) {
+            dateStr
+        }
+    }
 }
 
 @Composable
 fun MissingOtReminderDialog(
     missingDates: List<String>,
-    lang: String = "bn",
+    lang: String = "en",
     onDismiss: () -> Unit,
     onAddOtForDate: (String) -> Unit
 ) {
     if (missingDates.isEmpty()) return
 
-    val isBn = lang == "bn"
+    val context = LocalContext.current
     val isSingleDate = missingDates.size == 1
     val primaryMissingDate = missingDates.first()
 
@@ -212,7 +238,7 @@ fun MissingOtReminderDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = if (isBn) "বন্ধ করুন" else "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -222,7 +248,7 @@ fun MissingOtReminderDialog(
 
                 // Title
                 Text(
-                    text = if (isBn) "বকেয়া ওটি এন্ট্রি রিমাইন্ডার" else "Missing OT Entry Alert",
+                    text = stringResource(R.string.missing_ot_dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -233,17 +259,12 @@ fun MissingOtReminderDialog(
 
                 // Descriptive Sub-text
                 val subText = if (isSingleDate) {
-                    if (isBn) {
-                        "আপনি ${MissingOtDetector.formatDisplayDate(primaryMissingDate, true)}-এর কোনো ওভারটাইম বা ডিউটি এন্ট্রি করেননি। মাসিক বেতন হিসাব নির্ভুল রাখতে এখনই যোগ করুন।"
-                    } else {
-                        "You haven't logged overtime for ${MissingOtDetector.formatDisplayDate(primaryMissingDate, false)}. Add it now to keep your monthly wages accurate."
-                    }
+                    stringResource(
+                        R.string.missing_ot_single_msg_fmt,
+                        MissingOtDetector.formatDisplayDate(context, primaryMissingDate, lang)
+                    )
                 } else {
-                    if (isBn) {
-                        "চলতি মাসে আপনার মোট ${missingDates.size} দিনের ওটি এন্ট্রি বাকি রয়েছে। তালিকায় ক্লিক করে সহজে ওটি যোগ করুন:"
-                    } else {
-                        "You have ${missingDates.size} unrecorded overtime days this month. Tap to enter records:"
-                    }
+                    stringResource(R.string.missing_ot_multi_msg_fmt, missingDates.size)
                 }
 
                 Text(
@@ -283,7 +304,7 @@ fun MissingOtReminderDialog(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = MissingOtDetector.formatDisplayDate(primaryMissingDate, isBn),
+                                    text = MissingOtDetector.formatDisplayDate(context, primaryMissingDate, lang),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -309,7 +330,7 @@ fun MissingOtReminderDialog(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = if (isBn) "ওটি যোগ করুন" else "Add Overtime",
+                                    text = stringResource(R.string.add_overtime_btn),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp
                                 )
@@ -352,7 +373,7 @@ fun MissingOtReminderDialog(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = MissingOtDetector.formatDisplayDate(dateStr, isBn),
+                                            text = MissingOtDetector.formatDisplayDate(context, dateStr, lang),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium,
                                             maxLines = 1,
@@ -378,7 +399,7 @@ fun MissingOtReminderDialog(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = if (isBn) "যোগ করুন" else "Add",
+                                            text = stringResource(R.string.add),
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -400,7 +421,7 @@ fun MissingOtReminderDialog(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = if (isBn) "পরে করব / বাদ দিন" else "Later / Dismiss",
+                        text = stringResource(R.string.later_dismiss_btn),
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

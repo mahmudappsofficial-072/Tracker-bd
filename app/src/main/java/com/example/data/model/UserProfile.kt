@@ -25,9 +25,9 @@ data class UserProfile(
     val tiffinBillRate: Double = 0.0,
     val customOtRate: Double = 0.0,
     val monthlyOtTargetHours: Double = 0.0,
-    val language: String = "bn",
+    val language: String = "system",
     val hasAcceptedPrivacyPolicy: Boolean = false,
     val privacyPolicyAcceptedAt: Long = 0L,
     val lastCloudSyncTime: Long = 0L,
-    val cloudSyncStatus: String = "অফলাইন (লোকাল)"
+    val cloudSyncStatus: String = ""
 )

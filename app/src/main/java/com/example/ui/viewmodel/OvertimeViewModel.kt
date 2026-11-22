@@ -2,8 +2,10 @@ package com.example.ui.viewmodel
 
 import android.app.Application
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.R
 import com.example.data.local.AppDatabase
 import com.example.data.model.DeductionRecord
 import com.example.data.model.MonthlySalarySettings
@@ -12,9 +14,13 @@ import com.example.data.model.PieceRateRecord
 import com.example.data.model.TrashItem
 import com.example.data.model.UserProfile
 import com.example.data.repository.OvertimeRepository
+import com.example.receiver.MyFirebaseMessagingService
+import com.example.receiver.ReminderScheduler
 import com.example.util.LaborLawCalculator
+import com.example.util.LanguageManager
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,6 +35,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -52,9 +59,13 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
     @Volatile
     private var isManualSignInActive = false
 
+    private fun localizedStr(@StringRes resId: Int, vararg args: Any): String {
+        val lctx = LanguageManager.getLocalizedContext(getApplication(), userProfile.value.language)
+        return if (args.isEmpty()) lctx.getString(resId) else lctx.getString(resId, *args)
+    }
+
     private fun lockedMonthMessage(): String {
-        val isBn = userProfile.value.language == "bn"
-        return if (isBn) "বিগত মাসের হিসাব লকড, পরিবর্তন করা যাবে না" else "Past month is locked and cannot be modified"
+        return localizedStr(R.string.msg_past_month_locked)
     }
 
     private suspend fun isYearMonthLocked(ym: String): Boolean {
@@ -99,6 +110,13 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
 
                                 if (isFreshInstallOrEmpty || timeSinceLastSync >= autoSyncCooldown) {
                                     repository.fullAutoSyncAndRestore(forceFullSync = false)
+                                    val syncedProfile = repository.getProfileOnce()
+                                    val normalizedLang = LanguageManager.normalizeProfileLanguage(syncedProfile.language)
+                                    if (normalizedLang != LanguageManager.getSelectedSettingTag(getApplication())) {
+                                        withContext(Dispatchers.Main.immediate) {
+                                            LanguageManager.applyAppLanguage(normalizedLang)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -294,12 +312,38 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
         _selectedYearMonth.value = sdf.format(cal.time)
     }
 
-    fun toggleLanguage() {
+    fun setLanguage(tag: String) {
+        val normalized = LanguageManager.normalizeProfileLanguage(tag)
         viewModelScope.launch {
-            val current = userProfile.value
-            val newLang = if (current.language == "bn") "en" else "bn"
-            repository.saveProfile(current.copy(language = newLang))
+            val current = repository.getProfileOnce()
+            if (current.language != normalized) {
+                repository.saveProfile(current.copy(language = normalized))
+            }
+            withContext(Dispatchers.Main.immediate) {
+                LanguageManager.applyAppLanguage(normalized)
+                val ctx = getApplication<Application>()
+                ReminderScheduler.createNotificationChannel(ctx)
+                MyFirebaseMessagingService.createFcmChannel(ctx)
+            }
         }
+    }
+
+    fun syncSystemAppLocaleToProfile(settingTag: String) {
+        val normalized = LanguageManager.normalizeProfileLanguage(settingTag)
+        viewModelScope.launch {
+            val current = repository.getProfileOnce()
+            if (current.language != normalized) {
+                repository.saveProfile(current.copy(language = normalized))
+            }
+            val ctx = getApplication<Application>()
+            ReminderScheduler.createNotificationChannel(ctx)
+            MyFirebaseMessagingService.createFcmChannel(ctx)
+        }
+    }
+
+    fun toggleLanguage() {
+        val currentEff = LanguageManager.getEffectiveLanguageTag(getApplication(), userProfile.value.language)
+        setLanguage(if (currentEff == "bn") "en" else "bn")
     }
 
     fun acceptPrivacyPolicy() {
@@ -368,11 +412,10 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
     fun setMonthLockStatus(yearMonth: String, isLocked: Boolean) {
         viewModelScope.launch {
             repository.setMonthLockStatus(yearMonth, isLocked)
-            val isBn = userProfile.value.language == "bn"
             val msg = if (isLocked) {
-                if (isBn) "মাসিক হিসাব লক করা হয়েছে 🔒" else "Month locked 🔒"
+                localizedStr(R.string.msg_month_locked_toast)
             } else {
-                if (isBn) "সাময়িকভাবে আনলক করা হয়েছে — কাজ শেষে লক করুন 🔓" else "Unlocked temporarily — lock after editing 🔓"
+                localizedStr(R.string.msg_month_unlocked_toast)
             }
             _uiMessage.tryEmit(msg)
         }
@@ -651,6 +694,12 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
 
         // Only update the user name with Google display name if the restored profile's name is still empty
         val profileAfterSync = repository.getProfileOnce()
+        val restoredLang = LanguageManager.normalizeProfileLanguage(profileAfterSync.language)
+        if (restoredLang != LanguageManager.getSelectedSettingTag(getApplication())) {
+            withContext(Dispatchers.Main.immediate) {
+                LanguageManager.applyAppLanguage(restoredLang)
+            }
+        }
         val newName = user.displayName
         if (!newName.isNullOrBlank() && (profileAfterSync.userName.isBlank() || profileAfterSync.userName == "মোঃ শ্রমিক ভাই")) {
             val updated = profileAfterSync.copy(userName = newName)
@@ -683,12 +732,18 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
 
     fun signOut(onComplete: (Boolean, String) -> Unit = { _, _ -> }) {
         if (_isSigningOut.value) return
-        val isBn = userProfile.value.language == "bn"
+        val offlineMsg = localizedStr(R.string.signout_offline_blocked)
+        val lostMsg = localizedStr(R.string.signout_connection_lost)
+        val doneMsg = localizedStr(R.string.signout_success)
+        val lctx = LanguageManager.getLocalizedContext(getApplication(), userProfile.value.language)
         viewModelScope.launch {
             _isSigningOut.value = true
             try {
-                val (success, msg) = executeGuardedSignOut(
-                    isBn = isBn,
+                val (success, msg) = executeGuardedSignOutLocalized(
+                    offlineMsg = offlineMsg,
+                    connectionLostMsg = lostMsg,
+                    successMsg = doneMsg,
+                    failedMsgBuilder = { err -> lctx.getString(R.string.signout_failed_fmt, err) },
                     isOnline = { com.example.util.NetworkMonitor.isStrictlyOnline(getApplication()) },
                     verifyAndSyncCloud = { repository.prepareAndVerifyCloudBeforeSignOut() },
                     performAuthSignOut = { com.example.data.auth.AuthManager.signOutSuspend(getApplication()) },
@@ -1109,5 +1164,36 @@ suspend fun executeGuardedSignOut(
             "Cloud sync failed (${e.localizedMessage ?: "Network error"}). Sign-out cancelled to protect your data."
         }
         Pair(false, errMsg)
+    }
+}
+
+suspend fun executeGuardedSignOutLocalized(
+    offlineMsg: String,
+    connectionLostMsg: String,
+    successMsg: String,
+    failedMsgBuilder: (String) -> String,
+    isOnline: () -> Boolean,
+    verifyAndSyncCloud: suspend () -> Pair<Boolean, String>,
+    performAuthSignOut: suspend () -> Unit,
+    clearLocalData: suspend () -> Boolean
+): Pair<Boolean, String> {
+    if (!isOnline()) {
+        return Pair(false, offlineMsg)
+    }
+    return try {
+        val (syncOk, syncMsg) = verifyAndSyncCloud()
+        if (!syncOk) {
+            return Pair(false, syncMsg)
+        }
+        if (!isOnline()) {
+            return Pair(false, connectionLostMsg)
+        }
+        performAuthSignOut()
+        clearLocalData()
+        Pair(true, successMsg)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Pair(false, failedMsgBuilder(e.localizedMessage ?: "Network error"))
     }
 }

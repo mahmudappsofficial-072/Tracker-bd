@@ -12,7 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.MainActivity
 import com.example.R
-
+import com.example.util.LanguageManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,29 +25,31 @@ class NotificationReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val isBn = try {
+                val profileLang = try {
                     val db = com.example.data.local.AppDatabase.getDatabase(context)
-                    val profile = db.userProfileDao().getUserProfileOnce()
-                    profile?.language != "en"
+                    db.userProfileDao().getUserProfileOnce()?.language
                 } catch (e: Exception) {
                     Log.w("NotificationReceiver", "Failed reading profile language: ${e.message}")
-                    true
+                    null
                 }
 
-                ReminderScheduler.createNotificationChannel(context, isBn)
+                val effectiveTag = LanguageManager.getEffectiveLanguageTag(context, profileLang)
+                val localizedCtx = LanguageManager.getLocalizedContext(context, effectiveTag)
+
+                ReminderScheduler.createNotificationChannel(context, effectiveTag)
 
                 val (title, body, subText, reqCode, openQuickOt) = when (reminderType) {
                     1 -> Tuple(
-                        if (isBn) "🕒 আজকের ওভারটাইম এন্ট্রি করুন এখনই ✅" else "🕒 Log Today's Overtime Now ✅",
-                        if (isBn) "আজ কত ঘণ্টা ওভারটাইম করেছেন? এখনই এন্ট্রি করে আজকের অতিরিক্ত আয়ের হিসাব দেখে নিন। 💰" else "How many hours of overtime did you do today? Log now to check your extra earnings. 💰",
-                        if (isBn) "দৈনিক ওভারটাইম রিমাইন্ডার • Overtime Tracker BD" else "Daily Overtime Reminder • Overtime Tracker BD",
+                        localizedCtx.getString(R.string.notif_reminder_1_title),
+                        localizedCtx.getString(R.string.notif_reminder_1_body),
+                        localizedCtx.getString(R.string.notif_reminder_1_subtext),
                         1001,
                         true
                     )
                     else -> Tuple(
-                        if (isBn) "🌙 আজকের ডিউটি ও ওটি হিসাব যাচাই করুন" else "🌙 Verify Today's Duty & OT Record",
-                        if (isBn) "আজকের ডিউটি, ওভারটাইম এন্ট্রি কি সম্পন্ন হয়েছে? মাসিক বেতন নির্ভুল রাখতে এখনই রেকর্ড যাচাই করুন। ✍️" else "Have you logged your duty and overtime for today? Check records now to ensure accurate wages. ✍️",
-                        if (isBn) "দৈনিক হিসাব যাচাই • Overtime Tracker BD" else "Daily Duty Check • Overtime Tracker BD",
+                        localizedCtx.getString(R.string.notif_reminder_2_title),
+                        localizedCtx.getString(R.string.notif_reminder_2_body),
+                        localizedCtx.getString(R.string.notif_reminder_2_subtext),
                         1002,
                         false
                     )

@@ -4,21 +4,23 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.OvertimeRecord
 import com.example.ui.theme.NightBlue
 import com.example.ui.theme.SuccessGreen
@@ -43,7 +45,7 @@ fun OtListScreen(
     onDeleteClick: (Long) -> Unit,
     onSetMonthLock: (Boolean) -> Unit = {}
 ) {
-    val isBn = lang == "bn"
+    val isBnDigits = LanguageManager.isBengaliDigits(lang)
     var recordToDelete by remember { mutableStateOf<Long?>(null) }
     var showLockedInfoDialog by remember { mutableStateOf(false) }
     var showUnlockConfirmDialog by remember { mutableStateOf(false) }
@@ -69,7 +71,7 @@ fun OtListScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.testTag("add_ot_fab")
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add OT")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_ot))
                 }
             }
         }
@@ -96,17 +98,23 @@ fun OtListScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             IconButton(onClick = onPreviousMonth) {
-                                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous Month")
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                    contentDescription = stringResource(R.string.cd_previous_month)
+                                )
                             }
-                            val formattedMonth = LanguageManager.formatYearMonth(selectedMonth, isBn)
+                            val formattedMonth = LanguageManager.formatYearMonth(selectedMonth, lang)
                             Text(
-                                text = if (isBn) "ওটি খাতা • $formattedMonth" else "OT Records • $formattedMonth",
+                                text = stringResource(R.string.ot_records_header_fmt, formattedMonth),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             IconButton(onClick = onNextMonth) {
-                                Icon(Icons.Default.ChevronRight, contentDescription = "Next Month")
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = stringResource(R.string.cd_next_month)
+                                )
                             }
                         }
 
@@ -115,7 +123,6 @@ fun OtListScreen(
                             PastMonthLockBanner(
                                 selectedMonth = selectedMonth,
                                 isLocked = isLocked,
-                                isBn = isBn,
                                 onUnlockClick = { showUnlockConfirmDialog = true },
                                 onLockClick = { onSetMonthLock(true) }
                             )
@@ -123,7 +130,9 @@ fun OtListScreen(
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                        // Monthly Summary Stats in List
+                        val daysUnit = stringResource(R.string.days_unit)
+                        val hoursUnit = stringResource(R.string.hours_unit)
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -133,7 +142,7 @@ fun OtListScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = if (isBn) "মোট দিন" else "Total Days",
+                                    text = stringResource(R.string.total_days_label),
                                     fontSize = 10.sp,
                                     maxLines = 1,
                                     softWrap = false,
@@ -142,7 +151,7 @@ fun OtListScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "${LaborLawCalculator.formatNumber(records.size.toDouble(), isBn, 0)} ${if (isBn) "দিন" else "days"}",
+                                    text = "${LaborLawCalculator.formatNumber(records.size.toDouble(), isBnDigits, 0)} $daysUnit",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
@@ -156,7 +165,7 @@ fun OtListScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = if (isBn) "মোট ওটি ঘণ্টা" else "Total OT Hours",
+                                    text = stringResource(R.string.total_ot_hours),
                                     fontSize = 10.sp,
                                     maxLines = 1,
                                     softWrap = false,
@@ -165,7 +174,7 @@ fun OtListScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "${LaborLawCalculator.formatNumber(totalHours, isBn)} ${if (isBn) "ঘণ্টা" else "hrs"}",
+                                    text = "${LaborLawCalculator.formatNumber(totalHours, isBnDigits)} $hoursUnit",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
@@ -180,7 +189,7 @@ fun OtListScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = if (isBn) "ওটি টাকা" else "OT Amount",
+                                    text = stringResource(R.string.ot_amount_label),
                                     fontSize = 10.sp,
                                     maxLines = 1,
                                     softWrap = false,
@@ -189,7 +198,7 @@ fun OtListScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = LaborLawCalculator.formatCurrency(totalAmount, isBn),
+                                    text = LaborLawCalculator.formatCurrency(totalAmount, isBnDigits),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
@@ -204,7 +213,7 @@ fun OtListScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = if (isBn) "হাজিরা বোনাস" else "Attendance Bonus",
+                                    text = stringResource(R.string.attendance_bonus),
                                     fontSize = 10.sp,
                                     maxLines = 1,
                                     softWrap = false,
@@ -215,11 +224,11 @@ fun OtListScreen(
                                 val isBonusEarned = attendanceBonus > 0
                                 val isBonusLost = isBonusCancelled
                                 Text(
-                                    text = if (isBonusEarned) {
-                                        if (isBn) "অর্জিত ✅" else "Earned ✅"
-                                    } else if (isBonusLost) {
-                                        if (isBn) "কর্তন ❌" else "Deducted ❌"
-                                    } else "0",
+                                    text = when {
+                                        isBonusEarned -> stringResource(R.string.bonus_earned_check)
+                                        isBonusLost -> stringResource(R.string.bonus_deducted_cross)
+                                        else -> "0"
+                                    },
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
@@ -251,13 +260,13 @@ fun OtListScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = if (isBn) "এই মাসে এখনও কোনো ওটি রেকর্ড নেই" else "No OT records found for this month",
+                                text = stringResource(R.string.no_ot_records_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (isBn) "নিচের '+' বাটনে ট্যাপ করে নতুন ওটি যোগ করুন" else "Tap the '+' button below to add a new OT record",
+                                text = stringResource(R.string.no_ot_records_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )
@@ -303,11 +312,12 @@ fun OtListScreen(
                                         record.isHoliday -> MaterialTheme.colorScheme.onTertiaryContainer
                                         else -> MaterialTheme.colorScheme.onPrimaryContainer
                                     }
+                                    val hoursUnit = stringResource(R.string.hours_unit)
                                     val badgeText = when {
-                                        isAbsent -> if (isBn) "অনুপস্থিত" else "Absent"
-                                        isLeave -> if (isBn) "ছুটি" else "Leave"
-                                        isWeeklyOff -> if (isBn) "সাপ্তাহিক ছুটি" else "Off Day"
-                                        else -> "${LaborLawCalculator.formatNumber(record.otHours, isBn)} ${if (isBn) "ঘণ্টা" else "hrs"}"
+                                        isAbsent -> stringResource(R.string.badge_absent)
+                                        isLeave -> stringResource(R.string.badge_leave)
+                                        isWeeklyOff -> stringResource(R.string.badge_off_day)
+                                        else -> "${LaborLawCalculator.formatNumber(record.otHours, isBnDigits)} $hoursUnit"
                                     }
 
                                     Surface(
@@ -332,7 +342,7 @@ fun OtListScreen(
                                         )
                                         if (record.note.isNotBlank()) {
                                             Text(
-                                                text = if (record.shiftType == "LEAVE") (if (isBn) "ছুটির কারণ: ${record.note}" else "Reason: ${record.note}") else record.note,
+                                                text = if (record.shiftType == "LEAVE") stringResource(R.string.leave_reason_fmt, record.note) else record.note,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -342,9 +352,9 @@ fun OtListScreen(
 
                                 if (record.shiftType == "ABSENT") {
                                     val deductionText = if (dailyAbsentRate > 0.0) {
-                                        "- " + LaborLawCalculator.formatCurrency(dailyAbsentRate, isBn)
+                                        "- " + LaborLawCalculator.formatCurrency(dailyAbsentRate, isBnDigits)
                                     } else {
-                                        if (isBn) "- বেতন কর্তন" else "- Deduction"
+                                        stringResource(R.string.badge_salary_deduction)
                                     }
                                     Text(
                                         text = deductionText,
@@ -355,7 +365,7 @@ fun OtListScreen(
                                 } else {
                                     val itemRate = if (isRunningMonth) hourlyRate else (if (record.hourlyRateSnapshot > 0.0) record.hourlyRateSnapshot else hourlyRate)
                                     Text(
-                                        text = LaborLawCalculator.formatCurrency(record.otHours * itemRate, isBn),
+                                        text = LaborLawCalculator.formatCurrency(record.otHours * itemRate, isBnDigits),
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary
@@ -370,7 +380,6 @@ fun OtListScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Badges
                                 Box(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
                                     @OptIn(ExperimentalLayoutApi::class)
                                     FlowRow(
@@ -383,7 +392,7 @@ fun OtListScreen(
                                             color = shiftType.color.copy(alpha = 0.15f)
                                         ) {
                                             Text(
-                                                text = shiftType.getLabel(isBn),
+                                                text = shiftType.getLabel(),
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
@@ -399,7 +408,7 @@ fun OtListScreen(
                                                 color = NightBlue.copy(alpha = 0.15f)
                                             ) {
                                                 Text(
-                                                    text = if (isBn) "🌙 নাইট বিল" else "🌙 Night Bill",
+                                                    text = stringResource(R.string.badge_night_bill),
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     maxLines = 1,
@@ -415,7 +424,7 @@ fun OtListScreen(
                                                 color = WarningOrange.copy(alpha = 0.15f)
                                             ) {
                                                 Text(
-                                                    text = if (isBn) "☕ টিফিন বিল" else "☕ Tiffin Bill",
+                                                    text = stringResource(R.string.badge_tiffin_bill),
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     maxLines = 1,
@@ -431,7 +440,7 @@ fun OtListScreen(
                                                 color = MaterialTheme.colorScheme.tertiaryContainer
                                             ) {
                                                 Text(
-                                                    text = if (isBn) "🎉 ছুটির দিন" else "🎉 Holiday",
+                                                    text = stringResource(R.string.badge_holiday),
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     maxLines = 1,
@@ -444,7 +453,6 @@ fun OtListScreen(
                                     }
                                 }
 
-                                // Actions: Edit & Delete
                                 if (!isLocked) {
                                     Row {
                                         IconButton(
@@ -452,7 +460,7 @@ fun OtListScreen(
                                         ) {
                                             Icon(
                                                 Icons.Default.Edit,
-                                                contentDescription = "Edit",
+                                                contentDescription = stringResource(R.string.cd_edit),
                                                 tint = MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.size(18.dp)
                                             )
@@ -462,7 +470,7 @@ fun OtListScreen(
                                         ) {
                                             Icon(
                                                 Icons.Default.Delete,
-                                                contentDescription = "Delete",
+                                                contentDescription = stringResource(R.string.cd_delete),
                                                 tint = MaterialTheme.colorScheme.error,
                                                 modifier = Modifier.size(18.dp)
                                             )
@@ -486,7 +494,7 @@ fun OtListScreen(
                                             )
                                             Spacer(modifier = Modifier.width(3.dp))
                                             Text(
-                                                text = if (isBn) "লকড" else "Locked",
+                                                text = stringResource(R.string.locked),
                                                 fontSize = 11.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontWeight = FontWeight.Medium
@@ -502,12 +510,11 @@ fun OtListScreen(
         }
     }
 
-    // Delete Confirmation Dialog
     if (recordToDelete != null) {
         AlertDialog(
             onDismissRequest = { recordToDelete = null },
-            title = { Text(if (isBn) "ওটি রেকর্ড মুছবেন?" else "Delete OT Record?") },
-            text = { Text(if (isBn) "এই ওটি রেকর্ডটি রিসাইকেল বিন (Trash)-এ চলে যাবে। সেখানে এটি ১ দিন জমা থাকবে এবং আপনি চাইলে যেকোনো সময় ফিরিয়ে আনতে পারবেন।" else "This OT record will be moved to Recycle Bin (Trash), where it will be stored for 1 day and can be restored anytime.") },
+            title = { Text(stringResource(R.string.delete_ot_title)) },
+            text = { Text(stringResource(R.string.delete_ot_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -516,22 +523,20 @@ fun OtListScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(if (isBn) "মুছে ফেলুন" else "Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recordToDelete = null }) {
-                    Text(if (isBn) "বাতিল" else "Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
     }
 
-    // Month Locked Info & Unlock Confirmation Dialogs
     MonthLockedInfoAndUnlockDialogs(
         showLockedInfo = showLockedInfoDialog,
         showUnlockConfirm = showUnlockConfirmDialog,
-        isBn = isBn,
         onDismissLockedInfo = { showLockedInfoDialog = false },
         onRequestUnlock = {
             showLockedInfoDialog = false

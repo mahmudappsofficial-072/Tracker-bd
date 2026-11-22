@@ -1,14 +1,17 @@
 package com.example.data.repository
 
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.room.withTransaction
 import com.example.BuildConfig
+import com.example.R
 import com.example.data.local.AppDatabase
 import com.example.data.model.OvertimeRecord
 import com.example.data.model.PieceRateRecord
 import com.example.data.model.TrashItem
 import com.example.data.model.UserProfile
 import com.example.util.LaborLawCalculator
+import com.example.util.LanguageManager
 import com.google.android.gms.tasks.Task
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -58,6 +61,16 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
     private val monthlySalaryDao = database.monthlySalaryDao()
     private val trashDao = database.trashDao()
     private val deductionDao = database.deductionDao()
+
+    private fun localizedString(@StringRes resId: Int, fallback: String, vararg args: Any): String {
+        val ctx = resolveContext() ?: return if (args.isEmpty()) fallback else String.format(Locale.US, fallback, *args)
+        return try {
+            val lctx = LanguageManager.getLocalizedContext(ctx)
+            if (args.isEmpty()) lctx.getString(resId) else lctx.getString(resId, *args)
+        } catch (_: Exception) {
+            if (args.isEmpty()) fallback else String.format(Locale.US, fallback, *args)
+        }
+    }
 
     val allTrashItems: Flow<List<TrashItem>> = trashDao.getAllTrashItems()
 
@@ -553,11 +566,11 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 tiffinBillRate = 0.0,
                 customOtRate = 0.0,
                 monthlyOtTargetHours = 0.0,
-                language = current?.language ?: "bn",
+                language = LanguageManager.normalizeProfileLanguage(current?.language),
                 hasAcceptedPrivacyPolicy = false,
                 privacyPolicyAcceptedAt = 0L,
                 lastCloudSyncTime = 0L,
-                cloudSyncStatus = if ((current?.language ?: "bn") == "bn") "লগইন নেই (লোকাল)" else "Not logged in (Local)"
+                cloudSyncStatus = localizedString(R.string.sync_status_local_unauthenticated, "Not logged in (Local)")
             )
             setLocalProfileModifiedAt(0L)
             userProfileDao.insertOrUpdateProfile(cleanProfile)
@@ -786,7 +799,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                         "tiffinBillRate" to 0.0,
                         "customOtRate" to 0.0,
                         "monthlyOtTargetHours" to 0.0,
-                        "language" to "bn",
+                        "language" to "system",
                         "lastSyncTime" to 0L,
                         // CONSENT IS PERMANENTLY PRESERVED IN FIRESTORE PER USER REQUIREMENT:
                         "hasAcceptedPrivacyPolicy" to true,
@@ -861,7 +874,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             val now = System.currentTimeMillis()
             val syncedProfile = profile.copy(
                 lastCloudSyncTime = now,
-                cloudSyncStatus = "স্বয়ংক্রিয় ব্যাকআপ সক্রিয় (Synced)"
+                cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
             )
             val userMap = profileToMap(syncedProfile)
             firestore.collection("users").document(docId).set(userMap, SetOptions.merge()).awaitResult()
@@ -938,7 +951,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         val latest = userProfileDao.getUserProfileOnce() ?: currentProfile
         userProfileDao.insertOrUpdateProfile(latest.copy(
             lastCloudSyncTime = now,
-            cloudSyncStatus = "স্বয়ংক্রিয় ব্যাকআপ সক্রিয় (Synced)"
+            cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
         ))
         val docId = getDocId(latest)
         if (docId != null) {
@@ -1066,7 +1079,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
 
     private suspend fun fullAutoSyncAndRestoreLocked(forceFullSync: Boolean = false): Pair<Boolean, String> {
         var currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return Pair(false, "লগইন করা নেই")
+        val docId = getDocId(currentProfile) ?: return Pair(false, localizedString(R.string.sync_not_logged_in, "Not logged in"))
         val now = System.currentTimeMillis()
         val lastSync = currentProfile.lastCloudSyncTime
 
@@ -1110,7 +1123,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                         val num = (data["maxLeaveForBonus"] as? Number)?.toInt()
                         if (num == null || num < 0) null else num
                     } else null
-                    val cloudLang = (data["language"] as? String)?.trim() ?: "bn"
+                    val cloudLang = (data["language"] as? String)?.trim() ?: ""
                     cloudSyncTime = (data["lastSyncTime"] as? Number)?.toLong() ?: 0L
                     val cloudConsentAudit = data["consentAudit"] as? Map<*, *>
                     val cloudHasConsent = getBooleanFromField(data["hasAcceptedPrivacyPolicy"]) ||
@@ -1160,11 +1173,11 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                             tiffinBillRate = if (cloudTiffinBill > 0.0) cloudTiffinBill else currentProfile.tiffinBillRate,
                             customOtRate = if (cloudCustomOt > 0.0) cloudCustomOt else currentProfile.customOtRate,
                             monthlyOtTargetHours = if (cloudTargetHours > 0.0) cloudTargetHours else currentProfile.monthlyOtTargetHours,
-                            language = if (cloudLang.isNotBlank()) cloudLang else currentProfile.language,
+                            language = if (cloudLang.isNotBlank()) LanguageManager.normalizeProfileLanguage(cloudLang) else currentProfile.language,
                             hasAcceptedPrivacyPolicy = mergedConsent,
                             privacyPolicyAcceptedAt = mergedConsentTime,
                             lastCloudSyncTime = if (cloudSyncTime > 0L) cloudSyncTime else now,
-                            cloudSyncStatus = "স্বয়ংক্রিয় ব্যাকআপ সক্রিয় (Synced)"
+                            cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
                         )
                         userProfileDao.insertOrUpdateProfile(restoredProfile)
                         currentProfile = restoredProfile
@@ -1174,7 +1187,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                             hasAcceptedPrivacyPolicy = mergedConsent,
                             privacyPolicyAcceptedAt = mergedConsentTime,
                             lastCloudSyncTime = now,
-                            cloudSyncStatus = "স্বয়ংক্রিয় ব্যাকআপ সক্রিয় (Synced)"
+                            cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
                         )
                         userDocRef.set(profileToMap(toUpload), SetOptions.merge()).awaitResult()
                         currentProfile = toUpload
@@ -1198,7 +1211,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 if (localHasData) {
                     val toUpload = currentProfile.copy(
                         lastCloudSyncTime = now,
-                        cloudSyncStatus = "স্বয়ংক্রিয় ব্যাকআপ সক্রিয় (Synced)"
+                        cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
                     )
                     userDocRef.set(profileToMap(toUpload), SetOptions.merge()).awaitResult()
                     currentProfile = toUpload
@@ -1444,14 +1457,14 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             val effectiveSyncTime = if (didSyncOccur) now else currentProfile.lastCloudSyncTime
             val finalProfile = currentProfile.copy(
                 lastCloudSyncTime = if (effectiveSyncTime > 0L) effectiveSyncTime else now,
-                cloudSyncStatus = "স্বয়ংক্রিয় ব্যাকআপ সক্রিয় (Synced)"
+                cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
             )
             userProfileDao.insertOrUpdateProfile(finalProfile)
-            Pair(true, "স্বয়ংক্রিয় ক্লাউড সিঙ্ক সফল হয়েছে!")
+            Pair(true, localizedString(R.string.sync_success_toast, "Auto cloud sync completed!"))
         } catch (e: Exception) {
             if (e is CancellationException && e !is TimeoutCancellationException) throw e
             Log.e("OvertimeRepository", "Full sync error", e)
-            Pair(false, "ক্লাউড সংযোগ ত্রুটি: ${e.message}")
+            Pair(false, localizedString(R.string.sync_connection_error_fmt, "Cloud connection error: %1\$s", e.message ?: ""))
         }
     }
 
@@ -1466,26 +1479,18 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
      * (Source.SERVER, no cache fallback) before allowing sign-out and local database wipe.
      */
     suspend fun prepareAndVerifyCloudBeforeSignOut(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-        val isBn = try {
-            getProfileOnce().language == "bn"
-        } catch (_: Exception) {
-            true
-        }
-        val offlineMsg = if (isBn) {
-            "অফলাইনে লগআউট করা যাবে না। আপনার অফলাইন ডেটা সুরক্ষিত রাখতে প্রথমে ইন্টারনেট সংযোগ চালু করুন।"
-        } else {
+        val offlineMsg = localizedString(
+            R.string.signout_offline_blocked,
             "Cannot sign out while offline. Please connect to the internet first to keep your data safe."
-        }
-        val syncFailMsg = if (isBn) {
-            "ক্লাউডের সাথে ডেটা সিঙ্ক সম্পন্ন হয়নি। ডেটা সুরক্ষায় লগআউট বাতিল করা হয়েছে।"
-        } else {
+        )
+        val syncFailMsg = localizedString(
+            R.string.signout_sync_incomplete,
             "Cloud data sync could not complete. Sign-out cancelled to protect your data."
-        }
-        val serverUnreachableMsg = if (isBn) {
-            "ইন্টারনেট বা সার্ভারে সংযোগ পাওয়া যাচ্ছে না। ডেটা সুরক্ষায় লগআউট বাতিল করা হয়েছে।"
-        } else {
+        )
+        val serverUnreachableMsg = localizedString(
+            R.string.signout_server_unreachable,
             "Unable to verify Firebase server connection. Sign-out cancelled to protect your data."
-        }
+        )
 
         val ctx = resolveContext()
         if (ctx != null && !com.example.util.NetworkMonitor.isStrictlyOnline(ctx)) {
@@ -1495,7 +1500,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         val docId = getDocId()
             ?: return@withContext Pair(
                 false,
-                if (isBn) "কোনো অ্যাকাউন্ট লগইন করা নেই" else "No signed-in account found"
+                localizedString(R.string.signout_no_account, "No signed-in account found")
             )
 
         // Barrier: Wait for any in-flight tracked background writes to enqueue/finish before acquiring syncMutex
@@ -1542,7 +1547,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
 
                 Pair(
                     true,
-                    if (isBn) "ক্লাউড ব্যাকআপ যাচাই সম্পন্ন" else "Cloud backup verified"
+                    localizedString(R.string.signout_backup_verified, "Cloud backup verified")
                 )
             } catch (e: CancellationException) {
                 if (e is TimeoutCancellationException) {
