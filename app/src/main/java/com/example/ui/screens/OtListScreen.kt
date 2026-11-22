@@ -27,6 +27,7 @@ import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningOrange
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
+import com.example.util.ResponsiveUtils
 
 @Composable
 fun OtListScreen(
@@ -46,6 +47,7 @@ fun OtListScreen(
     onSetMonthLock: (Boolean) -> Unit = {}
 ) {
     val isBnDigits = LanguageManager.isBengaliDigits(lang)
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     var recordToDelete by remember { mutableStateOf<Long?>(null) }
     var showLockedInfoDialog by remember { mutableStateOf(false) }
     var showUnlockConfirmDialog by remember { mutableStateOf(false) }
@@ -81,8 +83,8 @@ fun OtListScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .testTag("ot_list_screen"),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = spacing.screenContentWithFab,
+            verticalArrangement = Arrangement.spacedBy(spacing.sectionGap)
         ) {
             // Month Switcher Header
             item {
@@ -91,7 +93,7 @@ fun OtListScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(spacing.cardPadding)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -119,7 +121,7 @@ fun OtListScreen(
                         }
 
                         if (!isRunningMonth) {
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             PastMonthLockBanner(
                                 selectedMonth = selectedMonth,
                                 isLocked = isLocked,
@@ -128,7 +130,7 @@ fun OtListScreen(
                             )
                         }
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
 
                         val daysUnit = stringResource(R.string.days_unit)
                         val hoursUnit = stringResource(R.string.hours_unit)
@@ -248,23 +250,23 @@ fun OtListScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 40.dp),
+                            .padding(vertical = spacing.emptyStateVertical),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 Icons.Default.DateRange,
                                 contentDescription = null,
-                                modifier = Modifier.size(56.dp),
+                                modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = stringResource(R.string.no_ot_records_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = stringResource(R.string.no_ot_records_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
@@ -289,7 +291,7 @@ fun OtListScreen(
                                 }
                             }
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(spacing.listItemPadding)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -323,14 +325,14 @@ fun OtListScreen(
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
                                         color = badgeBg,
-                                        modifier = Modifier.padding(end = 10.dp)
+                                        modifier = Modifier.padding(end = 8.dp)
                                     ) {
                                         Text(
                                             text = badgeText,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = if (isAbsent || isLeave || isWeeklyOff) 12.sp else 14.sp,
                                             color = badgeTextColor,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = 4.dp)
                                         )
                                     }
 
@@ -373,7 +375,7 @@ fun OtListScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -398,7 +400,7 @@ fun OtListScreen(
                                                 maxLines = 1,
                                                 softWrap = false,
                                                 color = shiftType.color,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                             )
                                         }
 
@@ -414,7 +416,7 @@ fun OtListScreen(
                                                     maxLines = 1,
                                                     softWrap = false,
                                                     color = NightBlue,
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                 )
                                             }
                                         }
@@ -430,7 +432,7 @@ fun OtListScreen(
                                                     maxLines = 1,
                                                     softWrap = false,
                                                     color = WarningOrange,
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                 )
                                             }
                                         }
@@ -446,7 +448,7 @@ fun OtListScreen(
                                                     maxLines = 1,
                                                     softWrap = false,
                                                     color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                 )
                                             }
                                         }
@@ -483,7 +485,7 @@ fun OtListScreen(
                                         modifier = Modifier.clickable { showLockedInfoDialog = true }
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Icon(

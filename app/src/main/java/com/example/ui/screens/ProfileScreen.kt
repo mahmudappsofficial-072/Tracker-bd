@@ -100,7 +100,8 @@ fun ProfileScreen(
         LanguageManager.getLocalizedContext(context, effectiveLang)
     }
     val isBnDigits = LanguageManager.isBengaliDigits(effectiveLang)
-    val isCompactScreen = ResponsiveUtils.isCompactScreen()
+    val spacing = ResponsiveUtils.rememberAppSpacing()
+    val isCompactScreen = spacing.isCompact
     var showTrashDialog by remember { mutableStateOf(false) }
     var showDeleteAllConfirmDialog by remember { mutableStateOf(false) }
 
@@ -371,8 +372,8 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .testTag("profile_screen"),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = spacing.screenContentNoFab,
+            verticalArrangement = Arrangement.spacedBy(spacing.sectionGap)
         ) {
             // Top Action Bar with Settings Icon
             item {
@@ -423,8 +424,8 @@ fun ProfileScreen(
                 ) {
                     if (currentUser == null) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                            modifier = Modifier.padding(spacing.cardPadding),
+                            verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -515,7 +516,7 @@ fun ProfileScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(spacing.cardPadding),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -576,7 +577,7 @@ fun ProfileScreen(
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = SuccessGreen,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                         )
                                     }
                                 }
@@ -592,6 +593,7 @@ fun ProfileScreen(
                                     }
                                 },
                                 enabled = !isSigningOut,
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier.testTag("sign_out_button")
                             ) {
                                 if (!isOnline) {
@@ -628,8 +630,8 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(spacing.cardPadding),
+                        verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -643,18 +645,18 @@ fun ProfileScreen(
                                 Surface(
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier.size(56.dp)
+                                    modifier = Modifier.size(48.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             Icons.Default.Person,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(32.dp)
+                                            modifier = Modifier.size(28.dp)
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.width(14.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
                                         text = userName.ifBlank { stringResource(R.string.your_name_placeholder) },
@@ -777,11 +779,11 @@ fun ProfileScreen(
                                 }
                             }
                         } else {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(spacing.gridGap)) {
                                 val notSetStr = stringResource(R.string.not_set)
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                                 ) {
                                     InfoChipCard(
                                         icon = Icons.Default.Business,
@@ -798,7 +800,7 @@ fun ProfileScreen(
                                 }
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                                 ) {
                                     InfoChipCard(
                                         icon = Icons.Default.Badge,
@@ -829,8 +831,8 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                            modifier = Modifier.padding(spacing.cardPadding),
+                            verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                         ) {
                             Text(
                                 text = stringResource(R.string.salary_structure_title),
@@ -846,7 +848,7 @@ fun ProfileScreen(
                                         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                         RoundedCornerShape(12.dp)
                                     )
-                                    .padding(4.dp),
+                                    .padding(3.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Surface(
@@ -854,6 +856,7 @@ fun ProfileScreen(
                                     color = if (!isCustomSalary) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     modifier = Modifier
                                         .weight(1f)
+                                        .heightIn(min = spacing.minTouchTarget)
                                         .clickable {
                                             isCustomSalary = false
                                             basicSalaryText = LaborLawCalculator.formatEditableNumber(autoResult.basicSalary)
@@ -866,7 +869,7 @@ fun ProfileScreen(
                                         .testTag("mode_auto_tab")
                                 ) {
                                     Box(
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 10.dp),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
@@ -885,6 +888,7 @@ fun ProfileScreen(
                                     color = if (isCustomSalary) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     modifier = Modifier
                                         .weight(1f)
+                                        .heightIn(min = spacing.minTouchTarget)
                                         .clickable {
                                             isCustomSalary = true
                                             if (basicSalaryText.isBlank() || basicSalaryText == "0") {
@@ -894,7 +898,7 @@ fun ProfileScreen(
                                         .testTag("mode_custom_tab")
                                 ) {
                                     Box(
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 10.dp),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
@@ -918,9 +922,9 @@ fun ProfileScreen(
                                     Text(
                                         text = stringResource(R.string.mode_auto_note),
                                         fontSize = 12.sp,
-                                        lineHeight = 18.sp,
+                                        lineHeight = 17.sp,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.padding(10.dp)
+                                        modifier = Modifier.padding(spacing.subCardPadding)
                                     )
                                 }
                             } else {
@@ -931,9 +935,9 @@ fun ProfileScreen(
                                     Text(
                                         text = stringResource(R.string.mode_custom_note),
                                         fontSize = 12.sp,
-                                        lineHeight = 18.sp,
+                                        lineHeight = 17.sp,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                        modifier = Modifier.padding(10.dp)
+                                        modifier = Modifier.padding(spacing.subCardPadding)
                                     )
                                 }
                             }
@@ -1273,7 +1277,7 @@ fun ProfileScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(14.dp),
+                                        .padding(spacing.cardPadding),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -1325,8 +1329,8 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth().testTag("salary_summary_card")
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                            modifier = Modifier.padding(spacing.cardPadding),
+                            verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1351,7 +1355,7 @@ fun ProfileScreen(
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (!isCustomSalary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onTertiaryContainer,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                     )
                                 }
                             }
@@ -1365,7 +1369,7 @@ fun ProfileScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(14.dp),
+                                        .padding(spacing.cardPadding),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -1422,8 +1426,8 @@ fun ProfileScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(12.dp),
-                                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                                        modifier = Modifier.padding(spacing.subCardPadding),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         SalaryBreakdownRow(stringResource(R.string.row_basic_salary), autoResult.basicSalary, isBnDigits)
                                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
@@ -1592,8 +1596,8 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier.padding(spacing.cardPadding),
+                        verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                     ) {
                         Text(
                             text = stringResource(R.string.settings_support_title),
@@ -1607,13 +1611,14 @@ fun ProfileScreen(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = spacing.minTouchTarget)
                                 .clickable { showTrashDialog = true }
                                 .testTag("trash_bin_button")
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp),
+                                    .padding(spacing.listItemPadding),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1667,7 +1672,7 @@ fun ProfileScreen(
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
                                                 softWrap = false,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                                modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                             )
                                         }
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -1696,7 +1701,10 @@ fun ProfileScreen(
                                     ).show()
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().testTag("whatsapp_help_button")
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = spacing.minTouchTarget)
+                                .testTag("whatsapp_help_button")
                         ) {
                             Icon(Icons.Default.SupportAgent, contentDescription = null, tint = SuccessGreen)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1722,7 +1730,11 @@ fun ProfileScreen(
                                     ).show()
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().testTag("privacy_policy_button")
+                            contentPadding = spacing.compactButtonContentPadding,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = spacing.minTouchTarget)
+                                .testTag("privacy_policy_button")
                         ) {
                             Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
@@ -1774,7 +1786,7 @@ fun ProfileScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -1814,8 +1826,8 @@ fun ProfileScreen(
                             .weight(1f)
                             .fillMaxWidth()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
+                        verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
                     ) {
                         // Language Picker Row
                         val currentLangDisplay = if (selectedSettingTag == LanguageManager.SYSTEM_TAG) {
@@ -1827,6 +1839,7 @@ fun ProfileScreen(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = spacing.minTouchTarget)
                                 .clickable {
                                     hideKeyboard()
                                     onOpenLanguagePicker()
@@ -1836,7 +1849,7 @@ fun ProfileScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp),
+                                    .padding(spacing.listItemPadding),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1855,10 +1868,14 @@ fun ProfileScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                FilledTonalButton(onClick = {
-                                    hideKeyboard()
-                                    onOpenLanguagePicker()
-                                }) {
+                                FilledTonalButton(
+                                    onClick = {
+                                        hideKeyboard()
+                                        onOpenLanguagePicker()
+                                    },
+                                    contentPadding = spacing.compactButtonContentPadding,
+                                    modifier = Modifier.heightIn(min = 36.dp)
+                                ) {
                                     Icon(
                                         imageVector = Icons.Default.Language,
                                         contentDescription = null,
@@ -1877,8 +1894,8 @@ fun ProfileScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    .padding(spacing.listItemPadding),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 val syncDateStr = LanguageManager.formatSyncTimestamp(
                                     context,
@@ -1913,14 +1930,14 @@ fun ProfileScreen(
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (profile.lastCloudSyncTime > 0L) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                             maxLines = 1
                                         )
                                     }
                                 }
 
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    modifier = Modifier.padding(vertical = 2.dp),
                                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                                 )
 
@@ -1932,6 +1949,7 @@ fun ProfileScreen(
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = spacing.minTouchTarget)
                                         .testTag("delete_all_data_button"),
                                     colors = ButtonDefaults.outlinedButtonColors(
                                         contentColor = MaterialTheme.colorScheme.error
@@ -1958,7 +1976,7 @@ fun ProfileScreen(
                                 }
 
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    modifier = Modifier.padding(vertical = 4.dp),
                                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                                 )
 
@@ -2021,7 +2039,7 @@ fun ProfileScreen(
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Row(
-                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                                modifier = Modifier.padding(horizontal = spacing.listItemPadding, vertical = 6.dp),
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
@@ -2055,7 +2073,7 @@ fun ProfileScreen(
                                                         fontSize = 10.sp,
                                                         fontWeight = FontWeight.SemiBold,
                                                         color = if (profile.maxLeaveForBonus != null && profile.maxLeaveForBonus > 0) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                     )
                                                 }
                                             }
@@ -2152,7 +2170,7 @@ fun ProfileScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV)
                         ) {
                             Button(
                                 onClick = {
@@ -2292,7 +2310,7 @@ fun ProfileScreen(
                                 color = MaterialTheme.colorScheme.errorContainer
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(10.dp),
+                                    modifier = Modifier.padding(spacing.subCardPadding),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
@@ -2405,6 +2423,7 @@ fun TrashManagementDialog(
     onDismiss: () -> Unit
 ) {
     val isBnDigits = LanguageManager.isBengaliDigits(effectiveLang)
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     var itemToDeletePermanently by remember { mutableStateOf<TrashItem?>(null) }
     var showClearAllConfirm by remember { mutableStateOf(false) }
 
@@ -2431,7 +2450,7 @@ fun TrashManagementDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -2454,7 +2473,11 @@ fun TrashManagementDialog(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (trashItems.isNotEmpty()) {
-                            TextButton(onClick = { showClearAllConfirm = true }) {
+                            TextButton(
+                                onClick = { showClearAllConfirm = true },
+                                contentPadding = spacing.compactButtonContentPadding,
+                                modifier = Modifier.heightIn(min = 36.dp)
+                            ) {
                                 Text(
                                     text = stringResource(R.string.empty_all),
                                     color = MaterialTheme.colorScheme.error,
@@ -2478,21 +2501,21 @@ fun TrashManagementDialog(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
+                verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
             ) {
                 Text(
                     text = stringResource(R.string.trash_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
 
                 if (trashItems.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 36.dp),
+                            .padding(vertical = spacing.emptyStateVertical),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -2521,7 +2544,7 @@ fun TrashManagementDialog(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         items(trashItems.size, key = { trashItems[it].id }) { index ->
                             val item = trashItems[index]
@@ -2568,7 +2591,7 @@ fun TrashManagementDialog(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(modifier = Modifier.padding(10.dp)) {
+                                Column(modifier = Modifier.padding(spacing.listItemPadding)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -2605,7 +2628,7 @@ fun TrashManagementDialog(
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = badgeTextColor,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                             )
                                         }
 
@@ -2629,14 +2652,16 @@ fun TrashManagementDialog(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
 
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.End,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         TextButton(
-                                            onClick = { itemToDeletePermanently = item }
+                                            onClick = { itemToDeletePermanently = item },
+                                            contentPadding = spacing.compactButtonContentPadding,
+                                            modifier = Modifier.heightIn(min = 36.dp)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.DeleteForever,
@@ -2651,12 +2676,12 @@ fun TrashManagementDialog(
                                                 fontSize = 12.sp
                                             )
                                         }
-                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
                                         Button(
                                             onClick = { onRestore(item) },
                                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                            modifier = Modifier.height(32.dp)
+                                            contentPadding = spacing.compactButtonContentPadding,
+                                            modifier = Modifier.heightIn(min = 36.dp)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Restore,
@@ -2682,7 +2707,7 @@ fun TrashManagementDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV)
                 ) {
                     Button(
                         onClick = onDismiss,
@@ -2755,22 +2780,23 @@ private fun InfoChipCard(
     value: String,
     modifier: Modifier = Modifier
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier.padding(spacing.subCardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(18.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Column {
                 Text(
                     text = label,
@@ -2827,13 +2853,14 @@ private fun BenefitChip(
     value: String,
     modifier: Modifier = Modifier
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     Surface(
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = spacing.subCardPadding, vertical = 5.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

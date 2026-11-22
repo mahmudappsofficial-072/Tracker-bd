@@ -93,10 +93,9 @@ fun HomeScreen(
         MonthLockPolicy.getDefaultDateForMonth(selectedMonth)
     }
 
-    val isCompactScreen = ResponsiveUtils.isCompactScreen()
-    val screenPadding = if (isCompactScreen) 12.dp else 16.dp
-    val cardPadding = if (isCompactScreen) 14.dp else 20.dp
-    val pillCardPadding = if (isCompactScreen) 8.dp else 12.dp
+    val spacing = ResponsiveUtils.rememberAppSpacing()
+    val isCompactScreen = spacing.isCompact
+    val pillCardPadding = spacing.pillCardPadding
     val pillTitleSize = if (isCompactScreen) 10.sp else 11.sp
     val pillValueSize = if (isCompactScreen) 13.sp else 14.sp
 
@@ -111,8 +110,8 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .testTag("home_screen"),
-            contentPadding = PaddingValues(start = screenPadding, end = screenPadding, top = screenPadding, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(if (isCompactScreen) 12.dp else 16.dp)
+            contentPadding = spacing.screenContentNoFab,
+            verticalArrangement = Arrangement.spacedBy(spacing.sectionGap)
         ) {
             // Top Header: User Greeting & Language Chip
             item {
@@ -124,7 +123,7 @@ fun HomeScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(horizontal = spacing.cardPadding, vertical = 9.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -132,10 +131,10 @@ fun HomeScreen(
                             painter = painterResource(id = R.drawable.ic_app_logo),
                             contentDescription = stringResource(R.string.cd_app_logo),
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = profile.userName.ifBlank { stringResource(R.string.app_display_name) },
@@ -192,7 +191,7 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
+                        .padding(horizontal = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -269,9 +268,9 @@ fun HomeScreen(
                                     )
                                 )
                             )
-                            .padding(cardPadding)
+                            .padding(spacing.heroCardPadding)
                     ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(spacing.heroInnerGap)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -295,7 +294,7 @@ fun HomeScreen(
                                         color = MaterialTheme.colorScheme.onPrimary,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                     )
                                 }
                             }
@@ -400,8 +399,8 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(spacing.cardPadding),
+                        verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                     ) {
                         // Header Row: Flag + Title & Edit Button / Locked Badge
                         Row(
@@ -416,7 +415,7 @@ fun HomeScreen(
                                     tint = WarningOrange,
                                     modifier = Modifier.size(20.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = stringResource(R.string.ot_target),
                                     style = MaterialTheme.typography.titleSmall,
@@ -427,18 +426,20 @@ fun HomeScreen(
                             if (!summary.isLocked) {
                                 TextButton(
                                     onClick = onEditTargetClick,
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                    modifier = Modifier.testTag("edit_target_button")
+                                    contentPadding = spacing.compactButtonContentPadding,
+                                    modifier = Modifier
+                                        .heightIn(min = 36.dp)
+                                        .testTag("edit_target_button")
                                 ) {
                                     Text(stringResource(R.string.change_target), fontSize = 12.sp)
                                 }
                             } else {
                                 Surface(
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(10.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
@@ -467,9 +468,9 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(14.dp),
+                                    modifier = Modifier.padding(spacing.subCardPadding),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
                                         Icons.Default.Info,
@@ -522,7 +523,7 @@ fun HomeScreen(
                                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
@@ -589,7 +590,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(IntrinsicSize.Min),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                             ) {
                                 // Left Box
                                 if (isTargetCompleted) {
@@ -602,7 +603,7 @@ fun HomeScreen(
                                         border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.35f))
                                     ) {
                                         Column(
-                                            modifier = Modifier.padding(10.dp),
+                                            modifier = Modifier.padding(spacing.subCardPadding),
                                             verticalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             Surface(
@@ -611,7 +612,7 @@ fun HomeScreen(
                                                 modifier = Modifier.testTag("target_met_badge")
                                             ) {
                                                 Row(
-                                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                                                    modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                                 ) {
@@ -679,7 +680,7 @@ fun HomeScreen(
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     ) {
                                         Column(
-                                            modifier = Modifier.padding(10.dp),
+                                            modifier = Modifier.padding(spacing.subCardPadding),
                                             verticalArrangement = Arrangement.spacedBy(3.dp)
                                         ) {
                                             Row(
@@ -742,12 +743,12 @@ fun HomeScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .fillMaxSize()
-                                                    .padding(10.dp),
+                                                    .padding(spacing.subCardPadding),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Column(
                                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                                    verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+                                                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
                                                     modifier = Modifier.testTag("target_congrats_badge")
                                                 ) {
                                                     Icon(
@@ -768,7 +769,7 @@ fun HomeScreen(
                                                             maxLines = 1,
                                                             softWrap = false,
                                                             overflow = TextOverflow.Ellipsis,
-                                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                         )
                                                     }
                                                 }
@@ -777,7 +778,7 @@ fun HomeScreen(
                                             Column(
                                                 modifier = Modifier
                                                     .fillMaxSize()
-                                                    .padding(10.dp),
+                                                    .padding(spacing.subCardPadding),
                                                 verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
                                             ) {
                                                 Row(
@@ -839,7 +840,7 @@ fun HomeScreen(
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     ) {
                                         Column(
-                                            modifier = Modifier.padding(10.dp),
+                                            modifier = Modifier.padding(spacing.subCardPadding),
                                             verticalArrangement = Arrangement.spacedBy(3.dp)
                                         ) {
                                             Row(
@@ -926,7 +927,7 @@ fun HomeScreen(
                                 border = BorderStroke(1.dp, projectedBorderColor)
                             ) {
                                 Column(
-                                    modifier = Modifier.padding(12.dp),
+                                    modifier = Modifier.padding(spacing.subCardPadding),
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Row(
@@ -1018,7 +1019,7 @@ fun HomeScreen(
                                                         color = WarningOrange,
                                                         maxLines = 1,
                                                         softWrap = false,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                     )
                                                 }
                                             }
@@ -1035,7 +1036,7 @@ fun HomeScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                 ) {
                     // Button 1: Today's OT
                     Card(
@@ -1043,6 +1044,7 @@ fun HomeScreen(
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = spacing.minTouchTarget)
                             .clickable {
                                 if (summary.isLocked) showLockedInfoDialog = true else onQuickAddOtClick()
                             }
@@ -1052,25 +1054,25 @@ fun HomeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 12.dp, horizontal = 6.dp),
+                                .padding(vertical = 8.dp, horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(32.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.AddAlarm,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = stringResource(R.string.action_todays_ot),
                                 fontWeight = FontWeight.Bold,
@@ -1095,6 +1097,7 @@ fun HomeScreen(
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = spacing.minTouchTarget)
                             .clickable {
                                 if (summary.isLocked) showLockedInfoDialog = true else showAdvanceDialog = true
                             }
@@ -1104,25 +1107,25 @@ fun HomeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 12.dp, horizontal = 6.dp),
+                                .padding(vertical = 8.dp, horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(32.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.Payments,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onError,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = stringResource(R.string.action_advance),
                                 fontWeight = FontWeight.Bold,
@@ -1147,6 +1150,7 @@ fun HomeScreen(
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = spacing.minTouchTarget)
                             .clickable {
                                 if (summary.isLocked) showLockedInfoDialog = true else showAponBazarDialog = true
                             }
@@ -1156,25 +1160,25 @@ fun HomeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 12.dp, horizontal = 6.dp),
+                                .padding(vertical = 8.dp, horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(32.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.ShoppingCart,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onSecondary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = stringResource(R.string.action_apon_bazar),
                                 fontWeight = FontWeight.Bold,
@@ -1197,11 +1201,11 @@ fun HomeScreen(
 
             // Summary Breakdown Grid (Attendance Bonus, Night Bill, Tiffin Bill, Piece Rate)
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(spacing.gridGap)) {
                     // Row 1: Attendance Bonus & Night Bill
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                     ) {
                         // Attendance Bonus Pill
                         Card(
@@ -1287,7 +1291,7 @@ fun HomeScreen(
                     // Row 2: Tiffin Bill & Piece Rate
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                     ) {
                         // Tiffin Bill Pill
                         Card(
@@ -1352,12 +1356,13 @@ fun HomeScreen(
                     // Row 3: Advance Deduction & Apon Bazar
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                     ) {
                         // Advance Deduction Pill
                         Card(
                             modifier = Modifier
                                 .weight(1f)
+                                .heightIn(min = spacing.minTouchTarget)
                                 .clickable { selectedDeductionListType = "ADVANCE" },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             shape = RoundedCornerShape(12.dp)
@@ -1413,6 +1418,7 @@ fun HomeScreen(
                         Card(
                             modifier = Modifier
                                 .weight(1f)
+                                .heightIn(min = spacing.minTouchTarget)
                                 .clickable { selectedDeductionListType = "APON_BAZAR" },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             shape = RoundedCornerShape(12.dp)
@@ -1479,7 +1485,11 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    TextButton(onClick = onViewAllClick) {
+                    TextButton(
+                        onClick = onViewAllClick,
+                        contentPadding = spacing.compactButtonContentPadding,
+                        modifier = Modifier.heightIn(min = 36.dp)
+                    ) {
                         Text(stringResource(R.string.view_all))
                     }
                 }
@@ -1496,17 +1506,17 @@ fun HomeScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(24.dp),
+                                .padding(vertical = spacing.emptyStateVertical, horizontal = spacing.cardPadding),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.EventNote,
                                     contentDescription = null,
-                                    modifier = Modifier.size(40.dp),
+                                    modifier = Modifier.size(36.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = stringResource(R.string.no_ot_this_month),
                                     style = MaterialTheme.typography.bodyMedium,
@@ -1531,7 +1541,8 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
+                                .heightIn(min = spacing.minTouchTarget)
+                                .padding(spacing.listItemPadding),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -1695,7 +1706,7 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -1734,8 +1745,8 @@ fun HomeScreen(
                             .weight(1f)
                             .fillMaxWidth()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
+                        verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
                     ) {
                         ProfessionalDatePickerField(
                             selectedDate = advDate,
@@ -1781,8 +1792,8 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             OutlinedButton(
@@ -1866,7 +1877,7 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -1905,8 +1916,8 @@ fun HomeScreen(
                             .weight(1f)
                             .fillMaxWidth()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
+                        verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
                     ) {
                         ProfessionalDatePickerField(
                             selectedDate = aponDate,
@@ -1953,8 +1964,8 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             OutlinedButton(
@@ -2020,7 +2031,7 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -2059,13 +2070,13 @@ fun HomeScreen(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
+                            .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV)
                     ) {
                         if (filteredList.isEmpty()) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(24.dp),
+                                    .padding(spacing.cardPadding),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -2075,7 +2086,7 @@ fun HomeScreen(
                             }
                         } else {
                             LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 items(filteredList, key = { it.id }) { item ->
@@ -2087,7 +2098,7 @@ fun HomeScreen(
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(10.dp),
+                                                .padding(spacing.listItemPadding),
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
@@ -2126,7 +2137,7 @@ fun HomeScreen(
                                 }
                             }
 
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -2154,7 +2165,7 @@ fun HomeScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                                .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV)
                         ) {
                             Button(
                                 onClick = { selectedDeductionListType = null },

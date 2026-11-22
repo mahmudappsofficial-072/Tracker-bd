@@ -32,6 +32,7 @@ import com.example.ui.theme.SuccessGreen
 import com.example.ui.viewmodel.MonthlySummaryState
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
+import com.example.util.ResponsiveUtils
 import kotlinx.coroutines.launch
 
 @Composable
@@ -46,6 +47,7 @@ fun PieceRateScreen(
     onSetMonthLock: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     val isBnDigits = LanguageManager.isBengaliDigits(lang)
     var selectedTab by remember { mutableStateOf(0) } // 0: Piece Rate, 1: Pay Slip
     var showUnlockConfirmDialog by remember { mutableStateOf(false) }
@@ -105,8 +107,8 @@ fun PieceRateScreen(
             if (selectedTab == 0) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = spacing.screenContentWithFab,
+                    verticalArrangement = Arrangement.spacedBy(spacing.sectionGap)
                 ) {
                     if (isPastMonth) {
                         item {
@@ -125,14 +127,14 @@ fun PieceRateScreen(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.padding(spacing.cardPadding)) {
                                 Text(
                                     text = stringResource(R.string.piece_rate_summary_fmt, selectedMonth),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -185,23 +187,23 @@ fun PieceRateScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 40.dp),
+                                    .padding(vertical = spacing.emptyStateVertical),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(
                                         Icons.Default.Layers,
                                         contentDescription = null,
-                                        modifier = Modifier.size(56.dp),
+                                        modifier = Modifier.size(48.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                                     )
-                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = stringResource(R.string.no_piece_records_title),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = stringResource(R.string.no_piece_records_subtitle),
                                         style = MaterialTheme.typography.bodySmall,
@@ -221,7 +223,7 @@ fun PieceRateScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(14.dp),
+                                        .padding(spacing.listItemPadding),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -273,7 +275,7 @@ fun PieceRateScreen(
                                                 color = MaterialTheme.colorScheme.surfaceVariant
                                             ) {
                                                 Row(
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     Icon(
@@ -314,8 +316,8 @@ fun PieceRateScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = spacing.screenContentNoFab,
+                    verticalArrangement = Arrangement.spacedBy(spacing.sectionGap)
                 ) {
                     if (isPastMonth) {
                         item {
@@ -342,8 +344,8 @@ fun PieceRateScreen(
                                 )
                         ) {
                             Column(
-                                modifier = Modifier.padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                                modifier = Modifier.padding(spacing.heroCardPadding),
+                                verticalArrangement = Arrangement.spacedBy(spacing.heroInnerGap)
                             ) {
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
@@ -422,7 +424,7 @@ fun PieceRateScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                                            .padding(horizontal = spacing.cardPadding, vertical = 9.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -470,6 +472,7 @@ fun PieceRateScreen(
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = spacing.minTouchTarget)
                                 .testTag("download_pdf_button")
                         ) {
                             if (isGeneratingPdf) {
@@ -496,7 +499,7 @@ fun PieceRateScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
-                                modifier = Modifier.padding(12.dp),
+                                modifier = Modifier.padding(spacing.subCardPadding),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
@@ -622,6 +625,7 @@ fun PieceRateScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = spacing.minTouchTarget)
                                 .testTag("share_slip_button")
                         ) {
                             Icon(Icons.Default.Share, contentDescription = null)

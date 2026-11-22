@@ -320,11 +320,9 @@ fun OvertimeApp(
     }
 
     val currentUpdate = appUpdateInfo
-    val isAnyOverlayOccludingBanner = showQuickOtDialog ||
-        showMissingOtDialog ||
-        showPieceDialog ||
-        showTargetDialog ||
-        showLanguagePicker ||
+    // Only true window-level dialogs and modal bottom sheets cover the bottom banner;
+    // in-screen content panels (Quick OT, Missing OT, Piece, Target) stay above bottomBar.
+    val isAnyOverlayOccludingBanner = showLanguagePicker ||
         isHomeSheetOpen ||
         isProfileSheetOpen ||
         pendingConsentUser != null ||
@@ -351,7 +349,8 @@ fun OvertimeApp(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     AdmobBanner(
                         modifier = Modifier.fillMaxWidth(),
-                        isOccluded = isAnyOverlayOccludingBanner
+                        isOccluded = isAnyOverlayOccludingBanner,
+                        canLoadAd = isAppReady
                     )
                     val isCompactNav = ResponsiveUtils.isCompactScreen()
                     val navLabelSize = if (isCompactNav) 10.sp else 12.sp

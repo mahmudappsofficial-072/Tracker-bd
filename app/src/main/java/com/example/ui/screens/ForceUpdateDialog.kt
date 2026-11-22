@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.R
 import com.example.util.AppUpdateInfo
+import com.example.util.ResponsiveUtils
 
 @Composable
 fun ForceUpdateDialog(
@@ -36,6 +37,7 @@ fun ForceUpdateDialog(
     onDismissOptional: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     val activity = context as? Activity
     val isForce = updateInfo.isForceUpdate
 
@@ -60,7 +62,7 @@ fun ForceUpdateDialog(
         icon = {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(56.dp)
                     .clip(CircleShape)
                     .background(
                         if (isForce) MaterialTheme.colorScheme.errorContainer
@@ -72,7 +74,7 @@ fun ForceUpdateDialog(
                     imageVector = if (isForce) Icons.Default.SystemUpdate else Icons.Default.NewReleases,
                     contentDescription = null,
                     tint = if (isForce) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(32.dp)
                 )
             }
         },
@@ -88,7 +90,7 @@ fun ForceUpdateDialog(
                     textAlign = TextAlign.Center
                 )
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     color = if (isForce) MaterialTheme.colorScheme.errorContainer
                     else MaterialTheme.colorScheme.secondaryContainer
                 ) {
@@ -100,7 +102,7 @@ fun ForceUpdateDialog(
                         color = if (isForce) MaterialTheme.colorScheme.onErrorContainer
                         else MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                     )
                 }
             }
@@ -108,7 +110,7 @@ fun ForceUpdateDialog(
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -129,7 +131,7 @@ fun ForceUpdateDialog(
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(10.dp),
+                        modifier = Modifier.padding(spacing.subCardPadding),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -142,6 +144,7 @@ fun ForceUpdateDialog(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = spacing.minTouchTarget)
                     .testTag("force_update_play_store_button"),
                 shape = RoundedCornerShape(10.dp)
             ) {
@@ -164,6 +167,7 @@ fun ForceUpdateDialog(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = spacing.minTouchTarget)
                     .testTag("update_dialog_dismiss_button")
             ) {
                 Text(

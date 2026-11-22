@@ -55,6 +55,7 @@ import com.example.R
 import com.example.data.model.OvertimeRecord
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
+import com.example.util.ResponsiveUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -175,6 +176,7 @@ fun MissingOtReminderDialog(
     if (missingDates.isEmpty()) return
 
     val context = LocalContext.current
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     val isSingleDate = missingDates.size == 1
     val primaryMissingDate = missingDates.first()
 
@@ -189,28 +191,28 @@ fun MissingOtReminderDialog(
                 indication = null,
                 onClick = onDismiss
             )
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(spacing.dialogOuterPadding),
         contentAlignment = Alignment.Center
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 520.dp)
-                .clip(RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(20.dp))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {}
                 )
                 .testTag("missing_ot_reminder_dialog"),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
+                    .padding(spacing.dialogCardPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Top close button and alert badge
@@ -221,7 +223,7 @@ fun MissingOtReminderDialog(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(46.dp)
+                            .size(42.dp)
                             .background(
                                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
                                 shape = CircleShape
@@ -232,14 +234,11 @@ fun MissingOtReminderDialog(
                             imageVector = Icons.Default.EventBusy,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(36.dp)
-                    ) {
+                    IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = stringResource(R.string.close),
@@ -248,7 +247,7 @@ fun MissingOtReminderDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
 
                 // Title
                 Text(
@@ -259,7 +258,7 @@ fun MissingOtReminderDialog(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // Descriptive Sub-text
                 val subText = if (isSingleDate) {
@@ -279,7 +278,7 @@ fun MissingOtReminderDialog(
                     lineHeight = 20.sp
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
 
                 // Missing items list or single item banner
                 if (isSingleDate) {
@@ -293,7 +292,7 @@ fun MissingOtReminderDialog(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(spacing.subCardPadding),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
@@ -315,12 +314,13 @@ fun MissingOtReminderDialog(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             Button(
                                 onClick = { onAddOtForDate(primaryMissingDate) },
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = spacing.minTouchTarget)
                                     .testTag("add_missing_ot_btn"),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
@@ -348,7 +348,7 @@ fun MissingOtReminderDialog(
                             .fillMaxWidth()
                             .weight(1f, fill = false)
                             .heightIn(max = 260.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         items(missingDates, key = { it }) { dateStr ->
                             Card(
@@ -356,12 +356,13 @@ fun MissingOtReminderDialog(
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 ),
-                                shape = RoundedCornerShape(14.dp)
+                                shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        .heightIn(min = spacing.minTouchTarget)
+                                        .padding(horizontal = spacing.listItemPadding, vertical = 7.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
@@ -389,12 +390,11 @@ fun MissingOtReminderDialog(
 
                                     Button(
                                         onClick = { onAddOtForDate(dateStr) },
-                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                            horizontal = 12.dp,
-                                            vertical = 6.dp
-                                        ),
+                                        contentPadding = spacing.compactButtonContentPadding,
                                         shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier.testTag("add_missing_date_${dateStr}")
+                                        modifier = Modifier
+                                            .heightIn(min = 36.dp)
+                                            .testTag("add_missing_date_${dateStr}")
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
@@ -414,13 +414,14 @@ fun MissingOtReminderDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
 
                 // Bottom dismiss button
                 OutlinedButton(
                     onClick = onDismiss,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = spacing.minTouchTarget)
                         .testTag("dismiss_missing_ot_btn"),
                     shape = RoundedCornerShape(12.dp)
                 ) {

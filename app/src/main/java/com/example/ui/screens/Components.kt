@@ -47,6 +47,7 @@ import com.example.data.model.OvertimeRecord
 import com.example.ui.theme.WarningOrange
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
+import com.example.util.ResponsiveUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -87,36 +88,37 @@ fun LanguagePickerBottomSheet(
     val systemResolvedLabel = remember(systemEffectiveTag) {
         LanguageManager.getDisplayName(LanguageManager.SYSTEM_TAG, systemEffectiveTag)
     }
+    val spacing = ResponsiveUtils.rememberAppSpacing()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = Modifier.testTag("language_picker_sheet"),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(horizontal = spacing.sheetBodyH)
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Language,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
@@ -134,7 +136,7 @@ fun LanguagePickerBottomSheet(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
 
             // Option 0: System Default (auto-detect with English fallback)
             val isSystemSelected = selectedSettingTag == LanguageManager.SYSTEM_TAG
@@ -143,18 +145,19 @@ fun LanguagePickerBottomSheet(
                     onSelectLanguage(LanguageManager.SYSTEM_TAG)
                     onDismiss()
                 },
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = if (isSystemSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                 border = if (isSystemSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = spacing.minTouchTarget)
                     .testTag("language_option_system")
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -201,18 +204,19 @@ fun LanguagePickerBottomSheet(
                         onSelectLanguage(option.tag)
                         onDismiss()
                     },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = spacing.minTouchTarget)
                         .testTag("language_option_${option.tag}")
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -286,6 +290,7 @@ fun ProfessionalDatePickerField(
     modifier: Modifier = Modifier
 ) {
     var showDatePickerDialog by remember { mutableStateOf(false) }
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val hideKeyboard = {
@@ -331,12 +336,12 @@ fun ProfessionalDatePickerField(
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         @OptIn(ExperimentalLayoutApi::class)
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             FilterChip(
                 selected = selectedDate == todayDateStr,
@@ -382,6 +387,7 @@ fun ProfessionalDatePickerField(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = spacing.minTouchTarget)
                 .clickable {
                     hideKeyboard()
                     showDatePickerDialog = true
@@ -391,7 +397,7 @@ fun ProfessionalDatePickerField(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.cardPadding, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -400,9 +406,9 @@ fun ProfessionalDatePickerField(
                         imageVector = Icons.Default.CalendarToday,
                         contentDescription = stringResource(R.string.cd_select_date),
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             text = stringResource(R.string.selected_date_tap_label),
@@ -427,7 +433,7 @@ fun ProfessionalDatePickerField(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                     )
                 }
             }
@@ -465,7 +471,7 @@ fun ProfessionalDatePickerField(
                 title = {
                     Text(
                         text = stringResource(R.string.select_date_dialog_title),
-                        modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+                        modifier = Modifier.padding(start = 16.dp, top = 12.dp),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -486,6 +492,7 @@ fun QuickOtEntryDialog(
     onSave: (date: String, hours: Double, nightBill: Boolean, tiffinBill: Boolean, isHoliday: Boolean, shiftType: String, note: String) -> Unit
 ) {
     val isBnDigits = LanguageManager.isBengaliDigits(lang)
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     val todayStr = remember {
         initialRecord?.date ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
     }
@@ -553,7 +560,7 @@ fun QuickOtEntryDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -598,8 +605,8 @@ fun QuickOtEntryDialog(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
+                verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
             ) {
                 ProfessionalDatePickerField(
                     selectedDate = date,
@@ -675,9 +682,7 @@ fun QuickOtEntryDialog(
                             ShiftType.LEAVE.code -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
                             else -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             text = stringResource(
@@ -694,7 +699,7 @@ fun QuickOtEntryDialog(
                                 ShiftType.LEAVE.code -> MaterialTheme.colorScheme.onTertiaryContainer
                                 else -> MaterialTheme.colorScheme.onPrimaryContainer
                             },
-                            modifier = Modifier.padding(14.dp)
+                            modifier = Modifier.padding(spacing.subCardPadding)
                         )
                     }
 
@@ -813,11 +818,12 @@ fun QuickOtEntryDialog(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Column(modifier = Modifier.padding(8.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = spacing.minTouchTarget)
                                     .clickable {
                                         hideKeyboard()
                                         if (!hasNightBill) {
@@ -830,7 +836,6 @@ fun QuickOtEntryDialog(
                                             hasNightBill = false
                                         }
                                     }
-                                    .padding(vertical = 4.dp)
                             ) {
                                 Checkbox(
                                     checked = hasNightBill,
@@ -856,6 +861,7 @@ fun QuickOtEntryDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = spacing.minTouchTarget)
                                     .clickable {
                                         hideKeyboard()
                                         if (!hasTiffinBill) {
@@ -868,7 +874,6 @@ fun QuickOtEntryDialog(
                                             hasTiffinBill = false
                                         }
                                     }
-                                    .padding(vertical = 4.dp)
                             ) {
                                 Checkbox(
                                     checked = hasTiffinBill,
@@ -894,11 +899,11 @@ fun QuickOtEntryDialog(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = spacing.minTouchTarget)
                                     .clickable {
                                         hideKeyboard()
                                         isHoliday = !isHoliday
                                     }
-                                    .padding(vertical = 4.dp)
                             ) {
                                 Checkbox(
                                     checked = isHoliday,
@@ -934,8 +939,8 @@ fun QuickOtEntryDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
@@ -1154,6 +1159,7 @@ fun AddPieceRateDialog(
     val total = count * rate
 
     val isBnDigits = LanguageManager.isBengaliDigits(lang)
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     val popularItems = listOf(
         stringResource(R.string.piece_suggestion_collar),
         stringResource(R.string.piece_suggestion_pocket),
@@ -1199,7 +1205,7 @@ fun AddPieceRateDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -1238,8 +1244,8 @@ fun AddPieceRateDialog(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
+                verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
             ) {
                 ProfessionalDatePickerField(
                     selectedDate = date,
@@ -1337,7 +1343,7 @@ fun AddPieceRateDialog(
                             R.string.total_piece_income_fmt,
                             LaborLawCalculator.formatCurrency(total, isBnDigits)
                         ),
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(spacing.subCardPadding),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -1362,8 +1368,8 @@ fun AddPieceRateDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
@@ -1417,6 +1423,7 @@ fun TargetGoalDialog(
     onSave: (Double) -> Unit
 ) {
     val isBnDigits = LanguageManager.isBengaliDigits(lang)
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     var targetText by remember { mutableStateOf(LaborLawCalculator.formatEditableNumber(currentTarget)) }
 
     val focusManager = LocalFocusManager.current
@@ -1458,7 +1465,7 @@ fun TargetGoalDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = spacing.sheetHeaderH, vertical = spacing.sheetHeaderV),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -1497,8 +1504,8 @@ fun TargetGoalDialog(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
+                verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
             ) {
                 Text(
                     text = stringResource(R.string.target_goal_intro),
@@ -1546,8 +1553,8 @@ fun TargetGoalDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.padding(spacing.subCardPadding),
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -1572,7 +1579,7 @@ fun TargetGoalDialog(
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                     )
                                 }
                             }
@@ -1617,7 +1624,7 @@ fun TargetGoalDialog(
 
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = 2.dp)
                         )
 
                         Row(
@@ -1688,7 +1695,7 @@ fun TargetGoalDialog(
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = WarningOrange,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                         )
                                     }
                                 }
@@ -1706,8 +1713,8 @@ fun TargetGoalDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
@@ -1753,6 +1760,7 @@ fun InitialPrivacyConsentDialog(
     val linkText = stringResource(R.string.privacy_consent_link_text)
     val suffix = stringResource(R.string.privacy_consent_suffix)
     val primaryColor = MaterialTheme.colorScheme.primary
+    val spacing = ResponsiveUtils.rememberAppSpacing()
 
     AlertDialog(
         onDismissRequest = onDecline,
@@ -1817,17 +1825,17 @@ fun InitialPrivacyConsentDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 ) {
-                    Box(modifier = Modifier.padding(16.dp)) {
+                    Box(modifier = Modifier.padding(spacing.cardPadding)) {
                         Text(
                             text = annotatedText,
                             style = MaterialTheme.typography.bodyMedium,
-                            lineHeight = 22.sp
+                            lineHeight = 20.sp
                         )
                     }
                 }
@@ -1868,6 +1876,7 @@ fun PastMonthLockBanner(
     modifier: Modifier = Modifier
 ) {
     val isGracePeriod = com.example.util.MonthLockPolicy.isWithinPreviousMonthGracePeriod(selectedMonth)
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     val containerColor = if (isLocked) {
         MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.85f)
     } else {
@@ -1887,7 +1896,7 @@ fun PastMonthLockBanner(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = spacing.listItemPadding, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -1913,7 +1922,7 @@ fun PastMonthLockBanner(
             if (isLocked) {
                 OutlinedButton(
                     onClick = onUnlockClick,
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier
                         .heightIn(min = 36.dp)
                         .testTag("unlock_month_button")
@@ -1935,7 +1944,7 @@ fun PastMonthLockBanner(
             } else {
                 FilledTonalButton(
                     onClick = onLockClick,
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier
                         .heightIn(min = 36.dp)
                         .testTag("lock_month_button")
