@@ -541,7 +541,6 @@ fun QuickOtEntryDialog(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -1188,7 +1187,6 @@ fun AddPieceRateDialog(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -1448,7 +1446,6 @@ fun TargetGoalDialog(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

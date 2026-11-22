@@ -10,10 +10,8 @@ import android.util.Log
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -68,8 +66,7 @@ fun AdmobBanner(
     val configuration = LocalConfiguration.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val density = LocalDensity.current
-    val isImeVisible = WindowInsets.ime.getBottom(density) > 0
-    val isBannerVisible = canLoadAd && !isImeVisible && !isOccluded
+    val isBannerVisible = canLoadAd && !isOccluded
     val isMobileAdsInitialized by OvertimeApp.isMobileAdsInitialized.collectAsStateWithLifecycle()
 
     val screenWidthDp = configuration.screenWidthDp.coerceAtLeast(320)

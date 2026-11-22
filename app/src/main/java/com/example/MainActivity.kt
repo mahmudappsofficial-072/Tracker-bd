@@ -15,14 +15,28 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
@@ -56,6 +70,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -343,23 +358,53 @@ fun OvertimeApp(
             )
         }
     } else {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            bottomBar = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    AdmobBanner(
-                        modifier = Modifier.fillMaxWidth(),
-                        isOccluded = isAnyOverlayOccludingBanner,
-                        canLoadAd = isAppReady
-                    )
-                    val isCompactNav = ResponsiveUtils.isCompactScreen()
-                    val navLabelSize = if (isCompactNav) 10.sp else 12.sp
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val density = LocalDensity.current
+            val imeBottomPx = WindowInsets.ime.getBottom(density)
+            val navBarBottomPx = WindowInsets.navigationBars.getBottom(density)
+            val isImeVisible = imeBottomPx > navBarBottomPx
+            val imeBottomDp = with(density) { imeBottomPx.toDp() }
+            val remainingAboveImeDp = maxHeight - imeBottomDp
+            val hideBannerForTightIme = isImeVisible && remainingAboveImeDp < 240.dp
 
-                    NavigationBar(
-                        modifier = Modifier.testTag("bottom_navigation_bar"),
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        tonalElevation = NavigationBarDefaults.Elevation
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                bottomBar = {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = if (!isImeVisible) NavigationBarDefaults.Elevation else 1.dp
                     ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .windowInsetsPadding(
+                                    WindowInsets.ime
+                                        .union(WindowInsets.navigationBars)
+                                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+                                )
+                        ) {
+                            if (!hideBannerForTightIme) {
+                                AdmobBanner(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    isOccluded = isAnyOverlayOccludingBanner,
+                                    canLoadAd = isAppReady
+                                )
+                            }
+                            val isCompactNav = ResponsiveUtils.isCompactScreen()
+                            val navLabelSize = if (isCompactNav) 10.sp else 12.sp
+
+                            AnimatedVisibility(
+                                visible = !isImeVisible,
+                                enter = fadeIn(tween(150)) + expandVertically(tween(180)),
+                                exit = fadeOut(tween(120)) + shrinkVertically(tween(150))
+                            ) {
+                                NavigationBar(
+                                    modifier = Modifier.testTag("bottom_navigation_bar"),
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    tonalElevation = 0.dp,
+                                    windowInsets = WindowInsets(0, 0, 0, 0)
+                                ) {
                         // Tab 0: Home
                         val tabHomeLabel = stringResource(R.string.tab_home)
                         NavigationBarItem(
@@ -485,8 +530,10 @@ fun OvertimeApp(
                                     overflow = TextOverflow.Ellipsis
                                 )
                             },
-                            modifier = Modifier.testTag("tab_profile_item")
-                        )
+                                modifier = Modifier.testTag("tab_profile_item")
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -740,6 +787,7 @@ fun OvertimeApp(
                     }
                 }
             }
+        }
         }
 
         // Language Selection Bottom Sheet (System Default + EN/BN/HI/TA/AR)

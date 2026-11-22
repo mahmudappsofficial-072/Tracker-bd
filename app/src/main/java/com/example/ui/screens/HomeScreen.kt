@@ -82,7 +82,9 @@ fun HomeScreen(
     var showLockedInfoDialog by remember { mutableStateOf(false) }
     var showUnlockConfirmDialog by remember { mutableStateOf(false) }
 
-    val hasBlockingSheet = showAdvanceDialog || showAponBazarDialog || selectedDeductionListType != null
+    // Only true window-level AlertDialogs overlap bottomBar AdmobBanner;
+    // in-screen deduction sheets resize cleanly above bottomBar.
+    val hasBlockingSheet = showLockedInfoDialog || showUnlockConfirmDialog
     LaunchedEffect(hasBlockingSheet) {
         onModalSheetVisibilityChanged(hasBlockingSheet)
     }
@@ -1689,7 +1691,6 @@ fun HomeScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxSize()
-                    .imePadding()
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -1860,7 +1861,6 @@ fun HomeScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxSize()
-                    .imePadding()
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,

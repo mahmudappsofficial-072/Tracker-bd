@@ -80,7 +80,6 @@ fun EditIdentitySheet(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -423,7 +422,6 @@ fun SalaryStructureSheet(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
