@@ -488,15 +488,38 @@
     <string name="edit_identity_title">ব্যক্তিগত তথ্য পরিবর্তন</string>
     <string name="setup_edit_salary_btn">বেতন কাঠামো সেটআপ / পরিবর্তন</string>
     <string name="salary_not_configured_hint">আপনার বেতন, ওটি রেট ও ভাতা সেট করতে নিচে ট্যাপ করুন</string>
-    <string name="account_and_app_section">অ্যাকাউন্ট ও অ্যাপ</string>
     <string name="settings_general_section">সাধারণ (General)</string>
     <string name="settings_account_backup_section">অ্যাকাউন্ট ও ক্লাউড ব্যাকআপ</string>
     <string name="settings_data_support_section">ডাটা, সহায়তা ও নীতিমালা</string>
     <string name="settings_danger_zone_section">ডেঞ্জার জোন (Danger Zone)</string>
-    <string name="settings_subtitle">ভাষা, ক্লাউড ব্যাকআপ, সাপোর্ট ও ডাটা রিসেট</string>
     <string name="sign_in_sync_subtitle">সব হিসাব নিরাপদে ব্যাকআপ রাখতে সাইন-ইন করুন</string>
     <string name="save_identity_btn">তথ্য সংরক্ষণ করুন</string>
     <string name="save_salary_btn">বেতন নিয়ম সংরক্ষণ করুন</string>
     <string name="identity_saved_toast">ব্যক্তিগত তথ্য সংরক্ষিত হয়েছে!</string>
     <string name="salary_saved_toast">বেতন কাঠামো সংরক্ষিত হয়েছে!</string>
+
+    <!-- Guided Salary Onboarding & Step-by-Step Sheet -->
+    <string name="salary_setup_card_title">বেতন ও ওটি সেটআপ</string>
+    <string name="badge_setup_pending">সেটআপ বাকি</string>
+    <string name="salary_setup_intro">অটোমেটিক ওভারটাইম হিসাব পেতে ১ মিনিটে বেতন সেট করুন:</string>
+    <string name="salary_guide_step_1_title">হিসাব পদ্ধতি ও মাসিক বেতন দিন</string>
+    <string name="salary_guide_step_1_desc">স্বয়ংক্রিয় (সরকারি আইন) অথবা নিজস্ব নিয়ম</string>
+    <string name="salary_guide_step_2_title">তাৎক্ষণিক প্রতি ঘণ্টা ওটি রেট দেখুন</string>
+    <string name="salary_guide_step_2_desc">বেতন লেখার সাথে সাথেই অ্যাপ হিসাব করবে</string>
+    <string name="salary_guide_step_3_title">নাইট, টিফিন ও বোনাস (ঐচ্ছিক)</string>
+    <string name="salary_guide_step_3_desc">আপনার জন্য প্রযোজ্য না হলে খালি রাখতে পারেন</string>
+    <string name="start_salary_setup_btn">এখনই বেতন সেটআপ শুরু করুন</string>
+    <string name="badge_required">প্রয়োজনীয়</string>
+    <string name="badge_optional">ঐচ্ছিক</string>
+    <string name="sheet_step_1_title">ধাপ ১ • হিসাবের ধরন বেছে নিন</string>
+    <string name="sheet_step_2_title">ধাপ ২ • আপনার মাসিক বেতন দিন</string>
+    <string name="sheet_step_3_title">ধাপ ৩ • অতিরিক্ত বিল ও হাজিরা বোনাস</string>
+    <string name="sheet_step_3_hint">এই অংশগুলো ঐচ্ছিক — আপনার কারখানায় প্রযোজ্য না হলে খালি রেখেই সংরক্ষণ করতে পারবেন।</string>
+    <string name="auto_breakdown_no_edit_hint">স্বয়ংক্রিয় হিসাব (এগুলোতে কিছু লিখতে হবে না):</string>
+    <string name="example_gross_salary">যেমন: 16000</string>
+    <string name="example_custom_ot_rate">যেমন: 85</string>
+    <string name="example_night_bill">যেমন: 100</string>
+    <string name="example_tiffin_bill">যেমন: 50</string>
+    <string name="example_attendance_bonus">যেমন: 1000</string>
+    <string name="example_absent_days">যেমন: 2</string>
 </resources>

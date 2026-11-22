@@ -488,15 +488,38 @@
     <string name="edit_identity_title">व्यक्तिगत जानकारी संपादित करें</string>
     <string name="setup_edit_salary_btn">वेतन संरचना सेटअप / संपादित करें</string>
     <string name="salary_not_configured_hint">अपना वेतन, ओटी दर और भत्ते सेट करने के लिए नीचे टैप करें</string>
-    <string name="account_and_app_section">खाता और ऐप</string>
     <string name="settings_general_section">सामान्य</string>
     <string name="settings_account_backup_section">खाता और क्लाउड बैकअप</string>
     <string name="settings_data_support_section">डेटा, सहायता और नीतियां</string>
     <string name="settings_danger_zone_section">डेंजर ज़ोन</string>
-    <string name="settings_subtitle">भाषा, क्लाउड बैकअप, सहायता और डेटा रीसेट</string>
     <string name="sign_in_sync_subtitle">अपने रिकॉर्ड बैकअप और सिंक करने के लिए साइन इन करें</string>
     <string name="save_identity_btn">जानकारी सहेजें</string>
     <string name="save_salary_btn">वेतन नियम सहेजें</string>
     <string name="identity_saved_toast">व्यक्तिगत जानकारी सहेजी गई!</string>
     <string name="salary_saved_toast">वेतन संरचना सहेजी गई!</string>
+
+    <!-- Guided Salary Onboarding & Step-by-Step Sheet -->
+    <string name="salary_setup_card_title">वेतन और ओटी सेटअप</string>
+    <string name="badge_setup_pending">सेटअप बाकी</string>
+    <string name="salary_setup_intro">ओवरटाइम की स्वचालित गणना के लिए 1 मिनट में वेतन सेट करें:</string>
+    <string name="salary_guide_step_1_title">मोड चुनें और मासिक वेतन दर्ज करें</string>
+    <string name="salary_guide_step_1_desc">स्वचालित (श्रम कानून) या कस्टम दर</string>
+    <string name="salary_guide_step_2_title">तुरंत प्रति घंटा ओटी दर देखें</string>
+    <string name="salary_guide_step_2_desc">टाइप करते ही स्वचालित गणना होगी</string>
+    <string name="salary_guide_step_3_title">नाइट, टिफिन और बोनस (वैकल्पिक)</string>
+    <string name="salary_guide_step_3_desc">लागू न होने पर खाली छोड़ सकते हैं</string>
+    <string name="start_salary_setup_btn">अभी वेतन सेटअप शुरू करें</string>
+    <string name="badge_required">आवश्यक</string>
+    <string name="badge_optional">वैकल्पिक</string>
+    <string name="sheet_step_1_title">चरण 1 • गणना मोड चुनें</string>
+    <string name="sheet_step_2_title">चरण 2 • मासिक वेतन दर्ज करें</string>
+    <string name="sheet_step_3_title">चरण 3 • अतिरिक्त बिल और उपस्थिति बोनस</string>
+    <string name="sheet_step_3_hint">ये फ़ील्ड वैकल्पिक हैं — लागू न होने पर खाली छोड़कर सहेज सकते हैं।</string>
+    <string name="auto_breakdown_no_edit_hint">स्वचालित गणना (लिखने की आवश्यकता नहीं):</string>
+    <string name="example_gross_salary">जैसे: 16000</string>
+    <string name="example_custom_ot_rate">जैसे: 85</string>
+    <string name="example_night_bill">जैसे: 100</string>
+    <string name="example_tiffin_bill">जैसे: 50</string>
+    <string name="example_attendance_bonus">जैसे: 1000</string>
+    <string name="example_absent_days">जैसे: 2</string>
 </resources>

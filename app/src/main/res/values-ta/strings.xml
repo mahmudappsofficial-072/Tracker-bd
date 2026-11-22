@@ -488,15 +488,38 @@
     <string name="edit_identity_title">தனிப்பட்ட தகவலைத் திருத்து</string>
     <string name="setup_edit_salary_btn">சம்பள அமைப்பை அமை / திருத்து</string>
     <string name="salary_not_configured_hint">உங்கள் சம்பளம், OT விகிதம் மற்றும் படிகளை அமைக்க கீழே தட்டவும்</string>
-    <string name="account_and_app_section">கணக்கு மற்றும் ஆப்</string>
     <string name="settings_general_section">பொது</string>
     <string name="settings_account_backup_section">கணக்கு மற்றும் கிளவுட் காப்புப்பிரதி</string>
     <string name="settings_data_support_section">தரவு, உதவி மற்றும் கொள்கை</string>
     <string name="settings_danger_zone_section">ஆபத்து பகுதி</string>
-    <string name="settings_subtitle">மொழி, கிளவுட் காப்புப்பிரதி, உதவி மற்றும் மீட்டமைப்பு</string>
     <string name="sign_in_sync_subtitle">பதிவுகளைப் பாதுகாப்பாக காப்புப்பிரதி எடுக்க உள்நுழையவும்</string>
     <string name="save_identity_btn">தகவலைச் சேமி</string>
     <string name="save_salary_btn">சம்பள விதிகளைச் சேமி</string>
     <string name="identity_saved_toast">தனிப்பட்ட தகவல் சேமிக்கப்பட்டது!</string>
     <string name="salary_saved_toast">சம்பள அமைப்பு சேமிக்கப்பட்டது!</string>
+
+    <!-- Guided Salary Onboarding & Step-by-Step Sheet -->
+    <string name="salary_setup_card_title">சம்பளம் &amp; OT அமைப்பு</string>
+    <string name="badge_setup_pending">அமைப்பு தேவை</string>
+    <string name="salary_setup_intro">OT-ஐத் தானாகக் கணக்கிட 1 நிமிடத்தில் சம்பளத்தை அமைக்கவும்:</string>
+    <string name="salary_guide_step_1_title">முறையைத் தேர்ந்து மாதச் சம்பளம் உள்ளிடவும்</string>
+    <string name="salary_guide_step_1_desc">தானியங்கி (தொழிலாளர் சட்டம்) அல்லது தனிப்பயன்</string>
+    <string name="salary_guide_step_2_title">மணிநேர OT விகிதத்தை உடனே காண்க</string>
+    <string name="salary_guide_step_2_desc">நீங்கள் தட்டச்சு செய்யும்போது தானாகக் கணக்கிடப்படும்</string>
+    <string name="salary_guide_step_3_title">இரவு, டிபன் &amp; போனஸ் (விருப்பம்)</string>
+    <string name="salary_guide_step_3_desc">பொருந்தாவிட்டால் காலியாக விடலாம்</string>
+    <string name="start_salary_setup_btn">இப்போது சம்பள அமைப்பைத் தொடங்கு</string>
+    <string name="badge_required">அவசியம்</string>
+    <string name="badge_optional">விருப்பம்</string>
+    <string name="sheet_step_1_title">படி 1 • கணக்கீட்டு முறையைத் தேர்வு செய்க</string>
+    <string name="sheet_step_2_title">படி 2 • மாதச் சம்பளத்தை உள்ளிடவும்</string>
+    <string name="sheet_step_3_title">படி 3 • கூடுதல் பில் &amp; வருகை போனஸ்</string>
+    <string name="sheet_step_3_hint">இவை விருப்பமானவை — பொருந்தவில்லை என்றால் காலியாக விட்டு சேமிக்கலாம்.</string>
+    <string name="auto_breakdown_no_edit_hint">தானாகக் கணக்கிடப்பட்டது (தட்டச்சு தேவையில்லை):</string>
+    <string name="example_gross_salary">எ.கா: 16000</string>
+    <string name="example_custom_ot_rate">எ.கா: 85</string>
+    <string name="example_night_bill">எ.கா: 100</string>
+    <string name="example_tiffin_bill">எ.கா: 50</string>
+    <string name="example_attendance_bonus">எ.கா: 1000</string>
+    <string name="example_absent_days">எ.கா: 2</string>
 </resources>

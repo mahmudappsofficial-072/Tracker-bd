@@ -488,15 +488,38 @@
     <string name="edit_identity_title">تعديل البيانات الشخصية</string>
     <string name="setup_edit_salary_btn">إعداد / تعديل هيكل الراتب</string>
     <string name="salary_not_configured_hint">انقر أدناه لإعداد الراتب ومعدل الإضافي والبدلات</string>
-    <string name="account_and_app_section">الحساب والتطبيق</string>
     <string name="settings_general_section">عام</string>
     <string name="settings_account_backup_section">الحساب والنسخ الاحتياطي السحابي</string>
     <string name="settings_data_support_section">البيانات والدعم والسياسات</string>
     <string name="settings_danger_zone_section">منطقة الخطر</string>
-    <string name="settings_subtitle">اللغة، النسخ السحابي، الدعم وإعادة التعيين</string>
     <string name="sign_in_sync_subtitle">سجل الدخول لحفظ ومزامنة سجلاتك بأمان</string>
     <string name="save_identity_btn">حفظ البيانات</string>
     <string name="save_salary_btn">حفظ قواعد الراتب</string>
     <string name="identity_saved_toast">تم حفظ البيانات الشخصية!</string>
     <string name="salary_saved_toast">تم حفظ هيكل الراتب!</string>
+
+    <!-- Guided Salary Onboarding & Step-by-Step Sheet -->
+    <string name="salary_setup_card_title">إعداد الراتب والإضافي</string>
+    <string name="badge_setup_pending">يتطلب إعداد</string>
+    <string name="salary_setup_intro">اضبط راتبك خلال دقيقة لحساب الإضافي تلقائياً:</string>
+    <string name="salary_guide_step_1_title">اختر الطريقة وأدخل الراتب الشهري</string>
+    <string name="salary_guide_step_1_desc">تلقائي (قانون العمل) أو معدل مخصص</string>
+    <string name="salary_guide_step_2_title">شاهد معدل الساعة الإضافي فوراً</string>
+    <string name="salary_guide_step_2_desc">يتم الحساب تلقائياً أثناء الكتابة</string>
+    <string name="salary_guide_step_3_title">بدل الليل والوجبة والمكافأة (اختياري)</string>
+    <string name="salary_guide_step_3_desc">اتركه فارغاً إذا لم ينطبق عليك</string>
+    <string name="start_salary_setup_btn">ابدأ إعداد الراتب الآن</string>
+    <string name="badge_required">مطلوب</string>
+    <string name="badge_optional">اختياري</string>
+    <string name="sheet_step_1_title">الخطوة 1 • اختر طريقة الحساب</string>
+    <string name="sheet_step_2_title">الخطوة 2 • أدخل الراتب الشهري</string>
+    <string name="sheet_step_3_title">الخطوة 3 • البدلات ومكافأة الحضور</string>
+    <string name="sheet_step_3_hint">هذه الحقول اختيارية — اتركها فارغة واحفظ إذا لم تنطبق عليك.</string>
+    <string name="auto_breakdown_no_edit_hint">محسوب تلقائياً (لا حاجة للكتابة):</string>
+    <string name="example_gross_salary">مثال: 16000</string>
+    <string name="example_custom_ot_rate">مثال: 85</string>
+    <string name="example_night_bill">مثال: 100</string>
+    <string name="example_tiffin_bill">مثال: 50</string>
+    <string name="example_attendance_bonus">مثال: 1000</string>
+    <string name="example_absent_days">مثال: 2</string>
 </resources>

@@ -488,15 +488,38 @@
     <string name="edit_identity_title">Edit Personal Info</string>
     <string name="setup_edit_salary_btn">Setup / Edit Salary Structure</string>
     <string name="salary_not_configured_hint">Tap below to set up your salary, OT rate &amp; allowances</string>
-    <string name="account_and_app_section">Account &amp; App</string>
     <string name="settings_general_section">General</string>
     <string name="settings_account_backup_section">Account &amp; Cloud Backup</string>
     <string name="settings_data_support_section">Data, Support &amp; Legal</string>
     <string name="settings_danger_zone_section">Danger Zone</string>
-    <string name="settings_subtitle">Language, Cloud Backup, Support &amp; Reset</string>
     <string name="sign_in_sync_subtitle">Sign in to back up &amp; sync your records across devices</string>
     <string name="save_identity_btn">Save Info</string>
     <string name="save_salary_btn">Save Salary Rules</string>
     <string name="identity_saved_toast">Personal info saved!</string>
     <string name="salary_saved_toast">Salary structure saved!</string>
+
+    <!-- Guided Salary Onboarding & Step-by-Step Sheet -->
+    <string name="salary_setup_card_title">Salary &amp; OT Setup</string>
+    <string name="badge_setup_pending">Setup Needed</string>
+    <string name="salary_setup_intro">Set up your salary in 1 minute to calculate your OT automatically:</string>
+    <string name="salary_guide_step_1_title">Choose mode &amp; enter monthly salary</string>
+    <string name="salary_guide_step_1_desc">Auto (Labor Law) or Custom company rate</string>
+    <string name="salary_guide_step_2_title">See your hourly OT rate instantly</string>
+    <string name="salary_guide_step_2_desc">Calculated automatically as you type</string>
+    <string name="salary_guide_step_3_title">Night, tiffin &amp; bonus (Optional)</string>
+    <string name="salary_guide_step_3_desc">Leave blank if not applicable to you</string>
+    <string name="start_salary_setup_btn">Start Salary Setup Now</string>
+    <string name="badge_required">Required</string>
+    <string name="badge_optional">Optional</string>
+    <string name="sheet_step_1_title">Step 1 • Choose Calculation Mode</string>
+    <string name="sheet_step_2_title">Step 2 • Enter Monthly Salary</string>
+    <string name="sheet_step_3_title">Step 3 • Bills &amp; Attendance Bonus</string>
+    <string name="sheet_step_3_hint">These fields are optional — leave blank and save if your factory does not provide them.</string>
+    <string name="auto_breakdown_no_edit_hint">Auto-calculated (no typing needed):</string>
+    <string name="example_gross_salary">e.g. 16000</string>
+    <string name="example_custom_ot_rate">e.g. 85</string>
+    <string name="example_night_bill">e.g. 100</string>
+    <string name="example_tiffin_bill">e.g. 50</string>
+    <string name="example_attendance_bonus">e.g. 1000</string>
+    <string name="example_absent_days">e.g. 2</string>
 </resources>

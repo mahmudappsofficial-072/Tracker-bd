@@ -476,6 +476,13 @@ fun SalaryStructureSheet(
                     .padding(horizontal = spacing.sheetBodyH, vertical = spacing.sheetBodyV),
                 verticalArrangement = Arrangement.spacedBy(spacing.sheetBodyGap)
             ) {
+                // Step 1: Calculation Mode
+                SheetStepHeader(
+                    title = stringResource(R.string.sheet_step_1_title),
+                    badgeText = stringResource(R.string.badge_required),
+                    isRequired = true
+                )
+
                 // Mode Toggle: Automatic vs Custom
                 Row(
                     modifier = Modifier
@@ -558,6 +565,15 @@ fun SalaryStructureSheet(
                     )
                 }
 
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+
+                // Step 2: Monthly Salary & Instant OT Rate Preview
+                SheetStepHeader(
+                    title = stringResource(R.string.sheet_step_2_title),
+                    badgeText = stringResource(R.string.badge_required),
+                    isRequired = true
+                )
+
                 if (!isCustomSalary) {
                     OutlinedTextField(
                         value = grossSalaryText,
@@ -569,7 +585,7 @@ fun SalaryStructureSheet(
                             }
                         },
                         label = { Text(stringResource(R.string.gross_salary_input_label)) },
-                        placeholder = { Text("0") },
+                        placeholder = { Text(stringResource(R.string.example_gross_salary)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .bringIntoViewRequester(salaryBringIntoViewRequester)
@@ -590,12 +606,115 @@ fun SalaryStructureSheet(
                             unfocusedLabelColor = if (isSalaryHighlighted) errorRed else defaultLabel
                         )
                     )
-
-                    Text(
-                        text = stringResource(R.string.auto_breakdown_locked_title),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp
+                } else {
+                    OutlinedTextField(
+                        value = basicSalaryText,
+                        onValueChange = {
+                            val normalized = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true)
+                            basicSalaryText = normalized
+                            if (normalized.isNotEmpty() && activeHighlightField == "SALARY") {
+                                activeHighlightField = null
+                            }
+                        },
+                        label = { Text(stringResource(R.string.total_salary_input_label)) },
+                        placeholder = { Text(stringResource(R.string.example_gross_salary)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bringIntoViewRequester(salaryBringIntoViewRequester)
+                            .testTag("basic_salary_input"),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Payments,
+                                contentDescription = null,
+                                tint = if (isSalaryHighlighted) errorRed else defaultPrimary
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = salaryFocusedBorderColor,
+                            unfocusedBorderColor = salaryBorderColor,
+                            focusedLabelColor = if (isSalaryHighlighted) errorRed else defaultPrimary,
+                            unfocusedLabelColor = if (isSalaryHighlighted) errorRed else defaultLabel
+                        )
                     )
+                    OutlinedTextField(
+                        value = customOtRateText,
+                        onValueChange = { customOtRateText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true) },
+                        label = { Text(stringResource(R.string.custom_ot_rate_label)) },
+                        placeholder = { Text(stringResource(R.string.example_custom_ot_rate)) },
+                        modifier = Modifier.fillMaxWidth().testTag("custom_ot_rate_input"),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        supportingText = { Text(stringResource(R.string.custom_ot_rate_hint)) }
+                    )
+                }
+
+                // Live Calculated Rate Preview (Placed right after salary input for instant clarity)
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(spacing.cardPadding),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.effective_ot_rate_label),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = if (effectiveHourlyOtRate != null && effectiveHourlyOtRate > 0.0) {
+                                    LaborLawCalculator.formatCurrency(effectiveHourlyOtRate, isBnDigits) +
+                                        stringResource(R.string.currency_per_hour_suffix)
+                                } else {
+                                    "—"
+                                },
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = stringResource(R.string.total_regular_salary_label),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            val calculatedGross = if (isCustomSalary) {
+                                LaborLawCalculator.parseLocalizedDouble(basicSalaryText)
+                            } else {
+                                autoResult.grossSalary
+                            }
+                            Text(
+                                text = LaborLawCalculator.formatCurrency(calculatedGross, isBnDigits),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+
+                if (!isCustomSalary) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = stringResource(R.string.auto_breakdown_locked_title),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = stringResource(R.string.auto_breakdown_no_edit_hint),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     OutlinedTextField(
                         value = autoResult.basicSalary.roundToInt().toString(),
                         onValueChange = {},
@@ -676,47 +795,28 @@ fun SalaryStructureSheet(
                             )
                         }
                     }
-                } else {
-                    OutlinedTextField(
-                        value = basicSalaryText,
-                        onValueChange = {
-                            val normalized = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true)
-                            basicSalaryText = normalized
-                            if (normalized.isNotEmpty() && activeHighlightField == "SALARY") {
-                                activeHighlightField = null
-                            }
-                        },
-                        label = { Text(stringResource(R.string.total_salary_input_label)) },
-                        placeholder = { Text("0") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .bringIntoViewRequester(salaryBringIntoViewRequester)
-                            .testTag("basic_salary_input"),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Payments,
-                                contentDescription = null,
-                                tint = if (isSalaryHighlighted) errorRed else defaultPrimary
-                            )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = salaryFocusedBorderColor,
-                            unfocusedBorderColor = salaryBorderColor,
-                            focusedLabelColor = if (isSalaryHighlighted) errorRed else defaultPrimary,
-                            unfocusedLabelColor = if (isSalaryHighlighted) errorRed else defaultLabel
-                        )
-                    )
-                    OutlinedTextField(
-                        value = customOtRateText,
-                        onValueChange = { customOtRateText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true) },
-                        label = { Text(stringResource(R.string.custom_ot_rate_label)) },
-                        placeholder = { Text("0") },
-                        modifier = Modifier.fillMaxWidth().testTag("custom_ot_rate_input"),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        supportingText = { Text(stringResource(R.string.custom_ot_rate_hint)) }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+
+                // Step 3: Optional Bills & Attendance Bonus
+                SheetStepHeader(
+                    title = stringResource(R.string.sheet_step_3_title),
+                    badgeText = stringResource(R.string.badge_optional),
+                    isRequired = false
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.sheet_step_3_hint),
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(spacing.subCardPadding)
                     )
                 }
 
@@ -732,7 +832,7 @@ fun SalaryStructureSheet(
                             }
                         },
                         label = { Text(stringResource(R.string.night_bill_rate_label)) },
-                        placeholder = { Text("0") },
+                        placeholder = { Text(stringResource(R.string.example_night_bill)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .bringIntoViewRequester(nightBringIntoViewRequester)
@@ -756,7 +856,7 @@ fun SalaryStructureSheet(
                             }
                         },
                         label = { Text(stringResource(R.string.tiffin_bill_rate_label)) },
-                        placeholder = { Text("0") },
+                        placeholder = { Text(stringResource(R.string.example_tiffin_bill)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .bringIntoViewRequester(tiffinBringIntoViewRequester)
@@ -782,7 +882,7 @@ fun SalaryStructureSheet(
                                 }
                             },
                             label = { Text(stringResource(R.string.night_bill_rate_label)) },
-                            placeholder = { Text("0") },
+                            placeholder = { Text(stringResource(R.string.example_night_bill)) },
                             modifier = Modifier
                                 .weight(1f)
                                 .bringIntoViewRequester(nightBringIntoViewRequester)
@@ -806,7 +906,7 @@ fun SalaryStructureSheet(
                                 }
                             },
                             label = { Text(stringResource(R.string.tiffin_bill_rate_label)) },
-                            placeholder = { Text("0") },
+                            placeholder = { Text(stringResource(R.string.example_tiffin_bill)) },
                             modifier = Modifier
                                 .weight(1f)
                                 .bringIntoViewRequester(tiffinBringIntoViewRequester)
@@ -828,7 +928,7 @@ fun SalaryStructureSheet(
                     value = attendanceBonusText,
                     onValueChange = { attendanceBonusText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true) },
                     label = { Text(stringResource(R.string.attendance_bonus_label)) },
-                    placeholder = { Text("0") },
+                    placeholder = { Text(stringResource(R.string.example_attendance_bonus)) },
                     modifier = Modifier.fillMaxWidth().testTag("attendance_bonus_input"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
@@ -838,7 +938,7 @@ fun SalaryStructureSheet(
                     value = maxAbsentForBonusText,
                     onValueChange = { maxAbsentForBonusText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = false) },
                     label = { Text(stringResource(R.string.bonus_absent_threshold_label)) },
-                    placeholder = { Text("0") },
+                    placeholder = { Text(stringResource(R.string.example_absent_days)) },
                     modifier = Modifier.fillMaxWidth().testTag("max_absent_bonus_input"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
@@ -863,58 +963,6 @@ fun SalaryStructureSheet(
                         }
                     }
                 )
-
-                // Live Calculated Rate Preview
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(spacing.cardPadding),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.effective_ot_rate_label),
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = if (effectiveHourlyOtRate != null && effectiveHourlyOtRate > 0.0) {
-                                    LaborLawCalculator.formatCurrency(effectiveHourlyOtRate, isBnDigits) +
-                                        stringResource(R.string.currency_per_hour_suffix)
-                                } else {
-                                    "—"
-                                },
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = stringResource(R.string.total_regular_salary_label),
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            val calculatedGross = if (isCustomSalary) {
-                                LaborLawCalculator.parseLocalizedDouble(basicSalaryText)
-                            } else {
-                                autoResult.grossSalary
-                            }
-                            Text(
-                                text = LaborLawCalculator.formatCurrency(calculatedGross, isBnDigits),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
@@ -973,6 +1021,39 @@ fun SalaryStructureSheet(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SheetStepHeader(
+    title: String,
+    badgeText: String,
+    isRequired: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f).padding(end = 8.dp)
+        )
+        Surface(
+            shape = RoundedCornerShape(6.dp),
+            color = if (isRequired) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
+        ) {
+            Text(
+                text = badgeText,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isRequired) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            )
         }
     }
 }

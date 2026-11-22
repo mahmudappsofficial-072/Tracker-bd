@@ -1,15 +1,11 @@
 package com.example.ui.screens
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,7 +13,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +27,6 @@ import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.model.TrashItem
 import com.example.data.model.UserProfile
-import com.example.ui.theme.SuccessGreen
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.NetworkMonitor
@@ -277,8 +271,9 @@ fun ProfileScreen(
                 }
             }
 
-            // Card 2: Salary & OT Summary Card (Opens SalaryStructureSheet)
+            // Card 2: Salary & OT Summary / Guided Onboarding Card (Opens SalaryStructureSheet)
             item {
+                val isSalaryConfigured = displayGross > 0.0 || (effectiveHourlyOtRate ?: 0.0) > 0.0
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -289,341 +284,246 @@ fun ProfileScreen(
                         modifier = Modifier.padding(spacing.cardPadding),
                         verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.salary_allowances_view_title),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (!profile.isCustomSalary) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer
-                            ) {
-                                Text(
-                                    text = stringResource(
-                                        if (!profile.isCustomSalary) R.string.badge_labor_law else R.string.badge_custom_rules
-                                    ),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (!profile.isCustomSalary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onTertiaryContainer,
-                                    modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
-                                )
-                            }
-                        }
-
-                        // Highlight Metrics (Gross & OT Rate)
-                        Surface(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        if (!isSalaryConfigured) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(spacing.cardPadding),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Text(
+                                    text = stringResource(R.string.salary_setup_card_title),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.tertiaryContainer
+                                ) {
                                     Text(
-                                        text = stringResource(R.string.total_regular_salary_label),
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                    Text(
-                                        text = LaborLawCalculator.formatCurrency(displayGross, isBnDigits),
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = stringResource(R.string.effective_ot_rate_label),
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                    Text(
-                                        text = if (effectiveHourlyOtRate != null && effectiveHourlyOtRate > 0.0) {
-                                            LaborLawCalculator.formatCurrency(effectiveHourlyOtRate, isBnDigits) +
-                                                stringResource(R.string.currency_per_hour_suffix)
-                                        } else {
-                                            "—"
-                                        },
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
+                                        text = stringResource(R.string.badge_setup_pending),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                     )
                                 }
                             }
-                        }
 
-                        if (!profile.isCustomSalary && autoResult.grossSalary > 0.0) {
+                            Text(
+                                text = stringResource(R.string.salary_setup_intro),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
                             Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(
                                     modifier = Modifier.padding(spacing.subCardPadding),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    SalaryBreakdownRow(stringResource(R.string.row_basic_salary), autoResult.basicSalary, isBnDigits)
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                                    SalaryBreakdownRow(stringResource(R.string.row_house_rent), autoResult.houseRent, isBnDigits)
-                                    SalaryBreakdownRow(stringResource(R.string.row_medical_allowance), 750.0, isBnDigits)
-                                    SalaryBreakdownRow(stringResource(R.string.row_conveyance), autoResult.conveyanceAllowance, isBnDigits)
-                                    SalaryBreakdownRow(stringResource(R.string.row_food_allowance), autoResult.foodAllowance, isBnDigits)
-                                }
-                            }
-                        } else if (displayGross <= 0.0) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.salary_not_configured_hint),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(spacing.subCardPadding)
-                                )
-                            }
-                        }
-
-                        // Benefits & Bonus Summary Chips
-                        val hasBenefits = profile.attendanceBonus > 0.0 || profile.nightBillRate > 0.0 || profile.tiffinBillRate > 0.0
-                        if (hasBenefits) {
-                            if (profile.nightBillRate > 0.0 || profile.tiffinBillRate > 0.0) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    if (profile.nightBillRate > 0.0) {
-                                        BenefitChip(
-                                            label = stringResource(R.string.night_bill_label),
-                                            value = LaborLawCalculator.formatCurrency(profile.nightBillRate, isBnDigits) +
-                                                stringResource(R.string.currency_per_night_suffix),
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                    }
-                                    if (profile.tiffinBillRate > 0.0) {
-                                        BenefitChip(
-                                            label = stringResource(R.string.tiffin_bill_label),
-                                            value = LaborLawCalculator.formatCurrency(profile.tiffinBillRate, isBnDigits) +
-                                                stringResource(R.string.currency_per_day_suffix),
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                    }
-                                }
-                            }
-                            if (profile.attendanceBonus > 0.0) {
-                                val absentDaysStr = LaborLawCalculator.formatNumber(profile.maxAbsentForBonus.coerceAtLeast(0).toDouble(), isBnDigits, 0)
-                                val leaveLimitPart = profile.maxLeaveForBonus?.takeIf { it > 0 }?.let { limit ->
-                                    stringResource(
-                                        R.string.leave_limit_inline_fmt,
-                                        LaborLawCalculator.formatNumber(limit.toDouble(), isBnDigits, 0)
-                                    )
-                                } ?: ""
-                                BenefitChip(
-                                    label = stringResource(R.string.attendance_bonus),
-                                    value = "${LaborLawCalculator.formatCurrency(profile.attendanceBonus, isBnDigits)} " +
-                                        stringResource(R.string.bonus_limit_summary_fmt, absentDaysStr, leaveLimitPart),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                pendingSalaryHighlight = null
-                                showSalarySheet = true
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = spacing.minTouchTarget)
-                                .testTag("edit_profile_button"),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.setup_edit_salary_btn),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Card 3: Account & App Menu Card (Clean Hub)
-            item {
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("account_card")
-                ) {
-                    Column(
-                        modifier = Modifier.padding(spacing.cardPadding),
-                        verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.account_and_app_section),
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        // Google Account Row
-                        if (currentUser == null) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(spacing.listItemPadding),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.Default.AccountCircle,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(32.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Column {
-                                            Text(
-                                                text = stringResource(R.string.google_account_title),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = stringResource(R.string.sign_in_sync_subtitle),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-                                    Surface(
-                                        shape = RoundedCornerShape(24.dp),
-                                        color = MaterialTheme.colorScheme.surface,
-                                        border = BorderStroke(1.dp, Color(0xFFDADCE0)),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(48.dp)
-                                            .clickable(enabled = !isAuthLoading) { onSignInWithGoogle() }
-                                            .testTag("google_sign_in_button")
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxSize(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            if (isAuthLoading) {
-                                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                                                Spacer(modifier = Modifier.width(10.dp))
-                                                Text(stringResource(R.string.signing_in_label), fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                                            } else {
-                                                Box(
-                                                    modifier = Modifier.size(22.dp).background(Color(0xFF4285F4), CircleShape),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text("G", color = Color.White, fontWeight = FontWeight.Black, fontSize = 13.sp)
-                                                }
-                                                Spacer(modifier = Modifier.width(10.dp))
-                                                Text(
-                                                    text = stringResource(R.string.sign_in_with_google),
-                                                    fontWeight = FontWeight.Medium,
-                                                    fontSize = 14.sp,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-                                            }
-                                        }
-                                    }
+                                    OnboardingStepRow(
+                                        stepNumber = 1,
+                                        title = stringResource(R.string.salary_guide_step_1_title),
+                                        subtitle = stringResource(R.string.salary_guide_step_1_desc),
+                                        isBnDigits = isBnDigits
+                                    )
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                    OnboardingStepRow(
+                                        stepNumber = 2,
+                                        title = stringResource(R.string.salary_guide_step_2_title),
+                                        subtitle = stringResource(R.string.salary_guide_step_2_desc),
+                                        isBnDigits = isBnDigits
+                                    )
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                    OnboardingStepRow(
+                                        stepNumber = 3,
+                                        title = stringResource(R.string.salary_guide_step_3_title),
+                                        subtitle = stringResource(R.string.salary_guide_step_3_desc),
+                                        isBnDigits = isBnDigits
+                                    )
                                 }
                             }
+
+                            Button(
+                                onClick = {
+                                    pendingSalaryHighlight = null
+                                    showSalarySheet = true
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = spacing.minTouchTarget)
+                                    .testTag("edit_profile_button"),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.start_salary_setup_btn),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
                         } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.salary_allowances_view_title),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (!profile.isCustomSalary) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer
+                                ) {
+                                    Text(
+                                        text = stringResource(
+                                            if (!profile.isCustomSalary) R.string.badge_labor_law else R.string.badge_custom_rules
+                                        ),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (!profile.isCustomSalary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onTertiaryContainer,
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
+                                    )
+                                }
+                            }
+
+                            // Highlight Metrics (Gross & OT Rate)
                             Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer,
                                 shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(spacing.listItemPadding),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(spacing.cardPadding),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                        Icon(Icons.Default.CloudDone, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(22.dp))
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Column {
-                                            Text(
-                                                text = currentUser.email ?: currentUser.displayName ?: stringResource(R.string.google_user_fallback),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.SemiBold,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Text(
-                                                text = LanguageManager.formatSyncTimestamp(context, profile.lastCloudSyncTime, effectiveLang),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = SuccessGreen
-                                            )
-                                        }
-                                    }
-                                    TextButton(
-                                        onClick = {
-                                            if (isSigningOut) return@TextButton
-                                            if (NetworkMonitor.isStrictlyOnline(context)) {
-                                                showSignOutConfirmDialog = true
-                                            } else {
-                                                showOfflineSignOutAlert = true
-                                            }
-                                        },
-                                        enabled = !isSigningOut,
-                                        contentPadding = spacing.compactButtonContentPadding,
-                                        modifier = Modifier.testTag("sign_out_button")
-                                    ) {
+                                    Column {
                                         Text(
-                                            text = stringResource(R.string.sign_out_btn),
-                                            color = if (isOnline) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.sp
+                                            text = stringResource(R.string.total_regular_salary_label),
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = LaborLawCalculator.formatCurrency(displayGross, isBnDigits),
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            text = stringResource(R.string.effective_ot_rate_label),
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = if (effectiveHourlyOtRate != null && effectiveHourlyOtRate > 0.0) {
+                                                LaborLawCalculator.formatCurrency(effectiveHourlyOtRate, isBnDigits) +
+                                                    stringResource(R.string.currency_per_hour_suffix)
+                                            } else {
+                                                "—"
+                                            },
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 }
                             }
+
+                            if (!profile.isCustomSalary && autoResult.grossSalary > 0.0) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(spacing.subCardPadding),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        SalaryBreakdownRow(stringResource(R.string.row_basic_salary), autoResult.basicSalary, isBnDigits)
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                        SalaryBreakdownRow(stringResource(R.string.row_house_rent), autoResult.houseRent, isBnDigits)
+                                        SalaryBreakdownRow(stringResource(R.string.row_medical_allowance), 750.0, isBnDigits)
+                                        SalaryBreakdownRow(stringResource(R.string.row_conveyance), autoResult.conveyanceAllowance, isBnDigits)
+                                        SalaryBreakdownRow(stringResource(R.string.row_food_allowance), autoResult.foodAllowance, isBnDigits)
+                                    }
+                                }
+                            }
+
+                            // Benefits & Bonus Summary Chips
+                            val hasBenefits = profile.attendanceBonus > 0.0 || profile.nightBillRate > 0.0 || profile.tiffinBillRate > 0.0
+                            if (hasBenefits) {
+                                if (profile.nightBillRate > 0.0 || profile.tiffinBillRate > 0.0) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (profile.nightBillRate > 0.0) {
+                                            BenefitChip(
+                                                label = stringResource(R.string.night_bill_label),
+                                                value = LaborLawCalculator.formatCurrency(profile.nightBillRate, isBnDigits) +
+                                                    stringResource(R.string.currency_per_night_suffix),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                        if (profile.tiffinBillRate > 0.0) {
+                                            BenefitChip(
+                                                label = stringResource(R.string.tiffin_bill_label),
+                                                value = LaborLawCalculator.formatCurrency(profile.tiffinBillRate, isBnDigits) +
+                                                    stringResource(R.string.currency_per_day_suffix),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                }
+                                if (profile.attendanceBonus > 0.0) {
+                                    val absentDaysStr = LaborLawCalculator.formatNumber(profile.maxAbsentForBonus.coerceAtLeast(0).toDouble(), isBnDigits, 0)
+                                    val leaveLimitPart = profile.maxLeaveForBonus?.takeIf { it > 0 }?.let { limit ->
+                                        stringResource(
+                                            R.string.leave_limit_inline_fmt,
+                                            LaborLawCalculator.formatNumber(limit.toDouble(), isBnDigits, 0)
+                                        )
+                                    } ?: ""
+                                    BenefitChip(
+                                        label = stringResource(R.string.attendance_bonus),
+                                        value = "${LaborLawCalculator.formatCurrency(profile.attendanceBonus, isBnDigits)} " +
+                                            stringResource(R.string.bonus_limit_summary_fmt, absentDaysStr, leaveLimitPart),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = {
+                                    pendingSalaryHighlight = null
+                                    showSalarySheet = true
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = spacing.minTouchTarget)
+                                    .testTag("edit_profile_button"),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.setup_edit_salary_btn),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
-
-                        // Recycle Bin Row
-                        HubMenuRow(
-                            icon = Icons.Default.DeleteSweep,
-                            iconBg = MaterialTheme.colorScheme.errorContainer,
-                            iconTint = MaterialTheme.colorScheme.error,
-                            title = stringResource(R.string.trash_bin_title),
-                            subtitle = stringResource(R.string.trash_bin_subtitle),
-                            badgeText = if (trashItems.isNotEmpty()) stringResource(R.string.items_count_fmt, trashItems.size) else null,
-                            onClick = { showTrashDialog = true },
-                            testTag = "trash_bin_button"
-                        )
-
-                        // Settings Row
-                        HubMenuRow(
-                            icon = Icons.Default.Settings,
-                            iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            title = stringResource(R.string.cd_settings),
-                            subtitle = stringResource(R.string.settings_subtitle),
-                            onClick = { showSettingsDialog = true },
-                            testTag = "settings_menu_row"
-                        )
                     }
                 }
             }
@@ -747,73 +647,6 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun HubMenuRow(
-    icon: ImageVector,
-    iconBg: Color,
-    iconTint: Color,
-    title: String,
-    subtitle: String,
-    badgeText: String? = null,
-    testTag: String,
-    onClick: () -> Unit
-) {
-    val spacing = ResponsiveUtils.rememberAppSpacing()
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = spacing.minTouchTarget)
-            .clickable(onClick = onClick)
-            .testTag(testTag)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(spacing.listItemPadding),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f).padding(end = 8.dp)
-            ) {
-                Box(
-                    modifier = Modifier.size(36.dp).clip(CircleShape).background(iconBg),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (!badgeText.isNullOrBlank()) {
-                    Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.error) {
-                        Text(
-                            text = badgeText,
-                            color = MaterialTheme.colorScheme.onError,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            softWrap = false,
-                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun InfoChipCard(
     icon: ImageVector,
     label: String,
@@ -909,6 +742,49 @@ private fun BenefitChip(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 textAlign = TextAlign.End
+            )
+        }
+    }
+}
+
+@Composable
+private fun OnboardingStepRow(
+    stepNumber: Int,
+    title: String,
+    subtitle: String,
+    isBnDigits: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(24.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = LaborLawCalculator.formatNumber(stepNumber.toDouble(), isBnDigits, 0),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                lineHeight = 15.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
