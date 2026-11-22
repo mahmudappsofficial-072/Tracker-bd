@@ -73,7 +73,7 @@ object LanguageManager {
             "bn" -> Locale.forLanguageTag("bn-BD")
             "hi" -> Locale.forLanguageTag("hi-IN")
             "ta" -> Locale.forLanguageTag("ta-IN")
-            "ar" -> Locale.forLanguageTag("ar")
+            "ar" -> Locale.forLanguageTag("ar-u-nu-latn")
             else -> Locale.US
         }
     }
@@ -197,7 +197,11 @@ object LanguageManager {
             val date = sdf.parse(yearMonth) ?: return yearMonth
             val outSdf = SimpleDateFormat("MMMM yyyy", localeForTag(resolvedTag))
             val formatted = outSdf.format(date)
-            if (resolvedTag == "bn") LaborLawCalculator.toBengaliDigits(formatted) else formatted
+            if (resolvedTag == "bn") {
+                LaborLawCalculator.toBengaliDigits(formatted)
+            } else {
+                LaborLawCalculator.toEnglishDigits(formatted)
+            }
         } catch (_: Exception) {
             yearMonth
         }
@@ -213,7 +217,11 @@ object LanguageManager {
         val resolvedTag = resolveSupportedTag(langTag)
         val sdf = SimpleDateFormat("dd MMM, hh:mm a", localeForTag(resolvedTag))
         val formatted = sdf.format(Date(timeMillis))
-        return if (resolvedTag == "bn") LaborLawCalculator.toBengaliDigits(formatted) else formatted
+        return if (resolvedTag == "bn") {
+            LaborLawCalculator.toBengaliDigits(formatted)
+        } else {
+            LaborLawCalculator.toEnglishDigits(formatted)
+        }
     }
 
     fun formatDisplayGrade(context: Context, grade: String, langTag: String): String {

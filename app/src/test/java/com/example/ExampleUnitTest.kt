@@ -513,5 +513,53 @@ class ExampleUnitTest {
     assertEquals(80.0, runningSummary.targetHours, 0.001)
     assertFalse(runningSummary.isLocked)
   }
+
+  @Test
+  fun testLanguageManager_supportedTagsAndEnglishFallback() {
+    assertEquals("en", com.example.util.LanguageManager.resolveSupportedTag("en"))
+    assertEquals("en", com.example.util.LanguageManager.resolveSupportedTag("en-US"))
+    assertEquals("bn", com.example.util.LanguageManager.resolveSupportedTag("bn-BD"))
+    assertEquals("hi", com.example.util.LanguageManager.resolveSupportedTag("hi-IN"))
+    assertEquals("ta", com.example.util.LanguageManager.resolveSupportedTag("ta-IN"))
+    assertEquals("ar", com.example.util.LanguageManager.resolveSupportedTag("ar-SA"))
+    // Unsupported locales fall back to English
+    assertEquals("en", com.example.util.LanguageManager.resolveSupportedTag("fr-FR"))
+    assertEquals("en", com.example.util.LanguageManager.resolveSupportedTag("es"))
+    assertEquals("en", com.example.util.LanguageManager.resolveSupportedTag(""))
+    assertEquals("en", com.example.util.LanguageManager.resolveSupportedTag(null))
+
+    // Profile language normalization
+    assertEquals("system", com.example.util.LanguageManager.normalizeProfileLanguage("system"))
+    assertEquals("system", com.example.util.LanguageManager.normalizeProfileLanguage("fr"))
+    assertEquals("bn", com.example.util.LanguageManager.normalizeProfileLanguage("bn-BD"))
+    assertEquals("hi", com.example.util.LanguageManager.normalizeProfileLanguage("HI"))
+    assertEquals("ta", com.example.util.LanguageManager.normalizeProfileLanguage("ta"))
+    assertEquals("ar", com.example.util.LanguageManager.normalizeProfileLanguage("ar-EG"))
+
+    // Bengali digits only for bn
+    assertTrue(com.example.util.LanguageManager.isBengaliDigits("bn"))
+    assertFalse(com.example.util.LanguageManager.isBengaliDigits("en"))
+    assertFalse(com.example.util.LanguageManager.isBengaliDigits("hi"))
+    assertFalse(com.example.util.LanguageManager.isBengaliDigits("ta"))
+    assertFalse(com.example.util.LanguageManager.isBengaliDigits("ar"))
+  }
+
+  @Test
+  fun testLanguageManager_formatYearMonthAllFiveLanguages() {
+    val en = com.example.util.LanguageManager.formatYearMonth("2026-11", "en")
+    val bn = com.example.util.LanguageManager.formatYearMonth("2026-11", "bn")
+    val hi = com.example.util.LanguageManager.formatYearMonth("2026-11", "hi")
+    val ta = com.example.util.LanguageManager.formatYearMonth("2026-11", "ta")
+    val ar = com.example.util.LanguageManager.formatYearMonth("2026-11", "ar")
+    val fallback = com.example.util.LanguageManager.formatYearMonth("2026-11", "fr")
+
+    assertTrue(en.contains("2026"))
+    assertTrue(bn.contains("২০২৬"))
+    assertTrue(hi.contains("2026"))
+    assertTrue(ta.contains("2026"))
+    assertTrue(ar.contains("2026"))
+    assertEquals(en, fallback)
+  }
 }
+
 

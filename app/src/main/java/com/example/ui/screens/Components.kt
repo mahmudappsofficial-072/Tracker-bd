@@ -314,7 +314,11 @@ fun ProfessionalDatePickerField(
             if (parsed != null) {
                 val dayName = SimpleDateFormat("EEEE", displayLocale).format(parsed)
                 val formatted = SimpleDateFormat("dd MMMM yyyy", displayLocale).format(parsed)
-                val display = if (isBnDigits) LaborLawCalculator.toBengaliDigits(formatted) else formatted
+                val display = if (isBnDigits) {
+                    LaborLawCalculator.toBengaliDigits(formatted)
+                } else {
+                    LaborLawCalculator.toEnglishDigits(formatted)
+                }
                 val suffix = when (selectedDate) {
                     todayDateStr -> todaySuffix
                     yesterdayDateStr -> yesterdaySuffix

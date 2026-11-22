@@ -113,16 +113,18 @@ object LaborLawCalculator {
     }
 
     /**
-     * Convert Bengali numerals (০-৯) to English ASCII digits (0-9)
+     * Convert localized numerals (Bengali ০-৯, Arabic-Indic ٠-٩ / ۰-۹, Devanagari ०-९) to English ASCII digits (0-9)
      */
     fun toEnglishDigits(input: String): String {
-        val bnToEnMap = mapOf(
-            '০' to '0', '১' to '1', '২' to '2', '৩' to '3', '৪' to '4',
-            '৫' to '5', '৬' to '6', '৭' to '7', '৮' to '8', '৯' to '9'
-        )
-        val sb = StringBuilder()
+        val sb = StringBuilder(input.length)
         for (ch in input) {
-            sb.append(bnToEnMap[ch] ?: ch)
+            when (ch) {
+                in '০'..'৯' -> sb.append(('0'.code + (ch.code - '০'.code)).toChar())
+                in '٠'..'٩' -> sb.append(('0'.code + (ch.code - '٠'.code)).toChar())
+                in '۰'..'۹' -> sb.append(('0'.code + (ch.code - '۰'.code)).toChar())
+                in '०'..'९' -> sb.append(('0'.code + (ch.code - '०'.code)).toChar())
+                else -> sb.append(ch)
+            }
         }
         return sb.toString()
     }

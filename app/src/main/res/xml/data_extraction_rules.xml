@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
-    <!-- Automatic Cloud Backup to Google Drive (excluding local DB and account sync prefs; Firestore handles cloud restore) -->
+    <!-- Automatic Cloud Backup to Google Drive (local Room DB is omitted because only domain="sharedpref" is included; Firestore handles cloud restore) -->
     <cloud-backup>
-        <exclude domain="database" path="."/>
         <include domain="sharedpref" path="."/>
         <exclude domain="sharedpref" path="com.google.firebase"/>
         <exclude domain="sharedpref" path="overtime_sync_prefs.xml"/>
         <exclude domain="sharedpref" path="overtime_tombstones.xml"/>
     </cloud-backup>
 
-    <!-- Direct Device-to-Device Transfer (exclude local DB & sync prefs to keep account state clean) -->
+    <!-- Direct Device-to-Device Transfer (local Room DB is omitted because only domain="sharedpref" is included) -->
     <device-transfer>
-        <exclude domain="database" path="."/>
         <include domain="sharedpref" path="."/>
         <exclude domain="sharedpref" path="com.google.firebase"/>
         <exclude domain="sharedpref" path="overtime_sync_prefs.xml"/>

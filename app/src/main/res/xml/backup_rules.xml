@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- Exclude local Room DB and account-scoped sync state so reinstalls do not mix stale local records across Google accounts; Firestore is the authoritative cloud backup. -->
-    <exclude domain="database" path="."/>
+    <!-- Local Room DB is automatically excluded because only domain="sharedpref" is included below; Firestore is the authoritative cloud backup. -->
     <include domain="sharedpref" path="."/>
     <exclude domain="sharedpref" path="com.google.firebase"/>
     <exclude domain="sharedpref" path="overtime_sync_prefs.xml"/>

@@ -1,11 +1,20 @@
 package com.example
 
+import android.Manifest
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,34 +23,83 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.style.TextOverflow
-import com.example.ui.components.AdmobBanner
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccessTimeFilled
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.model.OvertimeRecord
-import com.example.ui.screens.*
+import com.example.receiver.MyFirebaseMessagingService
+import com.example.receiver.ReminderScheduler
+import com.example.ui.components.AdmobBanner
+import com.example.ui.screens.AddPieceRateDialog
+import com.example.ui.screens.ForceUpdateDialog
+import com.example.ui.screens.HomeScreen
+import com.example.ui.screens.InitialPrivacyConsentDialog
+import com.example.ui.screens.LanguagePickerBottomSheet
+import com.example.ui.screens.MissingOtDetector
+import com.example.ui.screens.MissingOtReminderDialog
+import com.example.ui.screens.OtListScreen
+import com.example.ui.screens.PieceRateScreen
+import com.example.ui.screens.ProfileScreen
+import com.example.ui.screens.QuickOtEntryDialog
+import com.example.ui.screens.TargetGoalDialog
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.OvertimeViewModel
+import com.example.util.AppUpdateChecker
+import com.example.util.AppUpdateInfo
 import com.example.util.LanguageManager
+import com.example.util.MonthLockPolicy
+import com.example.util.ResponsiveUtils
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
-    private val openQuickOtTrigger = androidx.compose.runtime.mutableStateOf(false)
+    private val openQuickOtTrigger = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +132,7 @@ fun OvertimeApp(
     openQuickOtTrigger: Boolean = false,
     onResetQuickOtTrigger: () -> Unit = {}
 ) {
-    var isAppReady by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var isAppReady by rememberSaveable { mutableStateOf(false) }
     val isInitialSyncComplete by viewModel.isInitialSyncComplete.collectAsStateWithLifecycle()
 
     LaunchedEffect(isInitialSyncComplete) {
@@ -85,12 +143,12 @@ fun OvertimeApp(
 
     LaunchedEffect(Unit) {
         if (!isAppReady) {
-            kotlinx.coroutines.delay(2000L)
+            delay(2000L)
             isAppReady = true
         }
     }
 
-    var currentTab by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) } // 0: Home, 1: OT List, 2: Piece & Slip, 3: Profile
+    var currentTab by rememberSaveable { mutableIntStateOf(0) } // 0: Home, 1: OT List, 2: Piece & Slip, 3: Profile
 
     val selectedMonth by viewModel.selectedYearMonth.collectAsStateWithLifecycle()
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -105,64 +163,97 @@ fun OvertimeApp(
     val isAuthLoading by viewModel.isAuthLoading.collectAsStateWithLifecycle()
     val isSigningOut by viewModel.isSigningOut.collectAsStateWithLifecycle()
     val pendingConsentUser by viewModel.pendingConsentUser.collectAsStateWithLifecycle()
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val activity = context as? android.app.Activity
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val configuration = LocalConfiguration.current
 
-    val lang = profile.language
+    // One-time legacy locale handoff once Room/initial sync finishes
+    var hasRunLocaleMigration by remember { mutableStateOf(false) }
+    LaunchedEffect(isInitialSyncComplete, profile, allOtRecords.size) {
+        if (isInitialSyncComplete && !hasRunLocaleMigration) {
+            hasRunLocaleMigration = true
+            val hasConfiguredData = profile.basicSalary > 0.0 ||
+                profile.userName.isNotBlank() ||
+                profile.lastCloudSyncTime > 0L ||
+                allOtRecords.isNotEmpty()
+            val migrated = LanguageManager.migrateLegacyLocaleIfNeeded(
+                context = context,
+                legacyProfileLanguage = profile.language,
+                hasConfiguredData = hasConfiguredData
+            )
+            if (migrated != profile.language) {
+                viewModel.syncSystemAppLocaleToProfile(migrated)
+            }
+        }
+    }
+
+    val selectedSettingTag = remember(configuration, profile.language) {
+        LanguageManager.getSelectedSettingTag(context)
+    }
+    val effectiveLangTag = remember(configuration, selectedSettingTag) {
+        LanguageManager.getEffectiveLanguageTag(context, fallbackProfileLang = null)
+    }
+    val latestEffectiveLang by rememberUpdatedState(effectiveLangTag)
+    val latestProfileLanguage by rememberUpdatedState(profile.language)
 
     // Notification permission launcher for Android 13+ (API 33+)
-    val notificationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            com.example.receiver.ReminderScheduler.scheduleDailyReminders(context, isBn = lang == "bn")
+            ReminderScheduler.scheduleDailyReminders(context, langTag = latestEffectiveLang)
         }
     }
 
     LaunchedEffect(Unit) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
                 context,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
             if (!hasPermission) {
-                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
         viewModel.uiMessage.collect { msg ->
-            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         }
     }
 
-    LaunchedEffect(lang) {
-        val isBn = lang == "bn"
-        com.example.receiver.ReminderScheduler.scheduleDailyReminders(context, isBn = isBn)
+    LaunchedEffect(effectiveLangTag) {
+        ReminderScheduler.scheduleDailyReminders(context, langTag = effectiveLangTag)
         try {
-            com.example.receiver.MyFirebaseMessagingService.createFcmChannel(context, isBn = isBn)
+            MyFirebaseMessagingService.createFcmChannel(context, langTag = effectiveLangTag)
         } catch (e: Exception) {
             Log.w("MainActivity", "Failed to create FCM notification channel: ${e.message}")
         }
     }
 
     // Dialog States
-    var appUpdateInfo by remember { mutableStateOf<com.example.util.AppUpdateInfo?>(null) }
-    var showQuickOtDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    var hasCheckedMissingOtThisSession by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var appUpdateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var showQuickOtDialog by rememberSaveable { mutableStateOf(false) }
+    var hasCheckedMissingOtThisSession by rememberSaveable { mutableStateOf(false) }
     var showMissingOtDialog by remember { mutableStateOf(false) }
     var missingOtDates by remember { mutableStateOf<List<String>>(emptyList()) }
-    var pendingProfileHighlightField by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
-    var profileHighlightTriggerId by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
+    var pendingProfileHighlightField by rememberSaveable { mutableStateOf<String?>(null) }
+    var profileHighlightTriggerId by rememberSaveable { mutableIntStateOf(0) }
+    var showLanguagePicker by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
                 viewModel.refreshMonthRolloverIfNeeded()
+                // Keep Android 13+ system App Language changes synced into UserProfile
+                val currentSystemAppSetting = LanguageManager.getSelectedSettingTag(context)
+                if (hasRunLocaleMigration && currentSystemAppSetting != latestProfileLanguage) {
+                    viewModel.syncSystemAppLocaleToProfile(currentSystemAppSetting)
+                }
                 if (appUpdateInfo == null) {
                     coroutineScope.launch {
-                        val update = com.example.util.AppUpdateChecker.checkUpdate(context)
+                        val update = AppUpdateChecker.checkUpdate(context)
                         if (update != null) {
                             appUpdateInfo = update
                         }
@@ -187,9 +278,9 @@ fun OvertimeApp(
 
     LaunchedEffect(otRecords, allOtRecords, previousMonthSettings, openQuickOtTrigger, isAppReady) {
         if (isAppReady && !hasCheckedMissingOtThisSession && !openQuickOtTrigger) {
-            kotlinx.coroutines.delay(350)
-            val prevYm = com.example.util.MonthLockPolicy.getPreviousCalendarYearMonth()
-            val isPrevUnlocked = !com.example.util.MonthLockPolicy.resolveIsMonthLocked(prevYm, previousMonthSettings?.isLocked)
+            delay(350)
+            val prevYm = MonthLockPolicy.getPreviousCalendarYearMonth()
+            val isPrevUnlocked = !MonthLockPolicy.resolveIsMonthLocked(prevYm, previousMonthSettings?.isLocked)
             val missing = MissingOtDetector.getMissingDatesForReminder(
                 currentMonthRecords = otRecords,
                 allRecords = allOtRecords,
@@ -202,8 +293,9 @@ fun OvertimeApp(
             hasCheckedMissingOtThisSession = true
         }
     }
-    var editingRecordId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<Long?>(null) }
-    var editingRecordDate by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+
+    var editingRecordId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var editingRecordDate by rememberSaveable { mutableStateOf<String?>(null) }
     val recordToEdit = remember(editingRecordId, editingRecordDate, otRecords, allOtRecords) {
         val id = editingRecordId
         val date = editingRecordDate
@@ -217,13 +309,13 @@ fun OvertimeApp(
             else -> null
         }
     }
-    var showPieceDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    var showTargetDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var showPieceDialog by rememberSaveable { mutableStateOf(false) }
+    var showTargetDialog by rememberSaveable { mutableStateOf(false) }
     var isHomeSheetOpen by remember { mutableStateOf(false) }
     var isProfileSheetOpen by remember { mutableStateOf(false) }
 
     // Back handling: Return to Home if on secondary tab when no in-screen sheet/panel is open
-    BackHandler(enabled = isAppReady && currentTab != 0 && !showQuickOtDialog && !showMissingOtDialog && !showPieceDialog && !showTargetDialog) {
+    BackHandler(enabled = isAppReady && currentTab != 0 && !showQuickOtDialog && !showMissingOtDialog && !showPieceDialog && !showTargetDialog && !showLanguagePicker) {
         currentTab = 0
     }
 
@@ -232,6 +324,7 @@ fun OvertimeApp(
         showMissingOtDialog ||
         showPieceDialog ||
         showTargetDialog ||
+        showLanguagePicker ||
         isHomeSheetOpen ||
         isProfileSheetOpen ||
         pendingConsentUser != null ||
@@ -248,435 +341,452 @@ fun OvertimeApp(
         ) {
             ForceUpdateDialog(
                 updateInfo = currentUpdate,
-                lang = lang
+                lang = effectiveLangTag
             )
         }
     } else {
         Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                AdmobBanner(
-                    modifier = Modifier.fillMaxWidth(),
-                    isOccluded = isAnyOverlayOccludingBanner
-                )
-                val isCompactNav = com.example.util.ResponsiveUtils.isCompactScreen()
-                val navLabelSize = if (isCompactNav) 10.sp else 12.sp
-
-                NavigationBar(
-                    modifier = Modifier.testTag("bottom_navigation_bar"),
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = NavigationBarDefaults.Elevation
-                ) {
-                // Tab 0: Home
-                NavigationBarItem(
-                    selected = currentTab == 0,
-                    onClick = {
-                        showQuickOtDialog = false
-                        editingRecordId = null
-                        editingRecordDate = null
-                        showMissingOtDialog = false
-                        showPieceDialog = false
-                        showTargetDialog = false
-                        currentTab = 0
-                    },
-                    icon = {
-                        Icon(
-                            if (currentTab == 0) Icons.Filled.Home else Icons.Outlined.Home,
-                            contentDescription = LanguageManager.get("tab_home", lang)
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = LanguageManager.get("tab_home", lang),
-                            fontWeight = if (currentTab == 0) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = navLabelSize,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    modifier = Modifier.testTag("tab_home_item")
-                )
-
-                // Tab 1: OT List
-                NavigationBarItem(
-                    selected = currentTab == 1,
-                    onClick = {
-                        showQuickOtDialog = false
-                        editingRecordId = null
-                        editingRecordDate = null
-                        showMissingOtDialog = false
-                        showPieceDialog = false
-                        showTargetDialog = false
-                        currentTab = 1
-                    },
-                    icon = {
-                        Icon(
-                            if (currentTab == 1) Icons.Filled.AccessTimeFilled else Icons.Outlined.AccessTime,
-                            contentDescription = LanguageManager.get("tab_ot_list", lang)
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = LanguageManager.get("tab_ot_list", lang),
-                            fontWeight = if (currentTab == 1) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = navLabelSize,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    modifier = Modifier.testTag("tab_ot_list_item")
-                )
-
-                // Tab 2: Piece Rate & Slip
-                NavigationBarItem(
-                    selected = currentTab == 2,
-                    onClick = {
-                        showQuickOtDialog = false
-                        editingRecordId = null
-                        editingRecordDate = null
-                        showMissingOtDialog = false
-                        showPieceDialog = false
-                        showTargetDialog = false
-                        currentTab = 2
-                    },
-                    icon = {
-                        Icon(
-                            if (currentTab == 2) Icons.AutoMirrored.Filled.ReceiptLong else Icons.AutoMirrored.Outlined.ReceiptLong,
-                            contentDescription = LanguageManager.get("tab_piece_rate", lang)
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = LanguageManager.get("tab_piece_rate", lang),
-                            fontWeight = if (currentTab == 2) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = navLabelSize,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    modifier = Modifier.testTag("tab_piece_item")
-                )
-
-                // Tab 3: Profile & Settings
-                NavigationBarItem(
-                    selected = currentTab == 3,
-                    onClick = {
-                        showQuickOtDialog = false
-                        editingRecordId = null
-                        editingRecordDate = null
-                        showMissingOtDialog = false
-                        showPieceDialog = false
-                        showTargetDialog = false
-                        currentTab = 3
-                    },
-                    icon = {
-                        Icon(
-                            if (currentTab == 3) Icons.Filled.Person else Icons.Outlined.Person,
-                            contentDescription = LanguageManager.get("tab_profile", lang)
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = LanguageManager.get("tab_profile", lang),
-                            fontWeight = if (currentTab == 3) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = navLabelSize,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    modifier = Modifier.testTag("tab_profile_item")
-                )
-            }
-        }
-    }
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .consumeWindowInsets(innerPadding),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            if (!isAppReady) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .testTag("app_initial_loading_screen"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 3.5.dp,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .testTag("app_initial_loading_indicator")
+            modifier = Modifier.fillMaxSize(),
+            bottomBar = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    AdmobBanner(
+                        modifier = Modifier.fillMaxWidth(),
+                        isOccluded = isAnyOverlayOccludingBanner
                     )
-                }
-            } else {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    when (currentTab) {
-                0 -> HomeScreen(
-                    selectedMonth = selectedMonth,
-                    summary = summary,
-                    profile = profile,
-                    recentRecords = otRecords,
-                    deductions = deductions,
-                    onPreviousMonth = { viewModel.previousMonth() },
-                    onNextMonth = { viewModel.nextMonth() },
-                    onToggleLanguage = { viewModel.toggleLanguage() },
-                    onQuickAddOtClick = {
-                        editingRecordId = null
-                        val currentCalYm = java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.US).format(java.util.Date())
-                        editingRecordDate = if (selectedMonth < currentCalYm) {
-                            com.example.util.MonthLockPolicy.getDefaultDateForMonth(selectedMonth)
-                        } else null
-                        showQuickOtDialog = true
-                    },
-                    onAddDeduction = { type, date, amount, desc ->
-                        viewModel.addDeduction(type, date, amount, desc)
-                    },
-                    onDeleteDeduction = { record ->
-                        viewModel.moveDeductionToTrash(record)
-                    },
-                    onEditTargetClick = { showTargetDialog = true },
-                    onRecordClick = { rec ->
-                        editingRecordId = rec.id
-                        editingRecordDate = null
-                        showQuickOtDialog = true
-                    },
-                    onViewAllClick = { currentTab = 1 },
-                    onSetMonthLock = { locked -> viewModel.setMonthLockStatus(selectedMonth, locked) },
-                    onModalSheetVisibilityChanged = { isHomeSheetOpen = it }
-                )
+                    val isCompactNav = ResponsiveUtils.isCompactScreen()
+                    val navLabelSize = if (isCompactNav) 10.sp else 12.sp
 
-                1 -> OtListScreen(
-                    selectedMonth = selectedMonth,
-                    records = otRecords,
-                    hourlyRate = summary.hourlyOtRate,
-                    dailyAbsentRate = summary.dailyAbsentRate,
-                    attendanceBonus = summary.attendanceBonus,
-                    isBonusCancelled = summary.isBonusCancelledDueToAbsent || summary.isBonusCancelledDueToLeave,
-                    isLocked = summary.isLocked,
-                    lang = lang,
-                    onPreviousMonth = { viewModel.previousMonth() },
-                    onNextMonth = { viewModel.nextMonth() },
-                    onAddClick = {
-                        editingRecordId = null
-                        val currentCalYm = java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.US).format(java.util.Date())
-                        editingRecordDate = if (selectedMonth < currentCalYm) {
-                            com.example.util.MonthLockPolicy.getDefaultDateForMonth(selectedMonth)
-                        } else null
-                        showQuickOtDialog = true
-                    },
-                    onEditClick = { rec ->
-                        editingRecordId = rec.id
-                        editingRecordDate = null
-                        showQuickOtDialog = true
-                    },
-                    onDeleteClick = { id ->
-                        otRecords.find { it.id == id }?.let { rec ->
-                            viewModel.moveOtToTrash(rec)
-                        } ?: viewModel.deleteOvertime(id)
-                    },
-                    onSetMonthLock = { locked -> viewModel.setMonthLockStatus(selectedMonth, locked) }
-                )
-
-                2 -> PieceRateScreen(
-                    selectedMonth = selectedMonth,
-                    pieceRecords = pieceRecords,
-                    profile = profile,
-                    summary = summary,
-                    lang = lang,
-                    onAddPieceClick = { showPieceDialog = true },
-                    onDeletePieceClick = { id ->
-                        pieceRecords.find { it.id == id }?.let { rec ->
-                            viewModel.movePieceToTrash(rec)
-                        } ?: viewModel.deletePieceRate(id)
-                    },
-                    onSetMonthLock = { locked -> viewModel.setMonthLockStatus(selectedMonth, locked) }
-                )
-
-                3 -> ProfileScreen(
-                    profile = profile,
-                    lang = lang,
-                    currentUser = currentUser,
-                    isAuthLoading = isAuthLoading,
-                    isSigningOut = isSigningOut,
-                    onSignInWithGoogle = {
-                        activity?.let { act ->
-                            viewModel.signInWithGoogle(act) { err ->
-                                android.widget.Toast.makeText(act, err, android.widget.Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    },
-                    onSignOut = { onResult ->
-                        viewModel.signOut { success, msg ->
-                            onResult(success, msg)
-                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
-                        }
-                    },
-                    onSaveProfile = { updated -> viewModel.updateProfile(updated) },
-                    onToggleLanguage = { viewModel.toggleLanguage() },
-                    onSyncCloud = { callback -> viewModel.syncCloudNow(callback) },
-                    trashItems = trashItems,
-                    onRestoreTrash = { viewModel.restoreTrashItem(it) },
-                    onDeleteTrashPermanently = { viewModel.deleteTrashItemPermanently(it) },
-                    onClearAllTrash = { viewModel.clearAllTrash() },
-                    onDeleteAllData = { onResult ->
-                        viewModel.deleteAllData { success ->
-                            onResult(success)
-                            val msg = if (success) {
-                                if (lang == "bn") "সকল ডেটা সফলভাবে মুছে ফেলা হয়েছে" else "All data deleted successfully"
-                            } else {
-                                if (lang == "bn") "ডেটা মুছতে সমস্যা হয়েছে (ইন্টারনেট সংযোগ চেক করুন)" else "Failed to delete data. Please check internet connection."
-                            }
-                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
-                        }
-                    },
-                    highlightField = pendingProfileHighlightField,
-                    highlightTriggerId = profileHighlightTriggerId,
-                    onConsumeHighlight = { pendingProfileHighlightField = null },
-                    onModalSheetVisibilityChanged = { isProfileSheetOpen = it }
-                )
-                    }
-
-                    // Missing Overtime Entry Reminder In-Screen Panel
-                    if (showMissingOtDialog && !showQuickOtDialog) {
-                        MissingOtReminderDialog(
-                            missingDates = missingOtDates,
-                            lang = lang,
-                            onDismiss = { showMissingOtDialog = false },
-                            onAddOtForDate = { targetDate ->
+                    NavigationBar(
+                        modifier = Modifier.testTag("bottom_navigation_bar"),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        tonalElevation = NavigationBarDefaults.Elevation
+                    ) {
+                        // Tab 0: Home
+                        val tabHomeLabel = stringResource(R.string.tab_home)
+                        NavigationBarItem(
+                            selected = currentTab == 0,
+                            onClick = {
+                                showQuickOtDialog = false
+                                editingRecordId = null
+                                editingRecordDate = null
                                 showMissingOtDialog = false
-                                editingRecordId = null
-                                editingRecordDate = targetDate
-                                showQuickOtDialog = true
-                            }
-                        )
-                    }
-
-                    // Quick/Edit OT In-Screen Sheet
-                    if (showQuickOtDialog) {
-                        QuickOtEntryDialog(
-                            initialRecord = recordToEdit,
-                            existingRecords = allOtRecords.ifEmpty { otRecords },
-                            hourlyRate = summary.hourlyOtRate,
-                            profile = profile,
-                            lang = lang,
-                            onDismiss = {
-                                showQuickOtDialog = false
-                                editingRecordId = null
-                                editingRecordDate = null
+                                showPieceDialog = false
+                                showTargetDialog = false
+                                currentTab = 0
                             },
-                            onNavigateToProfile = { targetField ->
+                            icon = {
+                                Icon(
+                                    if (currentTab == 0) Icons.Filled.Home else Icons.Outlined.Home,
+                                    contentDescription = tabHomeLabel
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tabHomeLabel,
+                                    fontWeight = if (currentTab == 0) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = navLabelSize,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            modifier = Modifier.testTag("tab_home_item")
+                        )
+
+                        // Tab 1: OT List
+                        val tabOtLabel = stringResource(R.string.tab_ot_list)
+                        NavigationBarItem(
+                            selected = currentTab == 1,
+                            onClick = {
                                 showQuickOtDialog = false
                                 editingRecordId = null
                                 editingRecordDate = null
-                                pendingProfileHighlightField = targetField
-                                profileHighlightTriggerId += 1
+                                showMissingOtDialog = false
+                                showPieceDialog = false
+                                showTargetDialog = false
+                                currentTab = 1
+                            },
+                            icon = {
+                                Icon(
+                                    if (currentTab == 1) Icons.Filled.AccessTimeFilled else Icons.Outlined.AccessTime,
+                                    contentDescription = tabOtLabel
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tabOtLabel,
+                                    fontWeight = if (currentTab == 1) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = navLabelSize,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            modifier = Modifier.testTag("tab_ot_list_item")
+                        )
+
+                        // Tab 2: Piece Rate & Slip
+                        val tabPieceLabel = stringResource(R.string.tab_piece_rate)
+                        NavigationBarItem(
+                            selected = currentTab == 2,
+                            onClick = {
+                                showQuickOtDialog = false
+                                editingRecordId = null
+                                editingRecordDate = null
+                                showMissingOtDialog = false
+                                showPieceDialog = false
+                                showTargetDialog = false
+                                currentTab = 2
+                            },
+                            icon = {
+                                Icon(
+                                    if (currentTab == 2) Icons.AutoMirrored.Filled.ReceiptLong else Icons.AutoMirrored.Outlined.ReceiptLong,
+                                    contentDescription = tabPieceLabel
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tabPieceLabel,
+                                    fontWeight = if (currentTab == 2) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = navLabelSize,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            modifier = Modifier.testTag("tab_piece_item")
+                        )
+
+                        // Tab 3: Profile & Settings
+                        val tabProfileLabel = stringResource(R.string.tab_profile)
+                        NavigationBarItem(
+                            selected = currentTab == 3,
+                            onClick = {
+                                showQuickOtDialog = false
+                                editingRecordId = null
+                                editingRecordDate = null
+                                showMissingOtDialog = false
+                                showPieceDialog = false
+                                showTargetDialog = false
                                 currentTab = 3
                             },
-                            onSave = { date, hours, nightBill, tiffinBill, isHoliday, shiftType, note ->
-                                viewModel.addOrUpdateOvertime(
-                                    id = recordToEdit?.id ?: 0,
-                                    date = date,
-                                    otHours = hours,
-                                    hasNightBill = nightBill,
-                                    hasTiffinBill = tiffinBill,
-                                    isHoliday = isHoliday,
-                                    shiftType = shiftType,
-                                    note = note
+                            icon = {
+                                Icon(
+                                    if (currentTab == 3) Icons.Filled.Person else Icons.Outlined.Person,
+                                    contentDescription = tabProfileLabel
                                 )
-                                showQuickOtDialog = false
-                                editingRecordId = null
-                                editingRecordDate = null
-                            }
+                            },
+                            label = {
+                                Text(
+                                    text = tabProfileLabel,
+                                    fontWeight = if (currentTab == 3) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = navLabelSize,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            modifier = Modifier.testTag("tab_profile_item")
                         )
                     }
-                    // Add Piece Work In-Screen Sheet
-                    if (showPieceDialog) {
-                        AddPieceRateDialog(
-                            lang = lang,
-                            defaultDate = com.example.util.MonthLockPolicy.getDefaultDateForMonth(selectedMonth),
-                            onDismiss = { showPieceDialog = false },
-                            onSave = { item, count, rate, date, note ->
-                                viewModel.addPieceRate(
-                                    itemName = item,
-                                    pieceCount = count,
-                                    ratePerPiece = rate,
-                                    date = date,
-                                    note = note
-                                )
-                                showPieceDialog = false
-                            }
+                }
+            }
+        ) { innerPadding ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                if (!isAppReady) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                            .testTag("app_initial_loading_screen"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 3.5.dp,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .testTag("app_initial_loading_indicator")
                         )
                     }
+                } else {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        when (currentTab) {
+                            0 -> HomeScreen(
+                                selectedMonth = selectedMonth,
+                                summary = summary,
+                                profile = profile,
+                                recentRecords = otRecords,
+                                deductions = deductions,
+                                effectiveLang = effectiveLangTag,
+                                selectedSettingTag = selectedSettingTag,
+                                onPreviousMonth = { viewModel.previousMonth() },
+                                onNextMonth = { viewModel.nextMonth() },
+                                onOpenLanguagePicker = { showLanguagePicker = true },
+                                onQuickAddOtClick = {
+                                    editingRecordId = null
+                                    val currentCalYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
+                                    editingRecordDate = if (selectedMonth < currentCalYm) {
+                                        MonthLockPolicy.getDefaultDateForMonth(selectedMonth)
+                                    } else null
+                                    showQuickOtDialog = true
+                                },
+                                onAddDeduction = { type, date, amount, desc ->
+                                    viewModel.addDeduction(type, date, amount, desc)
+                                },
+                                onDeleteDeduction = { record ->
+                                    viewModel.moveDeductionToTrash(record)
+                                },
+                                onEditTargetClick = { showTargetDialog = true },
+                                onRecordClick = { rec ->
+                                    editingRecordId = rec.id
+                                    editingRecordDate = null
+                                    showQuickOtDialog = true
+                                },
+                                onViewAllClick = { currentTab = 1 },
+                                onSetMonthLock = { locked -> viewModel.setMonthLockStatus(selectedMonth, locked) },
+                                onModalSheetVisibilityChanged = { isHomeSheetOpen = it }
+                            )
 
-                    // Monthly Target In-Screen Sheet
-                    if (showTargetDialog) {
-                        TargetGoalDialog(
-                            currentTarget = profile.monthlyOtTargetHours,
-                            lang = lang,
-                            hourlyRate = summary.hourlyOtRate,
-                            currentTotalEarnings = summary.totalEstimatedEarnings,
-                            currentOtHours = summary.totalOtHours,
-                            grossSalary = summary.grossSalary,
-                            totalDeductions = summary.advanceDeduction + summary.aponBazarDeduction + summary.absentDeduction,
-                            isBonusCancelled = summary.isBonusCancelledDueToAbsent || summary.isBonusCancelledDueToLeave,
-                            onDismiss = { showTargetDialog = false },
-                            onSave = { newTarget ->
-                                viewModel.updateTargetHours(newTarget)
-                                showTargetDialog = false
-                            }
-                        )
+                            1 -> OtListScreen(
+                                selectedMonth = selectedMonth,
+                                records = otRecords,
+                                hourlyRate = summary.hourlyOtRate,
+                                dailyAbsentRate = summary.dailyAbsentRate,
+                                attendanceBonus = summary.attendanceBonus,
+                                isBonusCancelled = summary.isBonusCancelledDueToAbsent || summary.isBonusCancelledDueToLeave,
+                                isLocked = summary.isLocked,
+                                lang = effectiveLangTag,
+                                onPreviousMonth = { viewModel.previousMonth() },
+                                onNextMonth = { viewModel.nextMonth() },
+                                onAddClick = {
+                                    editingRecordId = null
+                                    val currentCalYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
+                                    editingRecordDate = if (selectedMonth < currentCalYm) {
+                                        MonthLockPolicy.getDefaultDateForMonth(selectedMonth)
+                                    } else null
+                                    showQuickOtDialog = true
+                                },
+                                onEditClick = { rec ->
+                                    editingRecordId = rec.id
+                                    editingRecordDate = null
+                                    showQuickOtDialog = true
+                                },
+                                onDeleteClick = { id ->
+                                    otRecords.find { it.id == id }?.let { rec ->
+                                        viewModel.moveOtToTrash(rec)
+                                    } ?: viewModel.deleteOvertime(id)
+                                },
+                                onSetMonthLock = { locked -> viewModel.setMonthLockStatus(selectedMonth, locked) }
+                            )
+
+                            2 -> PieceRateScreen(
+                                selectedMonth = selectedMonth,
+                                pieceRecords = pieceRecords,
+                                profile = profile,
+                                summary = summary,
+                                lang = effectiveLangTag,
+                                onAddPieceClick = { showPieceDialog = true },
+                                onDeletePieceClick = { id ->
+                                    pieceRecords.find { it.id == id }?.let { rec ->
+                                        viewModel.movePieceToTrash(rec)
+                                    } ?: viewModel.deletePieceRate(id)
+                                },
+                                onSetMonthLock = { locked -> viewModel.setMonthLockStatus(selectedMonth, locked) }
+                            )
+
+                            3 -> ProfileScreen(
+                                profile = profile,
+                                effectiveLang = effectiveLangTag,
+                                selectedSettingTag = selectedSettingTag,
+                                currentUser = currentUser,
+                                isAuthLoading = isAuthLoading,
+                                isSigningOut = isSigningOut,
+                                onSignInWithGoogle = {
+                                    activity?.let { act ->
+                                        viewModel.signInWithGoogle(act) { err ->
+                                            Toast.makeText(act, err, Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                },
+                                onSignOut = { onResult ->
+                                    viewModel.signOut { success, msg ->
+                                        onResult(success, msg)
+                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                    }
+                                },
+                                onSaveProfile = { updated -> viewModel.updateProfile(updated) },
+                                onOpenLanguagePicker = { showLanguagePicker = true },
+                                onSyncCloud = { callback -> viewModel.syncCloudNow(callback) },
+                                trashItems = trashItems,
+                                onRestoreTrash = { viewModel.restoreTrashItem(it) },
+                                onDeleteTrashPermanently = { viewModel.deleteTrashItemPermanently(it) },
+                                onClearAllTrash = { viewModel.clearAllTrash() },
+                                onDeleteAllData = { onResult ->
+                                    viewModel.deleteAllData { success ->
+                                        onResult(success)
+                                        val lctx = LanguageManager.getLocalizedContext(context, latestEffectiveLang)
+                                        val msg = if (success) {
+                                            lctx.getString(R.string.delete_all_success_toast)
+                                        } else {
+                                            lctx.getString(R.string.delete_all_failed_toast)
+                                        }
+                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                    }
+                                },
+                                highlightField = pendingProfileHighlightField,
+                                highlightTriggerId = profileHighlightTriggerId,
+                                onConsumeHighlight = { pendingProfileHighlightField = null },
+                                onModalSheetVisibilityChanged = { isProfileSheetOpen = it }
+                            )
+                        }
+
+                        // Missing Overtime Entry Reminder In-Screen Panel
+                        if (showMissingOtDialog && !showQuickOtDialog) {
+                            MissingOtReminderDialog(
+                                missingDates = missingOtDates,
+                                lang = effectiveLangTag,
+                                onDismiss = { showMissingOtDialog = false },
+                                onAddOtForDate = { targetDate ->
+                                    showMissingOtDialog = false
+                                    editingRecordId = null
+                                    editingRecordDate = targetDate
+                                    showQuickOtDialog = true
+                                }
+                            )
+                        }
+
+                        // Quick/Edit OT In-Screen Sheet
+                        if (showQuickOtDialog) {
+                            QuickOtEntryDialog(
+                                initialRecord = recordToEdit,
+                                existingRecords = allOtRecords.ifEmpty { otRecords },
+                                hourlyRate = summary.hourlyOtRate,
+                                profile = profile,
+                                lang = effectiveLangTag,
+                                onDismiss = {
+                                    showQuickOtDialog = false
+                                    editingRecordId = null
+                                    editingRecordDate = null
+                                },
+                                onNavigateToProfile = { targetField ->
+                                    showQuickOtDialog = false
+                                    editingRecordId = null
+                                    editingRecordDate = null
+                                    pendingProfileHighlightField = targetField
+                                    profileHighlightTriggerId += 1
+                                    currentTab = 3
+                                },
+                                onSave = { date, hours, nightBill, tiffinBill, isHoliday, shiftType, note ->
+                                    viewModel.addOrUpdateOvertime(
+                                        id = recordToEdit?.id ?: 0,
+                                        date = date,
+                                        otHours = hours,
+                                        hasNightBill = nightBill,
+                                        hasTiffinBill = tiffinBill,
+                                        isHoliday = isHoliday,
+                                        shiftType = shiftType,
+                                        note = note
+                                    )
+                                    showQuickOtDialog = false
+                                    editingRecordId = null
+                                    editingRecordDate = null
+                                }
+                            )
+                        }
+
+                        // Add Piece Work In-Screen Sheet
+                        if (showPieceDialog) {
+                            AddPieceRateDialog(
+                                lang = effectiveLangTag,
+                                defaultDate = MonthLockPolicy.getDefaultDateForMonth(selectedMonth),
+                                onDismiss = { showPieceDialog = false },
+                                onSave = { item, count, rate, date, note ->
+                                    viewModel.addPieceRate(
+                                        itemName = item,
+                                        pieceCount = count,
+                                        ratePerPiece = rate,
+                                        date = date,
+                                        note = note
+                                    )
+                                    showPieceDialog = false
+                                }
+                            )
+                        }
+
+                        // Monthly Target In-Screen Sheet
+                        if (showTargetDialog) {
+                            TargetGoalDialog(
+                                currentTarget = profile.monthlyOtTargetHours,
+                                lang = effectiveLangTag,
+                                hourlyRate = summary.hourlyOtRate,
+                                currentTotalEarnings = summary.totalEstimatedEarnings,
+                                currentOtHours = summary.totalOtHours,
+                                grossSalary = summary.grossSalary,
+                                totalDeductions = summary.advanceDeduction + summary.aponBazarDeduction + summary.absentDeduction,
+                                isBonusCancelled = summary.isBonusCancelledDueToAbsent || summary.isBonusCancelledDueToLeave,
+                                onDismiss = { showTargetDialog = false },
+                                onSave = { newTarget ->
+                                    viewModel.updateTargetHours(newTarget)
+                                    showTargetDialog = false
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
-    }
 
-    // Google Sign-In Privacy Consent Dialog (shown AFTER account selection if account hasn't consented yet)
-    val pendingUser = pendingConsentUser
-    if (pendingUser != null) {
-        InitialPrivacyConsentDialog(
-            lang = lang,
-            titleText = if (lang == "bn") "গোপনীয়তা নীতিমালায় সম্মতি" else "Privacy Policy Consent",
-            confirmButtonText = if (lang == "bn") "সম্মত আছি ও সাইন ইন" else "Agree & Sign In",
-            dismissButtonText = if (lang == "bn") "বাতিল / অফলাইনে ব্যবহার" else "Cancel / Use Offline",
-            onAgree = {
-                viewModel.confirmPrivacyConsent(pendingUser)
-            },
-            onDecline = {
-                viewModel.declinePrivacyConsent()
-            },
-            onViewFullPolicy = {
-                val privacyUrl = "https://mahmudappsofficial-072.github.io/overtime-tracker-privacy-policy/"
-                try {
-                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(privacyUrl))
-                    context.startActivity(intent)
-                } catch (e: Exception) {
-                    Log.w("MainActivity", "Unable to open privacy policy link: ${e.message}")
+        // Language Selection Bottom Sheet (System Default + EN/BN/HI/TA/AR)
+        if (showLanguagePicker) {
+            LanguagePickerBottomSheet(
+                selectedSettingTag = selectedSettingTag,
+                onSelectLanguage = { tag -> viewModel.setLanguage(tag) },
+                onDismiss = { showLanguagePicker = false }
+            )
+        }
+
+        // Google Sign-In Privacy Consent Dialog
+        val pendingUser = pendingConsentUser
+        if (pendingUser != null) {
+            InitialPrivacyConsentDialog(
+                titleText = stringResource(R.string.privacy_consent_title),
+                confirmButtonText = stringResource(R.string.privacy_consent_confirm_signin),
+                dismissButtonText = stringResource(R.string.privacy_consent_decline_offline),
+                onAgree = {
+                    viewModel.confirmPrivacyConsent(pendingUser)
+                },
+                onDecline = {
+                    viewModel.declinePrivacyConsent()
+                },
+                onViewFullPolicy = {
+                    val privacyUrl = "https://mahmudappsofficial-072.github.io/overtime-tracker-privacy-policy/"
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(privacyUrl))
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        Log.w("MainActivity", "Unable to open privacy policy link: ${e.message}")
+                    }
                 }
-            }
-        )
-    }
+            )
+        }
 
-    // Optional / Flexible Update Dialog (shown politely over loaded app content)
-    if (currentUpdate != null && !currentUpdate.isForceUpdate) {
-        ForceUpdateDialog(
-            updateInfo = currentUpdate,
-            lang = lang,
-            onDismissOptional = {
-                com.example.util.AppUpdateChecker.snoozeOptionalUpdate(context, currentUpdate.latestVersionCode)
-                appUpdateInfo = null
-            }
-        )
-    }
+        // Optional / Flexible Update Dialog
+        if (currentUpdate != null && !currentUpdate.isForceUpdate) {
+            ForceUpdateDialog(
+                updateInfo = currentUpdate,
+                lang = effectiveLangTag,
+                onDismissOptional = {
+                    AppUpdateChecker.snoozeOptionalUpdate(context, currentUpdate.latestVersionCode)
+                    appUpdateInfo = null
+                }
+            )
+        }
     }
 }

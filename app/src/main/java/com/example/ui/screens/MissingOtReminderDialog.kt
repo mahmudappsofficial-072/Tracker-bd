@@ -147,7 +147,11 @@ object MissingOtDetector {
             val resolvedTag = LanguageManager.resolveSupportedTag(langTag)
             val locale = LanguageManager.localeForTag(resolvedTag)
             val rawFormatted = SimpleDateFormat("dd MMMM, EEEE", locale).format(parsed)
-            val formattedDate = if (resolvedTag == "bn") LaborLawCalculator.toBengaliDigits(rawFormatted) else rawFormatted
+            val formattedDate = if (resolvedTag == "bn") {
+                LaborLawCalculator.toBengaliDigits(rawFormatted)
+            } else {
+                LaborLawCalculator.toEnglishDigits(rawFormatted)
+            }
 
             if (isYesterday) {
                 val lctx = LanguageManager.getLocalizedContext(context, resolvedTag)

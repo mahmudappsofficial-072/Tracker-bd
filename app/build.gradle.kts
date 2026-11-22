@@ -68,6 +68,11 @@ android {
     generateLocaleConfig = true
     localeFilters += listOf("en", "bn", "hi", "ta", "ar")
   }
+  bundle {
+    language {
+      enableSplit = false
+    }
+  }
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files

@@ -160,4 +160,36 @@ class ExampleRobolectricTest {
       db.close()
     }
   }
+
+  @Test
+  fun `localized context loads all 5 languages and falls back to English for unsupported locales`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+
+    val enCtx = com.example.util.LanguageManager.getLocalizedContext(context, "en")
+    val bnCtx = com.example.util.LanguageManager.getLocalizedContext(context, "bn")
+    val hiCtx = com.example.util.LanguageManager.getLocalizedContext(context, "hi")
+    val taCtx = com.example.util.LanguageManager.getLocalizedContext(context, "ta")
+    val arCtx = com.example.util.LanguageManager.getLocalizedContext(context, "ar")
+    val frFallbackCtx = com.example.util.LanguageManager.getLocalizedContext(context, "fr")
+
+    assertEquals("Home", enCtx.getString(R.string.tab_home))
+    assertEquals("হোম", bnCtx.getString(R.string.tab_home))
+    assertEquals("होम", hiCtx.getString(R.string.tab_home))
+    assertEquals("முகப்பு", taCtx.getString(R.string.tab_home))
+    assertEquals("الرئيسية", arCtx.getString(R.string.tab_home))
+    assertEquals(enCtx.getString(R.string.tab_home), frFallbackCtx.getString(R.string.tab_home))
+
+    // Format strings work safely across all 5 languages without FormatConversionException
+    assertFalse(enCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
+    assertFalse(bnCtx.getString(R.string.leave_limit_inline_fmt, "২").isBlank())
+    assertFalse(hiCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
+    assertFalse(taCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
+    assertFalse(arCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
+
+    // Format grade strips legacy words and localizes cleanly
+    assertEquals("Grade 4", com.example.util.LanguageManager.formatDisplayGrade(context, "গ্রেড 4", "en"))
+    assertEquals("গ্রেড 4", com.example.util.LanguageManager.formatDisplayGrade(context, "Grade 4", "bn"))
+    assertEquals("ग्रेड 4", com.example.util.LanguageManager.formatDisplayGrade(context, "Grade 4", "hi"))
+  }
 }
+
