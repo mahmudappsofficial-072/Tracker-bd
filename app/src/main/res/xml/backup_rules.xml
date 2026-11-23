@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- Local Room DB is automatically excluded because only domain="sharedpref" is included below; Firestore is the authoritative cloud backup. -->
-    <include domain="sharedpref" path="."/>
-    <exclude domain="sharedpref" path="com.google.firebase"/>
-    <exclude domain="sharedpref" path="overtime_sync_prefs.xml"/>
-    <exclude domain="sharedpref" path="overtime_tombstones.xml"/>
+    <!-- Include local Room database directory (overtime_bd_database + WAL/SHM journals) -->
+    <include domain="database" path="." />
+
+    <!-- Include only safe non-token app preferences (excludes Firebase, AdMob, and volatile sync state) -->
+    <include domain="sharedpref" path="overtime_locale_prefs.xml" />
+    <include domain="sharedpref" path="app_update_prefs.xml" />
 </full-backup-content>
