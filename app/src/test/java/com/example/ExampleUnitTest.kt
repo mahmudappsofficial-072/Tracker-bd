@@ -778,32 +778,25 @@ class ExampleUnitTest {
       "ca-app-pub-9027708775227838/5097750056",
       com.example.util.InterstitialAdGatePolicy.resolveAdUnitId(isDebug = false)
     )
+    assertEquals(8_000L, com.example.util.InterstitialAdGatePolicy.AD_LOAD_TIMEOUT_MS)
+
+    // Banner-parity internet capability check works even when VALIDATED flag is false
+    assertTrue(com.example.util.NetworkMonitor.hasInternetCapability(true))
+    assertFalse(com.example.util.NetworkMonitor.hasInternetCapability(false))
 
     // Offline -> skip ad request completely and allow direct PDF download
     assertFalse(
       com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
-        isOnline = false,
-        isMobileAdsInitialized = true,
+        hasInternet = false,
         nowMs = 1_000_000L,
         lastShownAtMs = 0L
       )
     )
 
-    // SDK not initialized -> skip ad request
-    assertFalse(
-      com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
-        isOnline = true,
-        isMobileAdsInitialized = false,
-        nowMs = 1_000_000L,
-        lastShownAtMs = 0L
-      )
-    )
-
-    // Online + initialized + first click -> eligible
+    // Online + first click -> eligible (SDK recovers on-demand if boot init lagged)
     assertTrue(
       com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
-        isOnline = true,
-        isMobileAdsInitialized = true,
+        hasInternet = true,
         nowMs = 1_000_000L,
         lastShownAtMs = 0L
       )
@@ -812,8 +805,7 @@ class ExampleUnitTest {
     // Within 60s cooldown -> blocked to prevent repetitive interstitial policy violation
     assertFalse(
       com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
-        isOnline = true,
-        isMobileAdsInitialized = true,
+        hasInternet = true,
         nowMs = 1_030_000L,
         lastShownAtMs = 1_000_000L
       )
@@ -822,8 +814,7 @@ class ExampleUnitTest {
     // After 60s cooldown -> eligible again
     assertTrue(
       com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
-        isOnline = true,
-        isMobileAdsInitialized = true,
+        hasInternet = true,
         nowMs = 1_060_000L,
         lastShownAtMs = 1_000_000L
       )
@@ -856,6 +847,17 @@ class ExampleUnitTest {
         isActivityAlive = true,
         isActivityResumed = true,
         isTimedOutOrCancelled = true
+      )
+    )
+
+    // Diagnostics appear ONLY in Debug builds, never in Release builds
+    val failedOutcome = com.example.util.InterstitialOutcome.LoadFailed(3, "No fill")
+    assertNotNull(com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(failedOutcome, isDebug = true))
+    assertNull(com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(failedOutcome, isDebug = false))
+    assertNull(
+      com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(
+        com.example.util.InterstitialOutcome.ShownAndDismissed,
+        isDebug = true
       )
     )
   }

@@ -1,11 +1,15 @@
 package com.example
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
 
 class OvertimeApp : Application() {
     companion object {
@@ -14,6 +18,28 @@ class OvertimeApp : Application() {
 
         private val _isMobileAdsInitialized = MutableStateFlow(false)
         val isMobileAdsInitialized: StateFlow<Boolean> = _isMobileAdsInitialized.asStateFlow()
+
+        /**
+         * Ensures MobileAds SDK has been given a chance to initialize even if boot-time
+         * initialization ran while offline or was delayed on slow devices.
+         */
+        suspend fun ensureMobileAdsInitialized(context: Context, timeoutMs: Long = 2_000L): Boolean {
+            if (_isMobileAdsInitialized.value) return true
+            val result = withTimeoutOrNull(timeoutMs) {
+                suspendCancellableCoroutine { cont ->
+                    try {
+                        com.google.android.gms.ads.MobileAds.initialize(context.applicationContext) {
+                            _isMobileAdsInitialized.value = true
+                            if (cont.isActive) cont.resume(true)
+                        }
+                    } catch (e: Exception) {
+                        Log.w("OvertimeApp", "On-demand AdMob initialization failed: ${e.message}")
+                        if (cont.isActive) cont.resume(false)
+                    }
+                }
+            }
+            return result ?: _isMobileAdsInitialized.value
+        }
     }
 
     override fun onCreate() {

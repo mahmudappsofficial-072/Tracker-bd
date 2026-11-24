@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -474,10 +475,13 @@ fun PieceRateScreen(
                                 if (!isGeneratingPdf && !isPreparingPdfAd) {
                                     activePdfDownloadJob = coroutineScope.launch {
                                         try {
-                                            GeneralInterstitialAdManager.showIfEligibleAndAwaitDismiss(
+                                            val outcome = GeneralInterstitialAdManager.showIfEligibleAndAwaitDismiss(
                                                 context = context,
                                                 onPreparingChanged = { preparing -> isPreparingPdfAd = preparing }
                                             )
+                                            com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(outcome)?.let { diagMsg ->
+                                                Toast.makeText(context, diagMsg, Toast.LENGTH_LONG).show()
+                                            }
                                             isGeneratingPdf = true
                                             com.example.util.PdfSlipGenerator.generateAndDownloadPdf(
                                                 context = context,

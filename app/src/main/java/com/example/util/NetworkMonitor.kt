@@ -23,6 +23,24 @@ object NetworkMonitor {
         return hasInternetCapability && hasValidatedCapability
     }
 
+    fun hasInternetCapability(hasInternet: Boolean): Boolean = hasInternet
+
+    /**
+     * Lightweight internet capability check matching AdmobBanner: allows AdMob requests
+     * even when NET_CAPABILITY_VALIDATED lags behind on mobile proxies, VPNs, or emulators.
+     */
+    fun hasAnyInternetConnection(context: Context): Boolean {
+        return try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                ?: return false
+            val activeNetwork = cm.activeNetwork ?: return false
+            val caps = cm.getNetworkCapabilities(activeNetwork) ?: return false
+            hasInternetCapability(caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     fun isStrictlyOnline(context: Context): Boolean {
         return try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager

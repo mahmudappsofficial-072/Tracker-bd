@@ -21,13 +21,23 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
+sealed class InterstitialOutcome {
+    data object ShownAndDismissed : InterstitialOutcome()
+    data object SkippedOffline : InterstitialOutcome()
+    data object SkippedCooldown : InterstitialOutcome()
+    data object SkippedNotResumed : InterstitialOutcome()
+    data class LoadFailed(val code: Int, val message: String) : InterstitialOutcome()
+    data object LoadTimedOut : InterstitialOutcome()
+    data class ShowFailed(val code: Int, val message: String) : InterstitialOutcome()
+}
+
 /**
  * Pure, testable AdMob + Play Console policy gate for on-demand Interstitial ads.
  */
 object InterstitialAdGatePolicy {
     const val DEBUG_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
     const val RELEASE_GENERAL_AD_UNIT_ID = "ca-app-pub-9027708775227838/5097750056"
-    const val AD_LOAD_TIMEOUT_MS = 10_000L
+    const val AD_LOAD_TIMEOUT_MS = 8_000L
     const val INTERSTITIAL_COOLDOWN_MS = 60_000L
 
     fun resolveAdUnitId(isDebug: Boolean = BuildConfig.DEBUG): String {
@@ -35,13 +45,12 @@ object InterstitialAdGatePolicy {
     }
 
     fun shouldRequestInterstitial(
-        isOnline: Boolean,
-        isMobileAdsInitialized: Boolean,
+        hasInternet: Boolean,
         nowMs: Long,
         lastShownAtMs: Long,
         cooldownMs: Long = INTERSTITIAL_COOLDOWN_MS
     ): Boolean {
-        if (!isOnline || !isMobileAdsInitialized) return false
+        if (!hasInternet) return false
         if (lastShownAtMs > 0L && (nowMs - lastShownAtMs) in 0 until cooldownMs) return false
         return true
     }
@@ -53,6 +62,23 @@ object InterstitialAdGatePolicy {
     ): Boolean {
         return isActivityAlive && isActivityResumed && !isTimedOutOrCancelled
     }
+
+    /**
+     * Returns developer diagnostic text ONLY in Debug builds so emulator/Play Services
+     * restrictions or No-Fill responses are immediately visible during testing.
+     */
+    fun formatDebugDiagnostic(outcome: InterstitialOutcome, isDebug: Boolean = BuildConfig.DEBUG): String? {
+        if (!isDebug) return null
+        return when (outcome) {
+            InterstitialOutcome.ShownAndDismissed -> null
+            InterstitialOutcome.SkippedOffline -> "Debug AdInfo: Offline (no internet capability)"
+            InterstitialOutcome.SkippedCooldown -> "Debug AdInfo: 60s ad cooldown active"
+            InterstitialOutcome.SkippedNotResumed -> null
+            InterstitialOutcome.LoadTimedOut -> "Debug AdInfo: Ad request timed out (8s) — check emulator Play Services/network"
+            is InterstitialOutcome.LoadFailed -> "Debug AdInfo: Load failed (code ${outcome.code}) — ${outcome.message}"
+            is InterstitialOutcome.ShowFailed -> "Debug AdInfo: Show failed (code ${outcome.code}) — ${outcome.message}"
+        }
+    }
 }
 
 tailrec fun Context.findActivity(): Activity? = when (this) {
@@ -63,12 +89,18 @@ tailrec fun Context.findActivity(): Activity? = when (this) {
 
 /**
  * On-demand Interstitial Ad coordinator ("General-Interstitial") for Pay Slip PDF downloads.
- * - Never preloads upon entering screens; loads strictly on explicit button tap when online.
- * - Uses bounded 10s load timeout, no-fill pass-through, foreground lifecycle checks,
+ * - Never preloads upon entering screens; loads strictly on explicit button tap when internet capability exists.
+ * - Recovers on-demand if MobileAds boot-time initialization missed or lagged.
+ * - Uses bounded 8s load timeout, no-fill pass-through, foreground lifecycle checks,
  *   single-use FullScreenContentCallback cleanup, and 60s anti-spam cooldown.
  */
 object GeneralInterstitialAdManager {
     private const val TAG = "GeneralInterstitialAd"
+
+    private sealed class LoadAttempt {
+        data class Loaded(val ad: InterstitialAd) : LoadAttempt()
+        data class Failed(val code: Int, val message: String) : LoadAttempt()
+    }
 
     @Volatile
     private var lastAdShownAtMs: Long = 0L
@@ -82,20 +114,29 @@ object GeneralInterstitialAdManager {
     suspend fun showIfEligibleAndAwaitDismiss(
         context: Context,
         onPreparingChanged: (Boolean) -> Unit
-    ) {
-        val eligible = InterstitialAdGatePolicy.shouldRequestInterstitial(
-            isOnline = NetworkMonitor.isStrictlyOnline(context),
-            isMobileAdsInitialized = OvertimeApp.isMobileAdsInitialized.value,
-            nowMs = System.currentTimeMillis(),
-            lastShownAtMs = lastAdShownAtMs
-        )
-        if (!eligible) return
+    ): InterstitialOutcome {
+        val hasInternet = NetworkMonitor.hasAnyInternetConnection(context)
+        if (!hasInternet) {
+            return InterstitialOutcome.SkippedOffline
+        }
 
-        val activity = context.findActivity() ?: return
-        if (!isActivityAliveAndResumed(activity)) return
+        val nowMs = System.currentTimeMillis()
+        if (!InterstitialAdGatePolicy.shouldRequestInterstitial(
+                hasInternet = true,
+                nowMs = nowMs,
+                lastShownAtMs = lastAdShownAtMs
+            )
+        ) {
+            return InterstitialOutcome.SkippedCooldown
+        }
+
+        val activity = context.findActivity() ?: return InterstitialOutcome.SkippedNotResumed
+        if (!isActivityAliveAndResumed(activity)) return InterstitialOutcome.SkippedNotResumed
 
         onPreparingChanged(true)
-        val loadedAd: InterstitialAd? = try {
+        val loadAttempt: LoadAttempt? = try {
+            // Ensure SDK had a chance to initialize if boot-time init ran offline or hung
+            OvertimeApp.ensureMobileAdsInitialized(context.applicationContext, timeoutMs = 2_000L)
             withTimeoutOrNull(InterstitialAdGatePolicy.AD_LOAD_TIMEOUT_MS) {
                 loadSingleInterstitial(
                     activity = activity,
@@ -106,23 +147,28 @@ object GeneralInterstitialAdManager {
             onPreparingChanged(false)
         }
 
-        if (loadedAd == null) return
+        val loadedAd = when (loadAttempt) {
+            null -> return InterstitialOutcome.LoadTimedOut
+            is LoadAttempt.Failed -> return InterstitialOutcome.LoadFailed(loadAttempt.code, loadAttempt.message)
+            is LoadAttempt.Loaded -> loadAttempt.ad
+        }
+
         if (!InterstitialAdGatePolicy.canShowLoadedAd(
                 isActivityAlive = !activity.isFinishing && !activity.isDestroyed,
                 isActivityResumed = isActivityAliveAndResumed(activity),
                 isTimedOutOrCancelled = false
             )
         ) {
-            return
+            return InterstitialOutcome.SkippedNotResumed
         }
 
-        showAndAwaitDismiss(activity = activity, interstitialAd = loadedAd)
+        return showAndAwaitDismiss(activity = activity, interstitialAd = loadedAd)
     }
 
     private suspend fun loadSingleInterstitial(
         activity: Activity,
         adUnitId: String
-    ): InterstitialAd? = withContext(Dispatchers.Main.immediate) {
+    ): LoadAttempt = withContext(Dispatchers.Main.immediate) {
         suspendCancellableCoroutine { cont ->
             val finished = AtomicBoolean(false)
             cont.invokeOnCancellation {
@@ -137,7 +183,7 @@ object GeneralInterstitialAdManager {
                     object : InterstitialAdLoadCallback() {
                         override fun onAdLoaded(interstitialAd: InterstitialAd) {
                             if (finished.compareAndSet(false, true)) {
-                                if (cont.isActive) cont.resume(interstitialAd)
+                                if (cont.isActive) cont.resume(LoadAttempt.Loaded(interstitialAd))
                             } else {
                                 Log.d(TAG, "Discarded late interstitial after timeout/cancellation.")
                             }
@@ -146,15 +192,16 @@ object GeneralInterstitialAdManager {
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             Log.w(TAG, "Interstitial failed to load (${loadAdError.code}): ${loadAdError.message}")
                             if (finished.compareAndSet(false, true) && cont.isActive) {
-                                cont.resume(null)
+                                cont.resume(LoadAttempt.Failed(loadAdError.code, loadAdError.message))
                             }
                         }
                     }
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "Interstitial load threw exception: ${e.message}")
+                val msg = e.message ?: "Unknown exception"
+                Log.w(TAG, "Interstitial load threw exception: $msg")
                 if (finished.compareAndSet(false, true) && cont.isActive) {
-                    cont.resume(null)
+                    cont.resume(LoadAttempt.Failed(-1, msg))
                 }
             }
         }
@@ -163,13 +210,13 @@ object GeneralInterstitialAdManager {
     private suspend fun showAndAwaitDismiss(
         activity: Activity,
         interstitialAd: InterstitialAd
-    ) = withContext(Dispatchers.Main.immediate) {
+    ): InterstitialOutcome = withContext(Dispatchers.Main.immediate) {
         suspendCancellableCoroutine { cont ->
             val resumed = AtomicBoolean(false)
-            fun finishOnce() {
+            fun finishOnce(outcome: InterstitialOutcome) {
                 interstitialAd.fullScreenContentCallback = null
                 if (resumed.compareAndSet(false, true) && cont.isActive) {
-                    cont.resume(Unit)
+                    cont.resume(outcome)
                 }
             }
 
@@ -184,12 +231,12 @@ object GeneralInterstitialAdManager {
                 }
 
                 override fun onAdDismissedFullScreenContent() {
-                    finishOnce()
+                    finishOnce(InterstitialOutcome.ShownAndDismissed)
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                     Log.w(TAG, "Interstitial failed to show (${adError.code}): ${adError.message}")
-                    finishOnce()
+                    finishOnce(InterstitialOutcome.ShowFailed(adError.code, adError.message))
                 }
             }
 
@@ -197,11 +244,12 @@ object GeneralInterstitialAdManager {
                 if (isActivityAliveAndResumed(activity)) {
                     interstitialAd.show(activity)
                 } else {
-                    finishOnce()
+                    finishOnce(InterstitialOutcome.SkippedNotResumed)
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Interstitial show threw exception: ${e.message}")
-                finishOnce()
+                val msg = e.message ?: "Show exception"
+                Log.w(TAG, "Interstitial show threw exception: $msg")
+                finishOnce(InterstitialOutcome.ShowFailed(-1, msg))
             }
         }
     }
