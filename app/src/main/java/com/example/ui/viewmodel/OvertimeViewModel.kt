@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -150,7 +151,11 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
     private val _selectedYearMonth = MutableStateFlow(currentMonthStr)
     val selectedYearMonth: StateFlow<String> = _selectedYearMonth.asStateFlow()
 
+    private val _isProfileLoaded = MutableStateFlow(false)
+    val isProfileLoaded: StateFlow<Boolean> = _isProfileLoaded.asStateFlow()
+
     val userProfile: StateFlow<UserProfile> = repository.userProfile
+        .onEach { _isProfileLoaded.value = true }
         .map { it ?: UserProfile() }
         .stateIn(
             scope = viewModelScope,

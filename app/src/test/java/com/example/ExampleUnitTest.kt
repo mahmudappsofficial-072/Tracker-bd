@@ -861,6 +861,117 @@ class ExampleUnitTest {
       )
     )
   }
+
+  @Test
+  fun testSalaryOnboardingPolicy_enforcesPriorityQueueAndBlocksReminderWithoutSalary() {
+    // 1. Salary configuration detection & mode guide auto-open policy across Auto and Custom modes
+    assertFalse(com.example.util.SalaryOnboardingPolicy.isSalaryConfigured(com.example.data.model.UserProfile()))
+    assertTrue(com.example.util.SalaryOnboardingPolicy.shouldAutoShowModeGuide(com.example.data.model.UserProfile()))
+    assertTrue(
+      com.example.util.SalaryOnboardingPolicy.isSalaryConfigured(
+        com.example.data.model.UserProfile(basicSalary = 10000.0, isCustomSalary = false)
+      )
+    )
+    assertFalse(
+      com.example.util.SalaryOnboardingPolicy.shouldAutoShowModeGuide(
+        com.example.data.model.UserProfile(basicSalary = 10000.0, isCustomSalary = false)
+      )
+    )
+    assertTrue(
+      com.example.util.SalaryOnboardingPolicy.isSalaryConfigured(
+        com.example.data.model.UserProfile(basicSalary = 0.0, isCustomSalary = true, customOtRate = 75.0)
+      )
+    )
+    assertFalse(
+      com.example.util.SalaryOnboardingPolicy.shouldAutoShowModeGuide(
+        com.example.data.model.UserProfile(basicSalary = 0.0, isCustomSalary = true, customOtRate = 75.0)
+      )
+    )
+    assertTrue(
+      com.example.util.SalaryOnboardingPolicy.isSalaryConfigured(
+        com.example.data.model.UserProfile(basicSalary = 15000.0, isCustomSalary = true, customOtRate = 0.0)
+      )
+    )
+    assertFalse(
+      com.example.util.SalaryOnboardingPolicy.isSalaryConfigured(
+        com.example.data.model.UserProfile(basicSalary = 0.0, isCustomSalary = true, customOtRate = 0.0)
+      )
+    )
+    assertTrue(
+      com.example.util.SalaryOnboardingPolicy.shouldAutoShowModeGuide(
+        com.example.data.model.UserProfile(basicSalary = 0.0, isCustomSalary = true, customOtRate = 0.0)
+      )
+    )
+
+    val readyUnconfigured = com.example.util.StartupPopupGateState(
+      isAppReady = true,
+      isProfileLoaded = true,
+      isInitialUpdateCheckSettled = true,
+      isAuthLoading = false,
+      isSigningOut = false,
+      hasUpdateDialog = false,
+      hasConsentDialog = false,
+      hasQuickOtTrigger = false,
+      isAnySheetOrDialogOpen = false,
+      currentTab = 0,
+      isSalaryConfigured = false,
+      hasCheckedMissingSalaryThisSession = false,
+      hasCheckedMissingOtThisSession = false
+    )
+
+    // 2. Tier 0 readiness gates prevent premature false-positive popup
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyUnconfigured.copy(isProfileLoaded = false))
+    )
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyUnconfigured.copy(isInitialUpdateCheckSettled = false))
+    )
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyUnconfigured.copy(isAuthLoading = true))
+    )
+
+    // 3. Tier 1 Update / Consent / QuickOT block lower tiers, and clearing Optional Update unlocks Salary Guide
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyUnconfigured.copy(hasUpdateDialog = true))
+    )
+    assertEquals(
+      com.example.util.StartupPopupAction.SHOW_SALARY_GUIDE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyUnconfigured)
+    )
+
+    // 4. Hard rule: When salary is NOT configured, Missing OT Reminder must NEVER trigger (even after dismissal or on tab switch)
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(
+        readyUnconfigured.copy(hasCheckedMissingSalaryThisSession = true, hasCheckedMissingOtThisSession = false)
+      )
+    )
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(
+        readyUnconfigured.copy(currentTab = 3)
+      )
+    )
+
+    // 5. When salary IS configured and no update/blocker is active, Missing OT Reminder runs once
+    val readyConfigured = readyUnconfigured.copy(isSalaryConfigured = true)
+    assertEquals(
+      com.example.util.StartupPopupAction.CHECK_MISSING_OT,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyConfigured)
+    )
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyConfigured.copy(hasUpdateDialog = true))
+    )
+    assertEquals(
+      com.example.util.StartupPopupAction.NONE,
+      com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyConfigured.copy(hasCheckedMissingOtThisSession = true))
+    )
+  }
 }
 
 

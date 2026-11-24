@@ -563,4 +563,23 @@
     <!-- Pay Slip PDF Ad Preparation Overlay -->
     <string name="pdf_preparing_ad_title">পে স্লিপ PDF প্রস্তুত হচ্ছে</string>
     <string name="pdf_preparing_ad_subtitle">অনুগ্রহ করে একটু অপেক্ষা করুন, আপনার ডকুমেন্ট প্রস্তুত হচ্ছে...</string>
+
+    <!-- Missing Salary Onboarding Guide Popup -->
+    <string name="salary_popup_title">আপনার বেতন কাঠামো সেট করুন</string>
+    <string name="salary_popup_later_btn">পরে সেট করুন</string>
+
+    <!-- Salary Structure Auto vs Custom Mode Guide Popup -->
+    <string name="salary_mode_guide_title">বেতন হিসাবের সঠিক নিয়ম বেছে নিন</string>
+    <string name="salary_mode_guide_subtitle">আপনার কোম্পানির নিয়ম অনুযায়ী নিচের যেকোনো একটি মোডে ট্যাপ করুন:</string>
+    <string name="salary_mode_auto_badge">জনপ্রিয় • শ্রম আইন</string>
+    <string name="salary_mode_auto_for_label">কাদের জন্য:</string>
+    <string name="salary_mode_how_label">সুবিধা:</string>
+    <string name="salary_mode_auto_for_desc">গার্মেন্টস বা স্ট্যান্ডার্ড কোম্পানিতে শ্রম আইন অনুযায়ী মূল বেতন ও ২× ওটি রেট চালু থাকলে।</string>
+    <string name="salary_mode_auto_why_desc">শুধু মোট বেতন দিলেই বেসিক, ভাতা ও ঘণ্টাপ্রতি ওটি রেট নিজে থেকেই হিসাব হয়ে যাবে।</string>
+    <string name="salary_mode_auto_select_btn">স্বয়ংক্রিয় মোড বেছে নিন</string>
+    <string name="salary_mode_custom_badge">নিজস্ব • ফিক্সড রেট</string>
+    <string name="salary_mode_custom_for_desc">কোম্পানিতে শ্রম আইনের বদলে ফিক্সড ওটি রেট (যেমন ৫০ বা ৮০ টাকা) ও নিজস্ব নিয়ম চললে।</string>
+    <string name="salary_mode_custom_why_desc">মাসিক বেতন এবং কোম্পানির নিজস্ব ঘণ্টাপ্রতি ওটি রেট সরাসরি বসিয়ে নিখুঁত হিসাব রাখতে পারবেন।</string>
+    <string name="salary_mode_custom_select_btn">কাস্টম মোড বেছে নিন</string>
+    <string name="cd_salary_mode_help">স্বয়ংক্রিয় ও কাস্টম হিসাব পদ্ধতির নির্দেশিকা দেখুন</string>
 </resources>

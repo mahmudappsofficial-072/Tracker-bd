@@ -563,4 +563,23 @@
     <!-- Pay Slip PDF Ad Preparation Overlay -->
     <string name="pdf_preparing_ad_title">جارٍ تجهيز ملف PDF لكشف الراتب</string>
     <string name="pdf_preparing_ad_subtitle">يرجى الانتظار قليلاً أثناء تجهيز المستند...</string>
+
+    <!-- Missing Salary Onboarding Guide Popup -->
+    <string name="salary_popup_title">أكمل إعداد هيكل الراتب</string>
+    <string name="salary_popup_later_btn">الإعداد لاحقاً</string>
+
+    <!-- Salary Structure Auto vs Custom Mode Guide Popup -->
+    <string name="salary_mode_guide_title">اختر قاعدة حساب الراتب الصحيحة</string>
+    <string name="salary_mode_guide_subtitle">اضغط على الخيار المناسب لطريقة حساب الراتب والإضافي في شركتك:</string>
+    <string name="salary_mode_auto_badge">شائع • قانون العمل</string>
+    <string name="salary_mode_auto_for_label">مناسب لـ:</string>
+    <string name="salary_mode_how_label">كيف يعمل:</string>
+    <string name="salary_mode_auto_for_desc">الشركات والمصانع التي تطبق قانون العمل للراتب الأساسي وساعة الإضافي ×2.</string>
+    <string name="salary_mode_auto_why_desc">أدخل إجمالي الراتب الشهري فقط ليحسب التطبيق الأساسي والبدلات وسعر ساعة الإضافي تلقائياً.</string>
+    <string name="salary_mode_auto_select_btn">اختر الوضع التلقائي</string>
+    <string name="salary_mode_custom_badge">مخصص • معدل ثابت</string>
+    <string name="salary_mode_custom_for_desc">أماكن العمل التي تعتمد سعر ساعة إضافي ثابتاً خاصاً بها بدلاً من صيغة قانون العمل.</string>
+    <string name="salary_mode_custom_why_desc">أدخل الراتب الشهري وسعر ساعة الإضافي الخاص بشركتك مباشرة لمطابقة كشف راتبك.</string>
+    <string name="salary_mode_custom_select_btn">اختر الوضع المخصص</string>
+    <string name="cd_salary_mode_help">مقارنة بين الوضع التلقائي والوضع المخصص</string>
 </resources>

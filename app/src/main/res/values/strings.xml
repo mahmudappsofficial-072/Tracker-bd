@@ -563,4 +563,23 @@
     <!-- Pay Slip PDF Ad Preparation Overlay -->
     <string name="pdf_preparing_ad_title">Preparing Pay Slip PDF</string>
     <string name="pdf_preparing_ad_subtitle">Please wait a moment while we ready your document...</string>
+
+    <!-- Missing Salary Onboarding Guide Popup -->
+    <string name="salary_popup_title">Complete Your Salary Setup</string>
+    <string name="salary_popup_later_btn">Set Up Later</string>
+
+    <!-- Salary Structure Auto vs Custom Mode Guide Popup -->
+    <string name="salary_mode_guide_title">Choose Your Salary Rule</string>
+    <string name="salary_mode_guide_subtitle">Tap the option below that matches how your company calculates salary and OT:</string>
+    <string name="salary_mode_auto_badge">Popular • Labor Law</string>
+    <string name="salary_mode_auto_for_label">Best for:</string>
+    <string name="salary_mode_how_label">How it works:</string>
+    <string name="salary_mode_auto_for_desc">Garment factories or standard firms following labor law basic salary and 2x OT rules.</string>
+    <string name="salary_mode_auto_why_desc">Just enter your monthly gross salary—basic pay, allowances, and hourly OT rate calculate automatically.</string>
+    <string name="salary_mode_auto_select_btn">Use Automatic Mode</string>
+    <string name="salary_mode_custom_badge">Custom • Fixed OT</string>
+    <string name="salary_mode_custom_for_desc">Factories or workplaces with fixed hourly OT rates (e.g., 50 or 80/hr) instead of labor law formulas.</string>
+    <string name="salary_mode_custom_why_desc">Enter your monthly salary and exact company hourly OT rate directly to match your slip.</string>
+    <string name="salary_mode_custom_select_btn">Use Custom Mode</string>
+    <string name="cd_salary_mode_help">Compare Automatic and Custom calculation modes</string>
 </resources>

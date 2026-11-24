@@ -20,6 +20,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -98,6 +100,7 @@ import com.example.ui.screens.OtListScreen
 import com.example.ui.screens.PieceRateScreen
 import com.example.ui.screens.ProfileScreen
 import com.example.ui.screens.QuickOtEntryDialog
+import com.example.ui.screens.SalarySetupGuideDialog
 import com.example.ui.screens.TargetGoalDialog
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.OvertimeViewModel
@@ -106,6 +109,9 @@ import com.example.util.AppUpdateInfo
 import com.example.util.LanguageManager
 import com.example.util.MonthLockPolicy
 import com.example.util.ResponsiveUtils
+import com.example.util.SalaryOnboardingPolicy
+import com.example.util.StartupPopupAction
+import com.example.util.StartupPopupGateState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -149,6 +155,8 @@ fun OvertimeApp(
 ) {
     var isAppReady by rememberSaveable { mutableStateOf(false) }
     val isInitialSyncComplete by viewModel.isInitialSyncComplete.collectAsStateWithLifecycle()
+    val isProfileLoaded by viewModel.isProfileLoaded.collectAsStateWithLifecycle()
+    var isInitialUpdateCheckSettled by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(isInitialSyncComplete) {
         if (isInitialSyncComplete) {
@@ -161,12 +169,17 @@ fun OvertimeApp(
             delay(2000L)
             isAppReady = true
         }
+        delay(600L)
+        if (!isInitialUpdateCheckSettled) {
+            isInitialUpdateCheckSettled = true
+        }
     }
 
     var currentTab by rememberSaveable { mutableIntStateOf(0) } // 0: Home, 1: OT List, 2: Piece & Slip, 3: Profile
 
     val selectedMonth by viewModel.selectedYearMonth.collectAsStateWithLifecycle()
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
+    val isSalaryConfigured = remember(profile) { SalaryOnboardingPolicy.isSalaryConfigured(profile) }
     val otRecords by viewModel.monthlyOtRecords.collectAsStateWithLifecycle()
     val allOtRecords by viewModel.allOvertimeRecords.collectAsStateWithLifecycle()
     val previousMonthSettings by viewModel.previousMonthSettings.collectAsStateWithLifecycle()
@@ -247,6 +260,8 @@ fun OvertimeApp(
     // Dialog States
     var appUpdateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
     var showQuickOtDialog by rememberSaveable { mutableStateOf(false) }
+    var hasCheckedMissingSalaryThisSession by rememberSaveable { mutableStateOf(false) }
+    var showMissingSalaryDialog by remember { mutableStateOf(false) }
     var hasCheckedMissingOtThisSession by rememberSaveable { mutableStateOf(false) }
     var showMissingOtDialog by remember { mutableStateOf(false) }
     var missingOtDates by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -268,11 +283,17 @@ fun OvertimeApp(
                 }
                 if (appUpdateInfo == null) {
                     coroutineScope.launch {
-                        val update = AppUpdateChecker.checkUpdate(context)
-                        if (update != null) {
-                            appUpdateInfo = update
+                        try {
+                            val update = AppUpdateChecker.checkUpdate(context)
+                            if (update != null) {
+                                appUpdateInfo = update
+                            }
+                        } finally {
+                            isInitialUpdateCheckSettled = true
                         }
                     }
+                } else {
+                    isInitialUpdateCheckSettled = true
                 }
             }
         }
@@ -285,27 +306,22 @@ fun OvertimeApp(
     LaunchedEffect(openQuickOtTrigger) {
         if (openQuickOtTrigger) {
             currentTab = 0
+            showMissingSalaryDialog = false
             showQuickOtDialog = true
             hasCheckedMissingOtThisSession = true
             onResetQuickOtTrigger()
         }
     }
 
-    LaunchedEffect(otRecords, allOtRecords, previousMonthSettings, openQuickOtTrigger, isAppReady) {
-        if (isAppReady && !hasCheckedMissingOtThisSession && !openQuickOtTrigger) {
-            delay(350)
-            val prevYm = MonthLockPolicy.getPreviousCalendarYearMonth()
-            val isPrevUnlocked = !MonthLockPolicy.resolveIsMonthLocked(prevYm, previousMonthSettings?.isLocked)
-            val missing = MissingOtDetector.getMissingDatesForReminder(
-                currentMonthRecords = otRecords,
-                allRecords = allOtRecords,
-                isPreviousMonthUnlocked = isPrevUnlocked
-            )
-            if (missing.isNotEmpty()) {
-                missingOtDates = missing
-                showMissingOtDialog = true
+    LaunchedEffect(isSalaryConfigured, currentTab) {
+        if (isSalaryConfigured) {
+            showMissingSalaryDialog = false
+            hasCheckedMissingSalaryThisSession = true
+        } else {
+            showMissingOtDialog = false
+            if (currentTab == 3) {
+                showMissingSalaryDialog = false
             }
-            hasCheckedMissingOtThisSession = true
         }
     }
 
@@ -330,13 +346,87 @@ fun OvertimeApp(
     var isProfileSheetOpen by remember { mutableStateOf(false) }
 
     // Back handling: Return to Home if on secondary tab when no in-screen sheet/panel is open
-    BackHandler(enabled = isAppReady && currentTab != 0 && !showQuickOtDialog && !showMissingOtDialog && !showPieceDialog && !showTargetDialog && !showLanguagePicker) {
+    BackHandler(enabled = isAppReady && currentTab != 0 && !showQuickOtDialog && !showMissingOtDialog && !showMissingSalaryDialog && !showPieceDialog && !showTargetDialog && !showLanguagePicker) {
         currentTab = 0
     }
 
     val currentUpdate = appUpdateInfo
+    val isAnyStartupBlockerOrOverlayOpen = showQuickOtDialog ||
+        showMissingOtDialog ||
+        showMissingSalaryDialog ||
+        showPieceDialog ||
+        showTargetDialog ||
+        showLanguagePicker ||
+        isHomeSheetOpen ||
+        isProfileSheetOpen
+
+    LaunchedEffect(
+        isAppReady,
+        isProfileLoaded,
+        isInitialUpdateCheckSettled,
+        isAuthLoading,
+        isSigningOut,
+        currentUpdate,
+        pendingConsentUser,
+        openQuickOtTrigger,
+        isAnyStartupBlockerOrOverlayOpen,
+        currentTab,
+        isSalaryConfigured,
+        hasCheckedMissingSalaryThisSession,
+        hasCheckedMissingOtThisSession,
+        otRecords,
+        allOtRecords,
+        previousMonthSettings
+    ) {
+        val action = SalaryOnboardingPolicy.evaluateStartupPopupAction(
+            StartupPopupGateState(
+                isAppReady = isAppReady,
+                isProfileLoaded = isProfileLoaded,
+                isInitialUpdateCheckSettled = isInitialUpdateCheckSettled,
+                isAuthLoading = isAuthLoading,
+                isSigningOut = isSigningOut,
+                hasUpdateDialog = currentUpdate != null,
+                hasConsentDialog = pendingConsentUser != null,
+                hasQuickOtTrigger = openQuickOtTrigger,
+                isAnySheetOrDialogOpen = isAnyStartupBlockerOrOverlayOpen,
+                currentTab = currentTab,
+                isSalaryConfigured = isSalaryConfigured,
+                hasCheckedMissingSalaryThisSession = hasCheckedMissingSalaryThisSession,
+                hasCheckedMissingOtThisSession = hasCheckedMissingOtThisSession
+            )
+        )
+
+        when (action) {
+            StartupPopupAction.SHOW_SALARY_GUIDE -> {
+                delay(250)
+                hasCheckedMissingSalaryThisSession = true
+                // Hard rule: never show Missing OT Reminder when salary isn't configured,
+                // and avoid ambushing fresh-install users in the same session right after setup.
+                hasCheckedMissingOtThisSession = true
+                showMissingOtDialog = false
+                showMissingSalaryDialog = true
+            }
+            StartupPopupAction.CHECK_MISSING_OT -> {
+                delay(350)
+                val prevYm = MonthLockPolicy.getPreviousCalendarYearMonth()
+                val isPrevUnlocked = !MonthLockPolicy.resolveIsMonthLocked(prevYm, previousMonthSettings?.isLocked)
+                val missing = MissingOtDetector.getMissingDatesForReminder(
+                    currentMonthRecords = otRecords,
+                    allRecords = allOtRecords,
+                    isPreviousMonthUnlocked = isPrevUnlocked
+                )
+                if (missing.isNotEmpty()) {
+                    missingOtDates = missing
+                    showMissingOtDialog = true
+                }
+                hasCheckedMissingOtThisSession = true
+            }
+            StartupPopupAction.NONE -> Unit
+        }
+    }
+
     // Only true window-level dialogs and modal bottom sheets cover the bottom banner;
-    // in-screen content panels (Quick OT, Missing OT, Piece, Target) stay above bottomBar.
+    // in-screen content panels (Salary Guide, Quick OT, Missing OT, Piece, Target) stay above bottomBar.
     val isAnyOverlayOccludingBanner = showLanguagePicker ||
         isHomeSheetOpen ||
         isProfileSheetOpen ||
@@ -414,6 +504,7 @@ fun OvertimeApp(
                                 editingRecordId = null
                                 editingRecordDate = null
                                 showMissingOtDialog = false
+                                showMissingSalaryDialog = false
                                 showPieceDialog = false
                                 showTargetDialog = false
                                 currentTab = 0
@@ -446,6 +537,7 @@ fun OvertimeApp(
                                 editingRecordId = null
                                 editingRecordDate = null
                                 showMissingOtDialog = false
+                                showMissingSalaryDialog = false
                                 showPieceDialog = false
                                 showTargetDialog = false
                                 currentTab = 1
@@ -478,6 +570,7 @@ fun OvertimeApp(
                                 editingRecordId = null
                                 editingRecordDate = null
                                 showMissingOtDialog = false
+                                showMissingSalaryDialog = false
                                 showPieceDialog = false
                                 showTargetDialog = false
                                 currentTab = 2
@@ -510,6 +603,7 @@ fun OvertimeApp(
                                 editingRecordId = null
                                 editingRecordDate = null
                                 showMissingOtDialog = false
+                                showMissingSalaryDialog = false
                                 showPieceDialog = false
                                 showTargetDialog = false
                                 currentTab = 3
@@ -693,8 +787,27 @@ fun OvertimeApp(
                             )
                         }
 
-                        // Missing Overtime Entry Reminder In-Screen Panel
-                        if (showMissingOtDialog && !showQuickOtDialog) {
+                        // Missing Salary Onboarding Guide In-Screen Panel (Above bottomBar so AdmobBanner stays active)
+                        AnimatedVisibility(
+                            visible = showMissingSalaryDialog && !isSalaryConfigured && currentUpdate == null && pendingConsentUser == null,
+                            enter = fadeIn(tween(220)) + scaleIn(initialScale = 0.94f, animationSpec = tween(220)),
+                            exit = fadeOut(tween(160)) + scaleOut(targetScale = 0.95f, animationSpec = tween(160))
+                        ) {
+                            SalarySetupGuideDialog(
+                                lang = effectiveLangTag,
+                                onDismiss = { showMissingSalaryDialog = false },
+                                onStartSetup = {
+                                    showMissingSalaryDialog = false
+                                    hasCheckedMissingSalaryThisSession = true
+                                    pendingProfileHighlightField = "SALARY"
+                                    profileHighlightTriggerId += 1
+                                    currentTab = 3
+                                }
+                            )
+                        }
+
+                        // Missing Overtime Entry Reminder In-Screen Panel (Strictly suppressed when salary not configured)
+                        if (showMissingOtDialog && !showQuickOtDialog && !showMissingSalaryDialog && isSalaryConfigured) {
                             MissingOtReminderDialog(
                                 missingDates = missingOtDates,
                                 lang = effectiveLangTag,

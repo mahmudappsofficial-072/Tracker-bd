@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,8 +46,10 @@ import com.example.data.model.UserProfile
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.ResponsiveUtils
+import com.example.util.SalaryOnboardingPolicy
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 internal enum class SalaryFieldHelpTopic(
@@ -399,12 +402,23 @@ fun SalaryStructureSheet(
 
     var activeHighlightField by remember(highlightTriggerId) { mutableStateOf(initialHighlightField) }
     var activeHelpTopic by remember { mutableStateOf<SalaryFieldHelpTopic?>(null) }
+    var showModeGuideDialog by rememberSaveable {
+        mutableStateOf(SalaryOnboardingPolicy.shouldAutoShowModeGuide(profile))
+    }
     var blinkPhaseOn by remember { mutableStateOf(true) }
+    val coroutineScope = rememberCoroutineScope()
     val salaryBringIntoViewRequester = remember { BringIntoViewRequester() }
     val nightBringIntoViewRequester = remember { BringIntoViewRequester() }
     val tiffinBringIntoViewRequester = remember { BringIntoViewRequester() }
 
-    LaunchedEffect(highlightTriggerId, initialHighlightField) {
+    LaunchedEffect(showModeGuideDialog) {
+        if (showModeGuideDialog) {
+            hideKeyboard()
+        }
+    }
+
+    LaunchedEffect(highlightTriggerId, initialHighlightField, showModeGuideDialog) {
+        if (showModeGuideDialog) return@LaunchedEffect
         val target = initialHighlightField ?: return@LaunchedEffect
         activeHighlightField = target
         blinkPhaseOn = true
@@ -439,7 +453,7 @@ fun SalaryStructureSheet(
         onDispose { hideKeyboard() }
     }
 
-    BackHandler(enabled = activeHelpTopic == null) {
+    BackHandler(enabled = activeHelpTopic == null && !showModeGuideDialog) {
         hideKeyboard()
         onDismiss()
     }
@@ -560,7 +574,25 @@ fun SalaryStructureSheet(
                 SheetStepHeader(
                     title = stringResource(R.string.sheet_step_1_title),
                     badgeText = stringResource(R.string.badge_required),
-                    isRequired = true
+                    isRequired = true,
+                    helpContent = {
+                        IconButton(
+                            onClick = {
+                                hideKeyboard()
+                                showModeGuideDialog = true
+                            },
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .testTag("salary_mode_help_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                                contentDescription = stringResource(R.string.cd_salary_mode_help),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 )
 
                 // Mode Toggle: Automatic vs Custom
@@ -1215,10 +1247,63 @@ fun SalaryStructureSheet(
         }
         }
 
+        if (showModeGuideDialog && activeHelpTopic == null) {
+            BackHandler {
+                showModeGuideDialog = false
+            }
+        }
+
         if (activeHelpTopic != null) {
             BackHandler {
                 activeHelpTopic = null
             }
+        }
+
+        AnimatedVisibility(
+            visible = showModeGuideDialog && activeHelpTopic == null,
+            enter = fadeIn(animationSpec = tween(180)),
+            exit = fadeOut(animationSpec = tween(130))
+        ) {
+            SalaryModeGuideDialog(
+                isCustomSalarySelected = isCustomSalary,
+                onSelectAuto = {
+                    isCustomSalary = false
+                    customOtRateText = ""
+                    showModeGuideDialog = false
+                    coroutineScope.launch {
+                        delay(80L)
+                        try {
+                            salaryBringIntoViewRequester.bringIntoView()
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {}
+                    }
+                },
+                onSelectCustom = {
+                    isCustomSalary = true
+                    if (basicSalaryText.isBlank() || basicSalaryText == "0") {
+                        basicSalaryText = if (currentGross > 0.0) {
+                            grossSalaryText
+                        } else {
+                            LaborLawCalculator.formatEditableNumber(autoResult.grossSalary)
+                        }
+                    }
+                    showModeGuideDialog = false
+                    coroutineScope.launch {
+                        delay(80L)
+                        try {
+                            salaryBringIntoViewRequester.bringIntoView()
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {}
+                    }
+                },
+                onDismiss = { showModeGuideDialog = false },
+                cardModifier = Modifier.animateEnterExit(
+                    enter = scaleIn(animationSpec = tween(180), initialScale = 0.94f),
+                    exit = scaleOut(animationSpec = tween(130), targetScale = 0.96f)
+                )
+            )
         }
 
         AnimatedVisibility(
@@ -1397,7 +1482,8 @@ private fun SalaryFieldHelpDialog(
 private fun SheetStepHeader(
     title: String,
     badgeText: String,
-    isRequired: Boolean
+    isRequired: Boolean,
+    helpContent: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1409,8 +1495,11 @@ private fun SheetStepHeader(
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f).padding(end = 8.dp)
+            modifier = Modifier.weight(1f).padding(end = 6.dp)
         )
+        if (helpContent != null) {
+            helpContent()
+        }
         Surface(
             shape = RoundedCornerShape(6.dp),
             color = if (isRequired) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer

@@ -563,4 +563,23 @@
     <!-- Pay Slip PDF Ad Preparation Overlay -->
     <string name="pdf_preparing_ad_title">சம்பள சீட்டு PDF தயாராகிறது</string>
     <string name="pdf_preparing_ad_subtitle">உங்கள் ஆவணம் தயாராகும் வரை சற்று காத்திருக்கவும்...</string>
+
+    <!-- Missing Salary Onboarding Guide Popup -->
+    <string name="salary_popup_title">சம்பள அமைப்பை முழுமையாக்குங்கள்</string>
+    <string name="salary_popup_later_btn">பிறகு அமைக்கவும்</string>
+
+    <!-- Salary Structure Auto vs Custom Mode Guide Popup -->
+    <string name="salary_mode_guide_title">சம்பள கணக்கீட்டு முறையைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="salary_mode_guide_subtitle">உங்கள் நிறுவனத்தின் சம்பள விதிக்குப் பொருந்தும் முறையை கீழே தட்டவும்:</string>
+    <string name="salary_mode_auto_badge">பிரபலம் • தொழிலாளர் சட்டம்</string>
+    <string name="salary_mode_auto_for_label">யாருக்குப் பொருந்தும்:</string>
+    <string name="salary_mode_how_label">எப்படிச் செயல்படும்:</string>
+    <string name="salary_mode_auto_for_desc">தொழிலாளர் சட்டத்தின்படி அடிப்படை சம்பளம் மற்றும் 2x OT விகிதம் உள்ள நிறுவனங்களுக்கு.</string>
+    <string name="salary_mode_auto_why_desc">மாத மொத்த சம்பளத்தை மட்டும் உள்ளிட்டால் அடிப்படை, படிகள் &amp; OT விகிதம் தானாகக் கணக்கிடப்படும்.</string>
+    <string name="salary_mode_auto_select_btn">தானியங்கி முறையைத் தேர்ந்தெடு</string>
+    <string name="salary_mode_custom_badge">தனிப்பயன் • நிலையான OT</string>
+    <string name="salary_mode_custom_for_desc">தொழிலாளர் சட்டத்திற்குப் பதிலாக நிறுவனத்தின் நிலையான மணிநேர OT விகிதம் உள்ளவர்களுக்கு.</string>
+    <string name="salary_mode_custom_why_desc">மாத சம்பளம் மற்றும் நிறுவனத்தின் நிலையான மணிநேர OT விகிதத்தை நேரடியாக உள்ளிடலாம்.</string>
+    <string name="salary_mode_custom_select_btn">தனிப்பயன் முறையைத் தேர்ந்தெடு</string>
+    <string name="cd_salary_mode_help">தானியங்கி மற்றும் தனிப்பயன் கணக்கீட்டு முறைகளை ஒப்பிட்டுப் பார்க்கவும்</string>
 </resources>

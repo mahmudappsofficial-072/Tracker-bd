@@ -563,4 +563,23 @@
     <!-- Pay Slip PDF Ad Preparation Overlay -->
     <string name="pdf_preparing_ad_title">पे स्लिप PDF तैयार हो रही है</string>
     <string name="pdf_preparing_ad_subtitle">कृपया प्रतीक्षा करें, आपका दस्तावेज़ तैयार किया जा रहा है...</string>
+
+    <!-- Missing Salary Onboarding Guide Popup -->
+    <string name="salary_popup_title">अपना वेतन ढाँचा सेट करें</string>
+    <string name="salary_popup_later_btn">बाद में सेट करें</string>
+
+    <!-- Salary Structure Auto vs Custom Mode Guide Popup -->
+    <string name="salary_mode_guide_title">वेतन गणना का सही नियम चुनें</string>
+    <string name="salary_mode_guide_subtitle">अपनी कंपनी के नियमों के अनुसार नीचे किसी एक विकल्प पर टैप करें:</string>
+    <string name="salary_mode_auto_badge">लोकप्रिय • श्रम कानून</string>
+    <string name="salary_mode_auto_for_label">किसके लिए:</string>
+    <string name="salary_mode_how_label">कैसे काम करता है:</string>
+    <string name="salary_mode_auto_for_desc">गारमेंट्स या मानक कंपनियों में जहाँ श्रम कानून के तहत बेसिक और 2x ओटी दर लागू हो।</string>
+    <string name="salary_mode_auto_why_desc">बस कुल मासिक वेतन डालें—बेसिक, भत्ते और प्रति घंटा ओटी दर अपने आप निकल आएगी।</string>
+    <string name="salary_mode_auto_select_btn">स्वचालित मोड चुनें</string>
+    <string name="salary_mode_custom_badge">कस्टम • तय ओटी दर</string>
+    <string name="salary_mode_custom_for_desc">जहाँ श्रम कानून की जगह कंपनी की तय प्रति घंटा ओटी दर (जैसे 50 या 80/घंटा) चलती हो।</string>
+    <string name="salary_mode_custom_why_desc">मासिक वेतन और अपनी कंपनी की सटीक प्रति घंटा ओटी दर सीधे दर्ज कर सकते हैं।</string>
+    <string name="salary_mode_custom_select_btn">कस्टम मोड चुनें</string>
+    <string name="cd_salary_mode_help">स्वचालित और कस्टम गणना मोड की तुलना देखें</string>
 </resources>
