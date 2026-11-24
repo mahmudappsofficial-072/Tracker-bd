@@ -152,9 +152,7 @@ object PdfSlipGenerator {
                 paint.color = Color.WHITE
                 paint.textSize = 20f
                 paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                val company = if (summary.companyName.isNotBlank()) summary.companyName
-                else if (profile.companyName.isNotBlank()) profile.companyName
-                else lctx.getString(R.string.default_company_name)
+                val company = summary.companyName.ifBlank { lctx.getString(R.string.default_company_name) }
                 drawBoxText(canvas, company, headerTextLeft, 60f, headerTextWidth, headerAlign)
 
                 // Title
@@ -206,10 +204,10 @@ object PdfSlipGenerator {
                 paint.color = Color.rgb(255, 255, 255)
                 canvas.drawRect(44f, y - 16f, pageWidth - 44f, y + 60f, paint)
 
-                val displayUserName = if (summary.userName.isNotBlank()) summary.userName else profile.userName
-                val displayDesignation = if (summary.designation.isNotBlank()) summary.designation else profile.designation
-                val displayGrade = if (summary.grade.isNotBlank()) summary.grade else profile.grade
-                val displayWorkerId = if (summary.workerId.isNotBlank()) summary.workerId else profile.workerId
+                val displayUserName = summary.userName
+                val displayDesignation = summary.designation
+                val displayGrade = summary.grade
+                val displayWorkerId = summary.workerId
 
                 val leftColX = 56f
                 val rightColX = 312f
@@ -328,20 +326,11 @@ object PdfSlipGenerator {
                 if (summary.isCustomSalary) {
                     drawPdfRow(lctx.getString(R.string.pdf_total_salary_row), summary.basicSalary)
                 } else {
-                    val autoAllowances = if (summary.basicSalary > 0.0) {
-                        LaborLawCalculator.calculateAutoAllowances(summary.basicSalary)
-                    } else null
-
-                    val effHouseRent = if (summary.houseRent > 0.0) summary.houseRent else (autoAllowances?.houseRent ?: profile.houseRent)
-                    val effMedical = if (summary.medicalAllowance > 0.0) summary.medicalAllowance else (autoAllowances?.medicalAllowance ?: profile.medicalAllowance)
-                    val effConveyance = if (summary.conveyanceAllowance > 0.0) summary.conveyanceAllowance else (autoAllowances?.conveyanceAllowance ?: profile.conveyanceAllowance)
-                    val effFood = if (summary.foodAllowance > 0.0) summary.foodAllowance else (autoAllowances?.foodAllowance ?: profile.foodAllowance)
-
                     drawPdfRow(lctx.getString(R.string.pdf_basic_salary_row), summary.basicSalary)
-                    drawPdfRow(lctx.getString(R.string.pdf_house_rent_row), effHouseRent)
-                    drawPdfRow(lctx.getString(R.string.pdf_medical_allowance_row), effMedical)
-                    drawPdfRow(lctx.getString(R.string.pdf_conveyance_allowance_row), effConveyance)
-                    drawPdfRow(lctx.getString(R.string.pdf_food_allowance_row), effFood)
+                    drawPdfRow(lctx.getString(R.string.pdf_house_rent_row), summary.houseRent)
+                    drawPdfRow(lctx.getString(R.string.pdf_medical_allowance_row), summary.medicalAllowance)
+                    drawPdfRow(lctx.getString(R.string.pdf_conveyance_allowance_row), summary.conveyanceAllowance)
+                    drawPdfRow(lctx.getString(R.string.pdf_food_allowance_row), summary.foodAllowance)
                 }
 
                 val attendanceLabel = if (summary.attendanceBonus > 0) {
@@ -391,7 +380,7 @@ object PdfSlipGenerator {
                     isBold = true
                 )
                 if (summary.nightBillTotal > 0) {
-                    val nightRate = if (summary.effectiveNightRate > 0.0) summary.effectiveNightRate else profile.nightBillRate
+                    val nightRate = summary.effectiveNightRate
                     drawPdfRow(
                         lctx.getString(
                             R.string.pdf_night_bill_fmt,
@@ -402,7 +391,7 @@ object PdfSlipGenerator {
                     )
                 }
                 if (summary.tiffinBillTotal > 0) {
-                    val tiffinRate = if (summary.effectiveTiffinRate > 0.0) summary.effectiveTiffinRate else profile.tiffinBillRate
+                    val tiffinRate = summary.effectiveTiffinRate
                     drawPdfRow(
                         lctx.getString(
                             R.string.pdf_tiffin_bill_fmt,

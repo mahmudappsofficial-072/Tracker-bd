@@ -560,6 +560,305 @@ class ExampleUnitTest {
     assertTrue(ar.contains("2026"))
     assertEquals(en, fallback)
   }
+
+  @Test
+  fun testLanguageManager_bengaliFirstInstallDefaultAndUpgradeSafety() {
+    assertEquals("bn", com.example.util.LanguageManager.DEFAULT_INSTALL_TAG)
+    assertEquals("en", com.example.util.LanguageManager.FALLBACK_TAG)
+    assertEquals("bn", com.example.data.model.UserProfile().language)
+
+    // All 5 languages remain supported with Bengali listed first
+    val tags = com.example.util.LanguageManager.SupportedLanguage.entries.map { it.tag }
+    assertEquals(listOf("bn", "en", "hi", "ta", "ar"), tags)
+
+    // True only on brand-new fresh install
+    assertTrue(
+      com.example.util.LanguageManager.shouldApplyDefaultInstallLanguage(
+        currentAppSetting = "system",
+        hasDefaultInitializedFlag = false,
+        hasLegacyV2MigratedFlag = false,
+        hasExistingDatabase = false
+      )
+    )
+
+    // Existing v26+ user on System Default must remain untouched
+    assertFalse(
+      com.example.util.LanguageManager.shouldApplyDefaultInstallLanguage(
+        currentAppSetting = "system",
+        hasDefaultInitializedFlag = false,
+        hasLegacyV2MigratedFlag = true,
+        hasExistingDatabase = false
+      )
+    )
+
+    // Existing legacy user with local database must remain untouched
+    assertFalse(
+      com.example.util.LanguageManager.shouldApplyDefaultInstallLanguage(
+        currentAppSetting = "system",
+        hasDefaultInitializedFlag = false,
+        hasLegacyV2MigratedFlag = false,
+        hasExistingDatabase = true
+      )
+    )
+
+    // User who later switches from Bengali back to System Default must remain on System Default
+    assertFalse(
+      com.example.util.LanguageManager.shouldApplyDefaultInstallLanguage(
+        currentAppSetting = "system",
+        hasDefaultInitializedFlag = true,
+        hasLegacyV2MigratedFlag = true,
+        hasExistingDatabase = true
+      )
+    )
+
+    // Existing explicit language selection must remain untouched
+    assertFalse(
+      com.example.util.LanguageManager.shouldApplyDefaultInstallLanguage(
+        currentAppSetting = "en",
+        hasDefaultInitializedFlag = false,
+        hasLegacyV2MigratedFlag = false,
+        hasExistingDatabase = false
+      )
+    )
+  }
+
+  @Test
+  fun testComputeMonthlySummary_pastSnapshotIdentityIsolationAndLegacyFallback() {
+    val activeProfile = com.example.data.model.UserProfile(
+      userName = "Rahim Updated",
+      companyName = "New Knitwear Ltd",
+      designation = "Senior Operator",
+      workerId = "EMP-999",
+      grade = "Grade 2",
+      basicSalary = 15000.0
+    )
+
+    // Snapshot with identity captured where grade/workerId/designation were intentionally left blank
+    val isolatedPastSnapshot = com.example.data.model.MonthlySalarySettings(
+      yearMonth = "2026-10",
+      basicSalary = 12000.0,
+      grossSalary = 20450.0,
+      hourlyOtRate = 115.38,
+      userName = "Rahim",
+      companyName = "Old Factory",
+      designation = "",
+      workerId = "",
+      grade = "",
+      isLocked = true,
+      updatedAt = 1791000000000L
+    )
+
+    val isolatedSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-10",
+      currentCalendarYm = "2026-11",
+      profile = activeProfile,
+      monthSnapshot = isolatedPastSnapshot,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+
+    assertEquals("Rahim", isolatedSummary.userName)
+    assertEquals("Old Factory", isolatedSummary.companyName)
+    assertEquals("", isolatedSummary.designation)
+    assertEquals("", isolatedSummary.workerId)
+    assertEquals("", isolatedSummary.grade)
+
+    // Legacy pre-v9 snapshot where all 5 identity fields were never populated
+    val legacyPastSnapshot = com.example.data.model.MonthlySalarySettings(
+      yearMonth = "2026-08",
+      basicSalary = 10400.0,
+      grossSalary = 17850.0,
+      hourlyOtRate = 100.0,
+      isLocked = true,
+      updatedAt = 1786000000000L
+    )
+
+    val legacySummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-08",
+      currentCalendarYm = "2026-11",
+      profile = activeProfile,
+      monthSnapshot = legacyPastSnapshot,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+
+    assertEquals("Rahim Updated", legacySummary.userName)
+    assertEquals("New Knitwear Ltd", legacySummary.companyName)
+    assertEquals("Senior Operator", legacySummary.designation)
+    assertEquals("EMP-999", legacySummary.workerId)
+    assertEquals("Grade 2", legacySummary.grade)
+  }
+
+  @Test
+  fun testComputeMonthlySummary_customZeroBasicSnapshotStaysIsolated() {
+    val activeLaborProfile = com.example.data.model.UserProfile(
+      userName = "Karim",
+      isCustomSalary = false,
+      basicSalary = 15000.0,
+      medicalAllowance = 750.0,
+      customOtRate = 0.0,
+      nightBillRate = 250.0,
+      monthlyOtTargetHours = 90.0
+    )
+    val zeroBasicCustomSnapshot = com.example.data.model.MonthlySalarySettings(
+      yearMonth = "2026-10",
+      basicSalary = 0.0,
+      houseRent = 0.0,
+      medicalAllowance = 0.0,
+      conveyanceAllowance = 0.0,
+      foodAllowance = 0.0,
+      grossSalary = 0.0,
+      hourlyOtRate = 95.0,
+      customOtRate = 95.0,
+      nightBillRate = 120.0,
+      monthlyOtTargetHours = 40.0,
+      isCustomSalary = true,
+      userName = "Karim",
+      isLocked = true,
+      updatedAt = 1791000000000L
+    )
+
+    val summary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-10",
+      currentCalendarYm = "2026-11",
+      profile = activeLaborProfile,
+      monthSnapshot = zeroBasicCustomSnapshot,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+
+    assertTrue(summary.isCustomSalary)
+    assertEquals(0.0, summary.basicSalary, 0.001)
+    assertEquals(0.0, summary.houseRent, 0.001)
+    assertEquals(0.0, summary.medicalAllowance, 0.001)
+    assertEquals(0.0, summary.conveyanceAllowance, 0.001)
+    assertEquals(0.0, summary.foodAllowance, 0.001)
+    assertEquals(0.0, summary.grossSalary, 0.001)
+    assertEquals(95.0, summary.hourlyOtRate, 0.001)
+    assertEquals(95.0, summary.customOtRate, 0.001)
+    assertEquals(120.0, summary.effectiveNightRate, 0.001)
+    assertEquals(40.0, summary.targetHours, 0.001)
+  }
+
+  @Test
+  fun testSalaryFieldHelpTopic_coversAllEightEditableFieldsWithUniqueTagsAndResources() {
+    val topics = com.example.ui.screens.SalaryFieldHelpTopic.entries
+    assertEquals(8, topics.size)
+
+    val titles = topics.map { it.titleRes }
+    val descs = topics.map { it.descRes }
+    val examples = topics.map { it.exampleRes }
+    val tags = topics.map { it.buttonTestTag }
+
+    assertEquals(8, titles.distinct().size)
+    assertEquals(8, descs.distinct().size)
+    assertEquals(8, examples.distinct().size)
+    assertEquals(8, tags.distinct().size)
+
+    val snakeCaseRegex = Regex("^[a-z0-9_]+$")
+    topics.forEach { topic ->
+      assertTrue(topic.titleRes != 0)
+      assertTrue(topic.descRes != 0)
+      assertTrue(topic.exampleRes != 0)
+      assertTrue("Expected snake_case testTag for ${topic.name}", snakeCaseRegex.matches(topic.buttonTestTag))
+    }
+  }
+
+  @Test
+  fun testInterstitialAdGatePolicy_enforcesOnlineInitCooldownDebugIdAndShowGuards() {
+    // Debug uses Google test interstitial ID; Release uses General-Interstitial production ID
+    assertEquals(
+      "ca-app-pub-3940256099942544/1033173712",
+      com.example.util.InterstitialAdGatePolicy.resolveAdUnitId(isDebug = true)
+    )
+    assertEquals(
+      "ca-app-pub-9027708775227838/5097750056",
+      com.example.util.InterstitialAdGatePolicy.resolveAdUnitId(isDebug = false)
+    )
+
+    // Offline -> skip ad request completely and allow direct PDF download
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
+        isOnline = false,
+        isMobileAdsInitialized = true,
+        nowMs = 1_000_000L,
+        lastShownAtMs = 0L
+      )
+    )
+
+    // SDK not initialized -> skip ad request
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
+        isOnline = true,
+        isMobileAdsInitialized = false,
+        nowMs = 1_000_000L,
+        lastShownAtMs = 0L
+      )
+    )
+
+    // Online + initialized + first click -> eligible
+    assertTrue(
+      com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
+        isOnline = true,
+        isMobileAdsInitialized = true,
+        nowMs = 1_000_000L,
+        lastShownAtMs = 0L
+      )
+    )
+
+    // Within 60s cooldown -> blocked to prevent repetitive interstitial policy violation
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
+        isOnline = true,
+        isMobileAdsInitialized = true,
+        nowMs = 1_030_000L,
+        lastShownAtMs = 1_000_000L
+      )
+    )
+
+    // After 60s cooldown -> eligible again
+    assertTrue(
+      com.example.util.InterstitialAdGatePolicy.shouldRequestInterstitial(
+        isOnline = true,
+        isMobileAdsInitialized = true,
+        nowMs = 1_060_000L,
+        lastShownAtMs = 1_000_000L
+      )
+    )
+
+    // Loaded ad show guards: must be alive, resumed, and not timed out / cancelled
+    assertTrue(
+      com.example.util.InterstitialAdGatePolicy.canShowLoadedAd(
+        isActivityAlive = true,
+        isActivityResumed = true,
+        isTimedOutOrCancelled = false
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.canShowLoadedAd(
+        isActivityAlive = true,
+        isActivityResumed = false,
+        isTimedOutOrCancelled = false
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.canShowLoadedAd(
+        isActivityAlive = false,
+        isActivityResumed = true,
+        isTimedOutOrCancelled = false
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.canShowLoadedAd(
+        isActivityAlive = true,
+        isActivityResumed = true,
+        isTimedOutOrCancelled = true
+      )
+    )
+  }
 }
 
 

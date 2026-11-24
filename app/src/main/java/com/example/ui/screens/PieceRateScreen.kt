@@ -1,8 +1,16 @@
 package com.example.ui.screens
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -30,9 +39,12 @@ import com.example.data.model.PieceRateRecord
 import com.example.data.model.UserProfile
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.viewmodel.MonthlySummaryState
+import com.example.util.GeneralInterstitialAdManager
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.ResponsiveUtils
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
@@ -61,9 +73,21 @@ fun PieceRateScreen(
     var itemToDelete by remember { mutableStateOf<PieceRateRecord?>(null) }
     val coroutineScope = rememberCoroutineScope()
     var isGeneratingPdf by remember { mutableStateOf(false) }
+    var isPreparingPdfAd by remember { mutableStateOf(false) }
+    var activePdfDownloadJob by remember { mutableStateOf<Job?>(null) }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+    DisposableEffect(Unit) {
+        onDispose { activePdfDownloadJob?.cancel() }
+    }
+
+    BackHandler(enabled = isPreparingPdfAd) {
+        activePdfDownloadJob?.cancel()
+        isPreparingPdfAd = false
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             if (selectedTab == 0 && !summary.isLocked) {
                 FloatingActionButton(
@@ -301,18 +325,16 @@ fun PieceRateScreen(
                     }
                 }
             } else {
-                val effHouseRent = if (summary.houseRent > 0.0) summary.houseRent else if (summary.isCustomSalary) profile.houseRent else (summary.basicSalary * 0.50)
-                val effMedical = if (summary.medicalAllowance > 0.0) summary.medicalAllowance else if (summary.isCustomSalary) profile.medicalAllowance else 750.0
-                val effFood = if (summary.foodAllowance > 0.0) summary.foodAllowance else if (summary.isCustomSalary) profile.foodAllowance else (if (summary.basicSalary > 0.0) 1250.0 else 0.0)
+                val effHouseRent = summary.houseRent
+                val effMedical = summary.medicalAllowance
+                val effFood = summary.foodAllowance
 
                 val defaultCompanyName = stringResource(R.string.default_company_name)
-                val displayCompany = if (summary.companyName.isNotBlank()) summary.companyName
-                else if (profile.companyName.isNotBlank()) profile.companyName
-                else defaultCompanyName
-                val displayUserName = if (summary.userName.isNotBlank()) summary.userName else profile.userName
-                val displayDesignation = if (summary.designation.isNotBlank()) summary.designation else profile.designation
-                val displayWorkerId = if (summary.workerId.isNotBlank()) summary.workerId else profile.workerId
-                val displayGrade = if (summary.grade.isNotBlank()) summary.grade else profile.grade
+                val displayCompany = summary.companyName.ifBlank { defaultCompanyName }
+                val displayUserName = summary.userName
+                val displayDesignation = summary.designation
+                val displayWorkerId = summary.workerId
+                val displayGrade = summary.grade
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -449,10 +471,14 @@ fun PieceRateScreen(
                     item {
                         Button(
                             onClick = {
-                                if (!isGeneratingPdf) {
-                                    coroutineScope.launch {
-                                        isGeneratingPdf = true
+                                if (!isGeneratingPdf && !isPreparingPdfAd) {
+                                    activePdfDownloadJob = coroutineScope.launch {
                                         try {
+                                            GeneralInterstitialAdManager.showIfEligibleAndAwaitDismiss(
+                                                context = context,
+                                                onPreparingChanged = { preparing -> isPreparingPdfAd = preparing }
+                                            )
+                                            isGeneratingPdf = true
                                             com.example.util.PdfSlipGenerator.generateAndDownloadPdf(
                                                 context = context,
                                                 profile = profile,
@@ -460,13 +486,17 @@ fun PieceRateScreen(
                                                 selectedMonth = selectedMonth,
                                                 langTag = lang
                                             )
+                                        } catch (_: CancellationException) {
+                                            // Cancelled via Back press or navigation while loading ad
                                         } finally {
+                                            isPreparingPdfAd = false
                                             isGeneratingPdf = false
+                                            activePdfDownloadJob = null
                                         }
                                     }
                                 }
                             },
-                            enabled = !isGeneratingPdf,
+                            enabled = !isGeneratingPdf && !isPreparingPdfAd,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             ),
@@ -632,6 +662,61 @@ fun PieceRateScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(stringResource(R.string.share_pay_slip))
                         }
+                    }
+                }
+            }
+        }
+    }
+
+        AnimatedVisibility(
+            visible = isPreparingPdfAd,
+            enter = fadeIn(animationSpec = tween(150)),
+            exit = fadeOut(animationSpec = tween(120))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    )
+                    .padding(spacing.dialogOuterPadding)
+                    .testTag("pdf_ad_loading_overlay"),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 6.dp,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 360.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 22.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(36.dp),
+                            strokeWidth = 3.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stringResource(R.string.pdf_preparing_ad_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = stringResource(R.string.pdf_preparing_ad_subtitle),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }

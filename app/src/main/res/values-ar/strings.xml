@@ -522,4 +522,45 @@
     <string name="example_tiffin_bill">مثال: 50</string>
     <string name="example_attendance_bonus">مثال: 1000</string>
     <string name="example_absent_days">مثال: 2</string>
+
+    <!-- Salary Field Help Dialog Strings -->
+    <string name="salary_help_example_badge">مثال</string>
+    <string name="salary_help_got_it">فهمت</string>
+    <string name="cd_field_help_fmt">معلومات عن %1$s</string>
+
+    <string name="help_gross_salary_title">الراتب الشهري الإجمالي (Gross)</string>
+    <string name="help_gross_salary_desc">أدخل راتبك الشهري المنتظم الكامل (الأساسي + السكن + الطبي + المواصلات + الطعام) بدون الإضافي. وفق قانون العمل، يحسب التطبيق تلقائياً الراتب الأساسي وسعر ساعة الإضافي (الأساسي ÷ 104).</string>
+    <string name="help_gross_salary_example">إذا كان راتبك الإجمالي 16,000، فاكتب 16000. يصبح الأساسي 9,033 وسعر الإضافي 86.86 للساعة.</string>
+
+    <string name="help_custom_salary_title">الراتب الشهري الثابت / المحدد</string>
+    <string name="help_custom_salary_desc">في الوضع المخصص، أدخل راتبك الشهري الثابت المتفق عليه. لن يقسم التطبيق البدلات تلقائياً، ويحسب خصم الغياب (الراتب ÷ 30) على هذا الرقم.</string>
+    <string name="help_custom_salary_example">إذا كان راتبك الثابت 14,000 فاكتب 14000، أو اتركه 0 إذا كنت تعمل بنظام القطعة فقط.</string>
+
+    <string name="help_custom_ot_rate_title">معدل الإضافي المخصص (للساعة)</string>
+    <string name="help_custom_ot_rate_desc">أدخل المبلغ المحدد الذي يدفعه مصنعك مقابل ساعة العمل الإضافي الواحدة. سيتم ضرب ساعات الإضافي في هذا السعر.</string>
+    <string name="help_custom_ot_rate_example">إذا كان سعر ساعة الإضافي 85، فاكتب 85. عند تسجيل ساعتين إضافي سيتم إضافة 170 تلقائياً.</string>
+
+    <string name="help_night_bill_title">البدل الليلي (لليلة)</string>
+    <string name="help_night_bill_desc">البدل الإضافي للعمل في الوردية الليلية أو العمل المتأخر. عند تحديد خيار البدل الليلي في سجل الإضافي يضاف هذا المبلغ تلقائياً. اتركه فارغاً إذا لم ينطبق.</string>
+    <string name="help_night_bill_example">إذا كان البدل الليلي 100 لليلة وعملت 4 ليالٍ، سيتم إضافة 400 تلقائياً لدخلك.</string>
+
+    <string name="help_tiffin_bill_title">بدل الوجبة (لليوم)</string>
+    <string name="help_tiffin_bill_desc">بدل الوجبة أو الوجبة الخفيفة اليومية أثناء العمل الإضافي. عند تحديد بدل الوجبة في سجل الإضافي يضاف هذا المبلغ. اتركه فارغاً إذا لم يكن متاحاً.</string>
+    <string name="help_tiffin_bill_example">إذا كان بدل الوجبة 50 يومياً واخترته لـ 10 أيام، سيتم إضافة 500 إلى أرباحك.</string>
+
+    <string name="help_attendance_bonus_title">مكافأة الحضور</string>
+    <string name="help_attendance_bonus_desc">المكافأة الشهرية للانتظام في الحضور دون تجاوز حدود الغياب أو الإجازات. تضاف تلقائياً ما لم تتخط الحدود المحددة أدناه.</string>
+    <string name="help_attendance_bonus_example">إذا كانت مكافأة الحضور 1,000 فاكتب 1000. تبقى مضافة لراتبك طالما التزمت بشروط الحضور.</string>
+
+    <string name="help_max_absent_title">أيام الغياب المسموحة للمكافأة</string>
+    <string name="help_max_absent_desc">أقصى عدد أيام غياب مسموح بها شهرياً دون فقدان مكافأة الحضور. اتركه فارغاً أو أدخل 0 إذا كان غياب يوم واحد يلغي المكافأة.</string>
+    <string name="help_max_absent_example">إدخال 0 يعني أن غياب يوم واحد يلغي المكافأة. إدخال 1 يحفظ المكافأة ليوم غياب واحد ويلغيها عند يومين.</string>
+
+    <string name="help_max_leave_title">أيام الإجازة المسموحة للمكافأة</string>
+    <string name="help_max_leave_desc">أقصى عدد أيام إجازة رسمية مسموحة شهرياً دون إلغاء مكافأة الحضور. اترك هذا الحقل فارغاً تماماً إذا كانت الإجازة المقبولة لا تلغي المكافأة.</string>
+    <string name="help_max_leave_example">أدخل 2 إذا كانت المكافأة تستمر حتى يومي إجازة وتلغى في اليوم الثالث، أو اضغط مسح لإبقائه غير مقيد.</string>
+
+    <!-- Pay Slip PDF Ad Preparation Overlay -->
+    <string name="pdf_preparing_ad_title">جارٍ تجهيز ملف PDF لكشف الراتب</string>
+    <string name="pdf_preparing_ad_subtitle">يرجى الانتظار قليلاً أثناء تجهيز المستند...</string>
 </resources>

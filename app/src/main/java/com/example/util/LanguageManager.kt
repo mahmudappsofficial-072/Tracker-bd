@@ -13,6 +13,7 @@ import java.util.Locale
 object LanguageManager {
 
     const val SYSTEM_TAG = "system"
+    const val DEFAULT_INSTALL_TAG = "bn"
     const val FALLBACK_TAG = "en"
 
     val SUPPORTED_LANG_TAGS = setOf("en", "bn", "hi", "ta", "ar")
@@ -20,6 +21,7 @@ object LanguageManager {
 
     private const val PREFS_NAME = "overtime_locale_prefs"
     private const val KEY_V2_MIGRATED = "locale_v2_migrated"
+    private const val KEY_DEFAULT_LOCALE_INITIALIZED = "default_locale_initialized"
 
     enum class SupportedLanguage(
         val tag: String,
@@ -27,8 +29,8 @@ object LanguageManager {
         val englishLabel: String,
         val flagEmoji: String
     ) {
-        EN("en", "English", "English", "🇬🇧"),
         BN("bn", "বাংলা", "Bengali", "🇧🇩"),
+        EN("en", "English", "English", "🇬🇧"),
         HI("hi", "हिन्दी", "Hindi", "🇮🇳"),
         TA("ta", "தமிழ்", "Tamil", "🇮🇳"),
         AR("ar", "العربية", "Arabic", "🇸🇦");
@@ -157,6 +159,51 @@ object LanguageManager {
         AppCompatDelegate.setApplicationLocales(localeList)
     }
 
+    internal fun shouldApplyDefaultInstallLanguage(
+        currentAppSetting: String,
+        hasDefaultInitializedFlag: Boolean,
+        hasLegacyV2MigratedFlag: Boolean,
+        hasExistingDatabase: Boolean
+    ): Boolean {
+        return currentAppSetting == SYSTEM_TAG &&
+            !hasDefaultInitializedFlag &&
+            !hasLegacyV2MigratedFlag &&
+            !hasExistingDatabase
+    }
+
+    fun ensureDefaultLanguageOnFirstInstall(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val currentAppSetting = getSelectedSettingTag(context)
+        val hasDefaultInit = prefs.getBoolean(KEY_DEFAULT_LOCALE_INITIALIZED, false)
+        val hasV2Migrated = prefs.getBoolean(KEY_V2_MIGRATED, false)
+        val dbFile = context.getDatabasePath("overtime_bd_database")
+        val hasExistingDb = dbFile != null && dbFile.exists() && dbFile.length() > 0L
+
+        if (shouldApplyDefaultInstallLanguage(
+                currentAppSetting = currentAppSetting,
+                hasDefaultInitializedFlag = hasDefaultInit,
+                hasLegacyV2MigratedFlag = hasV2Migrated,
+                hasExistingDatabase = hasExistingDb
+            )
+        ) {
+            prefs.edit()
+                .putBoolean(KEY_DEFAULT_LOCALE_INITIALIZED, true)
+                .putBoolean(KEY_V2_MIGRATED, true)
+                .apply()
+            applyAppLanguage(DEFAULT_INSTALL_TAG)
+            return DEFAULT_INSTALL_TAG
+        }
+
+        if (!hasDefaultInit || (currentAppSetting != SYSTEM_TAG && !hasV2Migrated)) {
+            val editor = prefs.edit().putBoolean(KEY_DEFAULT_LOCALE_INITIALIZED, true)
+            if (currentAppSetting != SYSTEM_TAG && !hasV2Migrated) {
+                editor.putBoolean(KEY_V2_MIGRATED, true)
+            }
+            editor.apply()
+        }
+        return currentAppSetting
+    }
+
     fun migrateLegacyLocaleIfNeeded(
         context: Context,
         legacyProfileLanguage: String?,
@@ -165,13 +212,22 @@ object LanguageManager {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val currentAppSetting = getSelectedSettingTag(context)
         if (currentAppSetting != SYSTEM_TAG) {
-            prefs.edit().putBoolean(KEY_V2_MIGRATED, true).apply()
+            prefs.edit()
+                .putBoolean(KEY_V2_MIGRATED, true)
+                .putBoolean(KEY_DEFAULT_LOCALE_INITIALIZED, true)
+                .apply()
             return currentAppSetting
         }
         if (prefs.getBoolean(KEY_V2_MIGRATED, false)) {
+            if (!prefs.getBoolean(KEY_DEFAULT_LOCALE_INITIALIZED, false)) {
+                prefs.edit().putBoolean(KEY_DEFAULT_LOCALE_INITIALIZED, true).apply()
+            }
             return SYSTEM_TAG
         }
-        prefs.edit().putBoolean(KEY_V2_MIGRATED, true).apply()
+        prefs.edit()
+            .putBoolean(KEY_V2_MIGRATED, true)
+            .putBoolean(KEY_DEFAULT_LOCALE_INITIALIZED, true)
+            .apply()
 
         val normalizedLegacy = normalizeProfileLanguage(legacyProfileLanguage)
         return if (hasConfiguredData && normalizedLegacy in SUPPORTED_LANG_TAGS) {

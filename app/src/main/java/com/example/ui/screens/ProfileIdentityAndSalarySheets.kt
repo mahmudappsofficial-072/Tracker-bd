@@ -1,8 +1,14 @@
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,16 +17,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -38,6 +48,71 @@ import com.example.util.ResponsiveUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+
+internal enum class SalaryFieldHelpTopic(
+    @StringRes val titleRes: Int,
+    @StringRes val descRes: Int,
+    @StringRes val exampleRes: Int,
+    val icon: ImageVector,
+    val buttonTestTag: String
+) {
+    GROSS_SALARY(
+        titleRes = R.string.help_gross_salary_title,
+        descRes = R.string.help_gross_salary_desc,
+        exampleRes = R.string.help_gross_salary_example,
+        icon = Icons.Default.Payments,
+        buttonTestTag = "gross_salary_help_btn"
+    ),
+    CUSTOM_BASIC_SALARY(
+        titleRes = R.string.help_custom_salary_title,
+        descRes = R.string.help_custom_salary_desc,
+        exampleRes = R.string.help_custom_salary_example,
+        icon = Icons.Default.Payments,
+        buttonTestTag = "basic_salary_help_btn"
+    ),
+    CUSTOM_OT_RATE(
+        titleRes = R.string.help_custom_ot_rate_title,
+        descRes = R.string.help_custom_ot_rate_desc,
+        exampleRes = R.string.help_custom_ot_rate_example,
+        icon = Icons.Default.Schedule,
+        buttonTestTag = "custom_ot_rate_help_btn"
+    ),
+    NIGHT_BILL_RATE(
+        titleRes = R.string.help_night_bill_title,
+        descRes = R.string.help_night_bill_desc,
+        exampleRes = R.string.help_night_bill_example,
+        icon = Icons.Default.NightsStay,
+        buttonTestTag = "night_rate_help_btn"
+    ),
+    TIFFIN_BILL_RATE(
+        titleRes = R.string.help_tiffin_bill_title,
+        descRes = R.string.help_tiffin_bill_desc,
+        exampleRes = R.string.help_tiffin_bill_example,
+        icon = Icons.Default.Restaurant,
+        buttonTestTag = "tiffin_rate_help_btn"
+    ),
+    ATTENDANCE_BONUS(
+        titleRes = R.string.help_attendance_bonus_title,
+        descRes = R.string.help_attendance_bonus_desc,
+        exampleRes = R.string.help_attendance_bonus_example,
+        icon = Icons.Default.EmojiEvents,
+        buttonTestTag = "attendance_bonus_help_btn"
+    ),
+    MAX_ABSENT_BONUS(
+        titleRes = R.string.help_max_absent_title,
+        descRes = R.string.help_max_absent_desc,
+        exampleRes = R.string.help_max_absent_example,
+        icon = Icons.Default.EventBusy,
+        buttonTestTag = "max_absent_bonus_help_btn"
+    ),
+    MAX_LEAVE_BONUS(
+        titleRes = R.string.help_max_leave_title,
+        descRes = R.string.help_max_leave_desc,
+        exampleRes = R.string.help_max_leave_example,
+        icon = Icons.Default.DateRange,
+        buttonTestTag = "max_leave_bonus_help_btn"
+    )
+}
 
 internal fun shouldShowMissingFieldHighlight(
     activeHighlightField: String?,
@@ -323,6 +398,7 @@ fun SalaryStructureSheet(
     }
 
     var activeHighlightField by remember(highlightTriggerId) { mutableStateOf(initialHighlightField) }
+    var activeHelpTopic by remember { mutableStateOf<SalaryFieldHelpTopic?>(null) }
     var blinkPhaseOn by remember { mutableStateOf(true) }
     val salaryBringIntoViewRequester = remember { BringIntoViewRequester() }
     val nightBringIntoViewRequester = remember { BringIntoViewRequester() }
@@ -363,7 +439,7 @@ fun SalaryStructureSheet(
         onDispose { hideKeyboard() }
     }
 
-    BackHandler {
+    BackHandler(enabled = activeHelpTopic == null) {
         hideKeyboard()
         onDismiss()
     }
@@ -419,18 +495,24 @@ fun SalaryStructureSheet(
         label = "tiffinFocusedBorderColor"
     )
 
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = { hideKeyboard() }
-            )
-            .testTag("salary_structure_sheet"),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    var lastHelpTopic by remember { mutableStateOf(SalaryFieldHelpTopic.GROSS_SALARY) }
+    LaunchedEffect(activeHelpTopic) {
+        activeHelpTopic?.let { lastHelpTopic = it }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { hideKeyboard() }
+                )
+                .testTag("salary_structure_sheet"),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
             Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
                 Row(
                     modifier = Modifier
@@ -573,6 +655,7 @@ fun SalaryStructureSheet(
                 )
 
                 if (!isCustomSalary) {
+                    val grossLabel = stringResource(R.string.gross_salary_input_label)
                     OutlinedTextField(
                         value = grossSalaryText,
                         onValueChange = {
@@ -582,7 +665,7 @@ fun SalaryStructureSheet(
                                 activeHighlightField = null
                             }
                         },
-                        label = { Text(stringResource(R.string.gross_salary_input_label)) },
+                        label = { Text(grossLabel) },
                         placeholder = { Text(stringResource(R.string.example_gross_salary)) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -597,6 +680,16 @@ fun SalaryStructureSheet(
                                 tint = if (isSalaryHighlighted) errorRed else defaultPrimary
                             )
                         },
+                        trailingIcon = {
+                            FieldHelpIconButton(
+                                topic = SalaryFieldHelpTopic.GROSS_SALARY,
+                                fieldLabel = grossLabel,
+                                onClick = {
+                                    hideKeyboard()
+                                    activeHelpTopic = SalaryFieldHelpTopic.GROSS_SALARY
+                                }
+                            )
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = salaryFocusedBorderColor,
                             unfocusedBorderColor = salaryBorderColor,
@@ -605,6 +698,7 @@ fun SalaryStructureSheet(
                         )
                     )
                 } else {
+                    val customSalaryLabel = stringResource(R.string.total_salary_input_label)
                     OutlinedTextField(
                         value = basicSalaryText,
                         onValueChange = {
@@ -614,7 +708,7 @@ fun SalaryStructureSheet(
                                 activeHighlightField = null
                             }
                         },
-                        label = { Text(stringResource(R.string.total_salary_input_label)) },
+                        label = { Text(customSalaryLabel) },
                         placeholder = { Text(stringResource(R.string.example_gross_salary)) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -629,6 +723,16 @@ fun SalaryStructureSheet(
                                 tint = if (isSalaryHighlighted) errorRed else defaultPrimary
                             )
                         },
+                        trailingIcon = {
+                            FieldHelpIconButton(
+                                topic = SalaryFieldHelpTopic.CUSTOM_BASIC_SALARY,
+                                fieldLabel = customSalaryLabel,
+                                onClick = {
+                                    hideKeyboard()
+                                    activeHelpTopic = SalaryFieldHelpTopic.CUSTOM_BASIC_SALARY
+                                }
+                            )
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = salaryFocusedBorderColor,
                             unfocusedBorderColor = salaryBorderColor,
@@ -636,14 +740,25 @@ fun SalaryStructureSheet(
                             unfocusedLabelColor = if (isSalaryHighlighted) errorRed else defaultLabel
                         )
                     )
+                    val customOtLabel = stringResource(R.string.custom_ot_rate_label)
                     OutlinedTextField(
                         value = customOtRateText,
                         onValueChange = { customOtRateText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true) },
-                        label = { Text(stringResource(R.string.custom_ot_rate_label)) },
+                        label = { Text(customOtLabel) },
                         placeholder = { Text(stringResource(R.string.example_custom_ot_rate)) },
                         modifier = Modifier.fillMaxWidth().testTag("custom_ot_rate_input"),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
+                        trailingIcon = {
+                            FieldHelpIconButton(
+                                topic = SalaryFieldHelpTopic.CUSTOM_OT_RATE,
+                                fieldLabel = customOtLabel,
+                                onClick = {
+                                    hideKeyboard()
+                                    activeHelpTopic = SalaryFieldHelpTopic.CUSTOM_OT_RATE
+                                }
+                            )
+                        },
                         supportingText = { Text(stringResource(R.string.custom_ot_rate_hint)) }
                     )
                 }
@@ -819,6 +934,8 @@ fun SalaryStructureSheet(
                 }
 
                 // Night & Tiffin Rates
+                val nightRateLabel = stringResource(R.string.night_bill_rate_label)
+                val tiffinRateLabel = stringResource(R.string.tiffin_bill_rate_label)
                 if (isCompactScreen) {
                     OutlinedTextField(
                         value = nightBillRateText,
@@ -829,7 +946,7 @@ fun SalaryStructureSheet(
                                 activeHighlightField = null
                             }
                         },
-                        label = { Text(stringResource(R.string.night_bill_rate_label)) },
+                        label = { Text(nightRateLabel) },
                         placeholder = { Text(stringResource(R.string.example_night_bill)) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -837,6 +954,16 @@ fun SalaryStructureSheet(
                             .testTag("night_rate_input"),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
+                        trailingIcon = {
+                            FieldHelpIconButton(
+                                topic = SalaryFieldHelpTopic.NIGHT_BILL_RATE,
+                                fieldLabel = nightRateLabel,
+                                onClick = {
+                                    hideKeyboard()
+                                    activeHelpTopic = SalaryFieldHelpTopic.NIGHT_BILL_RATE
+                                }
+                            )
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = nightFocusedBorderColor,
                             unfocusedBorderColor = nightBorderColor,
@@ -853,7 +980,7 @@ fun SalaryStructureSheet(
                                 activeHighlightField = null
                             }
                         },
-                        label = { Text(stringResource(R.string.tiffin_bill_rate_label)) },
+                        label = { Text(tiffinRateLabel) },
                         placeholder = { Text(stringResource(R.string.example_tiffin_bill)) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -861,6 +988,16 @@ fun SalaryStructureSheet(
                             .testTag("tiffin_rate_input"),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
+                        trailingIcon = {
+                            FieldHelpIconButton(
+                                topic = SalaryFieldHelpTopic.TIFFIN_BILL_RATE,
+                                fieldLabel = tiffinRateLabel,
+                                onClick = {
+                                    hideKeyboard()
+                                    activeHelpTopic = SalaryFieldHelpTopic.TIFFIN_BILL_RATE
+                                }
+                            )
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = tiffinFocusedBorderColor,
                             unfocusedBorderColor = tiffinBorderColor,
@@ -879,7 +1016,7 @@ fun SalaryStructureSheet(
                                     activeHighlightField = null
                                 }
                             },
-                            label = { Text(stringResource(R.string.night_bill_rate_label)) },
+                            label = { Text(nightRateLabel) },
                             placeholder = { Text(stringResource(R.string.example_night_bill)) },
                             modifier = Modifier
                                 .weight(1f)
@@ -887,6 +1024,16 @@ fun SalaryStructureSheet(
                                 .testTag("night_rate_input"),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             singleLine = true,
+                            trailingIcon = {
+                                FieldHelpIconButton(
+                                    topic = SalaryFieldHelpTopic.NIGHT_BILL_RATE,
+                                    fieldLabel = nightRateLabel,
+                                    onClick = {
+                                        hideKeyboard()
+                                        activeHelpTopic = SalaryFieldHelpTopic.NIGHT_BILL_RATE
+                                    }
+                                )
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = nightFocusedBorderColor,
                                 unfocusedBorderColor = nightBorderColor,
@@ -903,7 +1050,7 @@ fun SalaryStructureSheet(
                                     activeHighlightField = null
                                 }
                             },
-                            label = { Text(stringResource(R.string.tiffin_bill_rate_label)) },
+                            label = { Text(tiffinRateLabel) },
                             placeholder = { Text(stringResource(R.string.example_tiffin_bill)) },
                             modifier = Modifier
                                 .weight(1f)
@@ -911,6 +1058,16 @@ fun SalaryStructureSheet(
                                 .testTag("tiffin_rate_input"),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             singleLine = true,
+                            trailingIcon = {
+                                FieldHelpIconButton(
+                                    topic = SalaryFieldHelpTopic.TIFFIN_BILL_RATE,
+                                    fieldLabel = tiffinRateLabel,
+                                    onClick = {
+                                        hideKeyboard()
+                                        activeHelpTopic = SalaryFieldHelpTopic.TIFFIN_BILL_RATE
+                                    }
+                                )
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = tiffinFocusedBorderColor,
                                 unfocusedBorderColor = tiffinBorderColor,
@@ -922,42 +1079,78 @@ fun SalaryStructureSheet(
                 }
 
                 // Attendance Bonus & Eligibility Thresholds (Absent + Allowed Leave Days together!)
+                val attendanceBonusLabel = stringResource(R.string.attendance_bonus_label)
                 OutlinedTextField(
                     value = attendanceBonusText,
                     onValueChange = { attendanceBonusText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = true) },
-                    label = { Text(stringResource(R.string.attendance_bonus_label)) },
+                    label = { Text(attendanceBonusLabel) },
                     placeholder = { Text(stringResource(R.string.example_attendance_bonus)) },
                     modifier = Modifier.fillMaxWidth().testTag("attendance_bonus_input"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true
+                    singleLine = true,
+                    trailingIcon = {
+                        FieldHelpIconButton(
+                            topic = SalaryFieldHelpTopic.ATTENDANCE_BONUS,
+                            fieldLabel = attendanceBonusLabel,
+                            onClick = {
+                                hideKeyboard()
+                                activeHelpTopic = SalaryFieldHelpTopic.ATTENDANCE_BONUS
+                            }
+                        )
+                    }
                 )
 
+                val maxAbsentLabel = stringResource(R.string.bonus_absent_threshold_label)
                 OutlinedTextField(
                     value = maxAbsentForBonusText,
                     onValueChange = { maxAbsentForBonusText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = false) },
-                    label = { Text(stringResource(R.string.bonus_absent_threshold_label)) },
+                    label = { Text(maxAbsentLabel) },
                     placeholder = { Text(stringResource(R.string.example_absent_days)) },
                     modifier = Modifier.fillMaxWidth().testTag("max_absent_bonus_input"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     supportingText = { Text(stringResource(R.string.bonus_absent_threshold_hint), fontSize = 11.sp) },
-                    leadingIcon = { Icon(Icons.Default.EventBusy, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                    leadingIcon = { Icon(Icons.Default.EventBusy, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingIcon = {
+                        FieldHelpIconButton(
+                            topic = SalaryFieldHelpTopic.MAX_ABSENT_BONUS,
+                            fieldLabel = maxAbsentLabel,
+                            onClick = {
+                                hideKeyboard()
+                                activeHelpTopic = SalaryFieldHelpTopic.MAX_ABSENT_BONUS
+                            }
+                        )
+                    }
                 )
 
+                val maxLeaveLabel = stringResource(R.string.allowed_leave_days_title)
                 OutlinedTextField(
                     value = maxLeaveForBonusText,
                     onValueChange = { maxLeaveForBonusText = LaborLawCalculator.normalizeNumericInput(it, allowDecimal = false) },
-                    label = { Text(stringResource(R.string.allowed_leave_days_title)) },
+                    label = { Text(maxLeaveLabel) },
                     placeholder = { Text(stringResource(R.string.leave_days_placeholder)) },
                     modifier = Modifier.fillMaxWidth().testTag("max_leave_bonus_input"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     trailingIcon = {
-                        if (maxLeaveForBonusText.isNotEmpty()) {
-                            IconButton(onClick = { maxLeaveForBonusText = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear), modifier = Modifier.size(16.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (maxLeaveForBonusText.isNotEmpty()) {
+                                IconButton(
+                                    onClick = { maxLeaveForBonusText = "" },
+                                    modifier = Modifier.minimumInteractiveComponentSize()
+                                ) {
+                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear), modifier = Modifier.size(16.dp))
+                                }
                             }
+                            FieldHelpIconButton(
+                                topic = SalaryFieldHelpTopic.MAX_LEAVE_BONUS,
+                                fieldLabel = maxLeaveLabel,
+                                onClick = {
+                                    hideKeyboard()
+                                    activeHelpTopic = SalaryFieldHelpTopic.MAX_LEAVE_BONUS
+                                }
+                            )
                         }
                     }
                 )
@@ -1016,6 +1209,183 @@ fun SalaryStructureSheet(
                         Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(stringResource(R.string.save_salary_btn), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+        }
+
+        if (activeHelpTopic != null) {
+            BackHandler {
+                activeHelpTopic = null
+            }
+        }
+
+        AnimatedVisibility(
+            visible = activeHelpTopic != null,
+            enter = fadeIn(animationSpec = tween(150)),
+            exit = fadeOut(animationSpec = tween(120))
+        ) {
+            SalaryFieldHelpDialog(
+                topic = activeHelpTopic ?: lastHelpTopic,
+                onDismiss = { activeHelpTopic = null },
+                cardModifier = Modifier.animateEnterExit(
+                    enter = scaleIn(animationSpec = tween(150), initialScale = 0.94f),
+                    exit = scaleOut(animationSpec = tween(120), targetScale = 0.96f)
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun FieldHelpIconButton(
+    topic: SalaryFieldHelpTopic,
+    fieldLabel: String,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .minimumInteractiveComponentSize()
+            .testTag(topic.buttonTestTag)
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+            contentDescription = stringResource(R.string.cd_field_help_fmt, fieldLabel),
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun SalaryFieldHelpDialog(
+    topic: SalaryFieldHelpTopic,
+    onDismiss: () -> Unit,
+    cardModifier: Modifier = Modifier
+) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.45f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss
+            )
+            .padding(spacing.dialogOuterPadding),
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            modifier = cardModifier
+                .fillMaxWidth()
+                .widthIn(max = 460.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {}
+                )
+                .testTag("salary_field_help_dialog"),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = topic.icon,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(topic.titleRes),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(topic.descRes),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 21.sp
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.salary_help_example_badge),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                            Text(
+                                text = stringResource(topic.exampleRes),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 20.sp
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .testTag("salary_field_help_close_btn"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.salary_help_got_it),
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }

@@ -522,4 +522,45 @@
     <string name="example_tiffin_bill">যেমন: 50</string>
     <string name="example_attendance_bonus">যেমন: 1000</string>
     <string name="example_absent_days">যেমন: 2</string>
+
+    <!-- Salary Field Help Dialog Strings -->
+    <string name="salary_help_example_badge">উদাহরণ</string>
+    <string name="salary_help_got_it">বুঝেছি</string>
+    <string name="cd_field_help_fmt">%1$s সম্পর্কে তথ্য</string>
+
+    <string name="help_gross_salary_title">মাসিক মোট বেতন (Gross Salary)</string>
+    <string name="help_gross_salary_desc">ওভারটাইম ছাড়া আপনার প্রতি মাসের নিয়মিত মোট বেতন (মূল বেতন + বাসাভাড়া + চিকিৎসা + যাতায়াত + খাদ্য ভাতা) এখানে লিখুন। বাংলাদেশ শ্রম আইন অনুযায়ী অ্যাপ নিজে থেকেই মূল বেতন ও প্রতি ঘণ্টা ওটি রেট (বেসিক ÷ ১০৪) বের করে নেবে।</string>
+    <string name="help_gross_salary_example">ধরুন আপনার মাসিক মোট বেতন ১৬,০০০ টাকা—তাহলে এখানে 16000 লিখুন। অ্যাপ অটো মূল বেতন ৯,০৩৩ টাকা ও ওটি রেট ঘণ্টায় ৮৬.৮৬ টাকা হিসাব করবে।</string>
+
+    <string name="help_custom_salary_title">মাসিক মোট বা নির্ধারিত বেতন</string>
+    <string name="help_custom_salary_desc">কাস্টম মোডে আপনার কারখানার সাথে ঠিক করা মাসিক মোট বেতন এখানে লিখুন। এখানে শ্রম আইনের ৪টি ভাতা আলাদাভাবে যোগ হবে না, আর অনুপস্থিত থাকলে দৈনিক কর্তন (বেতন ÷ ৩০) এই টাকার ওপর হিসাব হবে।</string>
+    <string name="help_custom_salary_example">আপনার মাসিক নির্ধারিত বেতন ১৪,০০০ টাকা হলে 14000 লিখুন; আর শুধু পিস-রেট বা ঘণ্টাভিত্তিক কাজ করলে খালি রাখুন বা 0 দিন।</string>
+
+    <string name="help_custom_ot_rate_title">কাস্টম ওটি রেট (প্রতি ঘণ্টা)</string>
+    <string name="help_custom_ot_rate_desc">আপনার কারখানা বা প্রতিষ্ঠান প্রতি ১ ঘণ্টা ওভারটাইমের জন্য সরাসরি যে টাকা দেয় তা এখানে লিখুন। প্রতিদিনের ওটি এন্ট্রিতে এই রেট দিয়ে গুণ করে আয় হিসাব হবে।</string>
+    <string name="help_custom_ot_rate_example">প্রতি ঘণ্টা ওভারটাইমে ৮৫ টাকা পেলে এখানে 85 লিখুন। কোনো দিন ২ ঘণ্টা ওটি করলে অটো ১৭০ টাকা যোগ হবে।</string>
+
+    <string name="help_night_bill_title">নাইট বিল রেট (প্রতি রাত)</string>
+    <string name="help_night_bill_desc">রাতের শিফট বা অতিরিক্ত রাতের ডিউটি করলে কারখানা থেকে প্রতি রাতে যে বাড়তি বিল দেয় তা লিখুন। ওটি যোগ করার সময় নাইট বিল টিক দিলে এই টাকা যোগ হবে। না পেলে খালি রাখুন।</string>
+    <string name="help_night_bill_example">প্রতি রাতে নাইট বিল ১০০ টাকা হলে 100 লিখুন। মাসে ৪ রাত নাইট বিল টিক দিলে মোট ৪০০ টাকা যোগ হবে।</string>
+
+    <string name="help_tiffin_bill_title">টিফিন বিল রেট (প্রতি দিন)</string>
+    <string name="help_tiffin_bill_desc">ওভারটাইম বা অতিরিক্ত ডিউটির দিনে নাস্তা বা টিফিন বাবদ প্রতি দিন যে টাকা দেয় তা এখানে লিখুন। ওটি এন্ট্রিতে টিফিন টিক দিলে এই টাকা যোগ হবে। প্রযোজ্য না হলে খালি রাখুন।</string>
+    <string name="help_tiffin_bill_example">প্রতিদিন টিফিন বিল ৫০ টাকা হলে 50 লিখুন। মাসে ১০ দিন টিফিন পেলে মোট ৫০০ টাকা আয় হিসেবে যোগ হবে।</string>
+
+    <string name="help_attendance_bonus_title">হাজিরা বোনাস (Attendance Bonus)</string>
+    <string name="help_attendance_bonus_desc">নিয়মিত অফিস করলে কারখানা থেকে মাসে যে হাজিরা বোনাস পান তার পরিমাণ লিখুন। নিচের অনুপস্থিতি বা ছুটির সীমা পার না হলে মাসের মোট আয়ে এই বোনাস স্বয়ংক্রিয়ভাবে যোগ থাকবে।</string>
+    <string name="help_attendance_bonus_example">মাসিক হাজিরা বোনাস ১,০০০ টাকা হলে 1000 লিখুন। শর্ত পূরণ করলে মাস শেষে ১,০০০ টাকা যোগ দেখাবে।</string>
+
+    <string name="help_max_absent_title">বোনাস পাওয়ার অনুপস্থিতি সীমা</string>
+    <string name="help_max_absent_desc">মাসে সর্বোচ্চ কত দিন অনুপস্থিত (Absent) থাকলেও আপনার হাজিরা বোনাস কাটা যাবে না তা লিখুন। ১ দিন অনুপস্থিত হলেই বোনাস কাটা গেলে এটি খালি রাখুন বা 0 দিন।</string>
+    <string name="help_max_absent_example">0 দিলে ১ দিন অনুপস্থিত হলেই বোনাস কাটা যাবে। আর 1 দিলে ১ দিন অনুপস্থিত থাকলেও বোনাস পাবেন, কিন্তু ২ দিন হলে কাটা যাবে।</string>
+
+    <string name="help_max_leave_title">বোনাস পাওয়ার ছুটির অনুমোদিত সীমা</string>
+    <string name="help_max_leave_desc">মাসে সর্বোচ্চ কত দিন অনুমোদিত ছুটি (Leave) নিলেও হাজিরা বোনাস কাটা যাবে না তা লিখুন। আপনার কারখানায় অনুমোদিত ছুটিতে বোনাস না কাটলে এই ঘরটি সম্পূর্ণ খালি রাখুন।</string>
+    <string name="help_max_leave_example">২ দিন পর্যন্ত ছুটিতে বোনাস থাকলে 2 লিখুন (৩ দিন হলে কাটা যাবে)। আর ছুটি সবসময় বোনাস-মুক্ত হলে পাশের Clear (×) চেপে খালি রাখুন।</string>
+
+    <!-- Pay Slip PDF Ad Preparation Overlay -->
+    <string name="pdf_preparing_ad_title">পে স্লিপ PDF প্রস্তুত হচ্ছে</string>
+    <string name="pdf_preparing_ad_subtitle">অনুগ্রহ করে একটু অপেক্ষা করুন, আপনার ডকুমেন্ট প্রস্তুত হচ্ছে...</string>
 </resources>

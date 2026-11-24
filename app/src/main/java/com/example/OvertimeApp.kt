@@ -20,6 +20,11 @@ class OvertimeApp : Application() {
         super.onCreate()
         instance = this
         try {
+            com.example.util.LanguageManager.ensureDefaultLanguageOnFirstInstall(this)
+        } catch (e: Exception) {
+            Log.w("OvertimeApp", "Default language initialization failed: ${e.message}")
+        }
+        try {
             com.example.receiver.TrashAutoDeleteScheduler.scheduleNextAutoDelete(this)
         } catch (e: Exception) {
             Log.w("OvertimeApp", "Trash auto-delete scheduling failed: ${e.message}")

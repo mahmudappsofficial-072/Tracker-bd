@@ -25,7 +25,7 @@ data class UserProfile(
     val tiffinBillRate: Double = 0.0,
     val customOtRate: Double = 0.0,
     val monthlyOtTargetHours: Double = 0.0,
-    val language: String = "system",
+    val language: String = com.example.util.LanguageManager.DEFAULT_INSTALL_TAG,
     val hasAcceptedPrivacyPolicy: Boolean = false,
     val privacyPolicyAcceptedAt: Long = 0L,
     val lastCloudSyncTime: Long = 0L,

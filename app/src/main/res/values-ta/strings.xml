@@ -522,4 +522,45 @@
     <string name="example_tiffin_bill">எ.கா: 50</string>
     <string name="example_attendance_bonus">எ.கா: 1000</string>
     <string name="example_absent_days">எ.கா: 2</string>
+
+    <!-- Salary Field Help Dialog Strings -->
+    <string name="salary_help_example_badge">உதாரணம்</string>
+    <string name="salary_help_got_it">புரிந்தது</string>
+    <string name="cd_field_help_fmt">%1$s பற்றிய தகவல்</string>
+
+    <string name="help_gross_salary_title">மாத மொத்த சம்பளம் (Gross Salary)</string>
+    <string name="help_gross_salary_desc">ஓவர்டைம் இல்லாமல் உங்கள் முழு மாத வழக்கமான சம்பளத்தை (அடிப்படை + வீட்டு வாடகை + மருத்துவம் + போக்குவரத்து + உணவு) உள்ளிடவும். தொழிலாளர் சட்டப்படி அடிப்படை சம்பளம் மற்றும் மணிநேர OT விகிதம் (அடிப்படை ÷ 104) தானாகக் கணக்கிடப்படும்.</string>
+    <string name="help_gross_salary_example">உங்கள் மாத சம்பளம் 16,000 என்றால் 16000 என உள்ளிடவும். அடிப்படை 9,033 ஆகவும் OT விகிதம் மணிக்கு 86.86 ஆகவும் வரும்.</string>
+
+    <string name="help_custom_salary_title">நிலையான / மொத்த மாத சம்பளம்</string>
+    <string name="help_custom_salary_desc">தனிப்பயன் முறையில் உங்கள் ஆலை நிர்ணயித்த நிலையான மாத சம்பளத்தை உள்ளிடவும். இதில் தானியங்கி படிகள் பிரிக்கப்படாது, மேலும் ஆப்சென்ட் பிடித்தம் (சம்பளம் ÷ 30) இதன் அடிப்படையில் கணக்கிடப்படும்.</string>
+    <string name="help_custom_salary_example">மாத சம்பளம் 14,000 எனில் 14000 என உள்ளிடவும்; பீஸ்-ரேட் மட்டும் செய்தால் 0 அல்லது காலியாக விடவும்.</string>
+
+    <string name="help_custom_ot_rate_title">தனிப்பயன் OT விகிதம் (மணிக்கு)</string>
+    <string name="help_custom_ot_rate_desc">1 மணிநேர ஓவர்டைமுக்கு உங்கள் ஆலை வழங்கும் நேரடி தொகையை உள்ளிடவும். ஒவ்வொரு OT பதிவிலும் மணிநேரங்கள் இந்த விகிதத்தால் பெருக்கப்படும்.</string>
+    <string name="help_custom_ot_rate_example">1 மணிநேர OT-க்கு 85 கிடைத்தால் 85 என உள்ளிடவும். 2 மணிநேர OT செய்தால் 170 தானாகச் சேரும்.</string>
+
+    <string name="help_night_bill_title">இரவு பில் விகிதம் (ஒரு இரவு)</string>
+    <string name="help_night_bill_desc">இரவு ஷிப்ட் அல்லது தாமத இரவு பணிக்கு ஒரு இரவுக்கு வழங்கப்படும் கூடுதல் படி. OT பதிவில் இரவு பில் தேர்வு செய்தால் இது சேரும். பொருந்தாவிட்டால் காலியாக விடவும்.</string>
+    <string name="help_night_bill_example">ஒரு இரவுக்கு 100 எனில் 100 எழுதவும். மாதத்தில் 4 இரவுகள் தேர்வு செய்தால் 400 தானாகச் சேரும்.</string>
+
+    <string name="help_tiffin_bill_title">டிபன் பில் விகிதம் (ஒரு நாள்)</string>
+    <string name="help_tiffin_bill_desc">கூடுதல் பணி அல்லது OT நாட்களில் வழங்கப்படும் தினசரி சிற்றுண்டி படி. OT பதிவில் டிபன் பில் தேர்வு செய்தால் இது சேர்க்கப்படும். இல்லையெனில் காலியாக விடவும்.</string>
+    <string name="help_tiffin_bill_example">தினசரி டிபன் படி 50 எனில் 50 எழுதவும். 10 நாட்களுக்குத் தேர்வு செய்தால் 500 வருமானத்தில் சேரும்.</string>
+
+    <string name="help_attendance_bonus_title">வருகை போனஸ் (Attendance Bonus)</string>
+    <string name="help_attendance_bonus_desc">தொடர்ந்து பணிக்கு வருவதற்கான மாத போனஸ். கீழே உள்ள ஆப்சென்ட் மற்றும் விடுப்பு வரம்பை மீறாதவரை இந்தத் தொகை தானாகச் சேரும்.</string>
+    <string name="help_attendance_bonus_example">மாத வருகை போனஸ் 1,000 எனில் 1000 எழுதவும். நிபந்தனைகளைப் பூர்த்தி செய்தால் மாத இறுதியில் சேர்க்கப்படும்.</string>
+
+    <string name="help_max_absent_title">போனஸுக்கான ஆப்சென்ட் வரம்பு</string>
+    <string name="help_max_absent_desc">ஒரு மாதத்தில் எத்தனை ஆப்சென்ட் நாட்கள் வரை போனஸ் ரத்து ஆகாமல் இருக்கும் என்பதை உள்ளிடவும். 1 நாள் ஆப்சென்ட் ஆனாலும் போனஸ் போனால் காலியாக விடவும் அல்லது 0 தரவும்.</string>
+    <string name="help_max_absent_example">0 எனில் 1 ஆப்சென்ட்டிலும் போனஸ் ரத்தாகும். 1 எனில் 1 ஆப்சென்ட் வரை போனஸ் கிடைக்கும், 2 நாட்களுக்கு ரத்தாகும்.</string>
+
+    <string name="help_max_leave_title">போனஸுக்கான விடுப்பு வரம்பு</string>
+    <string name="help_max_leave_desc">ஒரு மாதத்தில் எத்தனை அனுமதிக்கப்பட்ட விடுப்பு நாட்கள் வரை போனஸ் கிடைக்கும் என்பதை உள்ளிடவும். அனுமதிக்கப்பட்ட விடுப்பால் போனஸ் குறையாவிட்டால் இதை காலியாக விடவும்.</string>
+    <string name="help_max_leave_example">2 விடுப்பு நாட்கள் வரை போனஸ் இருந்தால் 2 எழுதவும் (3-ல் ரத்தாகும்), அல்லது வரம்பற்றதாக இருக்க Clear அழுத்தி காலியாக்கவும்.</string>
+
+    <!-- Pay Slip PDF Ad Preparation Overlay -->
+    <string name="pdf_preparing_ad_title">சம்பள சீட்டு PDF தயாராகிறது</string>
+    <string name="pdf_preparing_ad_subtitle">உங்கள் ஆவணம் தயாராகும் வரை சற்று காத்திருக்கவும்...</string>
 </resources>

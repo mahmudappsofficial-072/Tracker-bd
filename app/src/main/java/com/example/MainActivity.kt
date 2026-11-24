@@ -769,7 +769,7 @@ fun OvertimeApp(
                         // Monthly Target In-Screen Sheet
                         if (showTargetDialog) {
                             TargetGoalDialog(
-                                currentTarget = profile.monthlyOtTargetHours,
+                                currentTarget = summary.targetHours,
                                 lang = effectiveLangTag,
                                 hourlyRate = summary.hourlyOtRate,
                                 currentTotalEarnings = summary.totalEstimatedEarnings,

@@ -522,4 +522,45 @@
     <string name="example_tiffin_bill">e.g. 50</string>
     <string name="example_attendance_bonus">e.g. 1000</string>
     <string name="example_absent_days">e.g. 2</string>
+
+    <!-- Salary Field Help Dialog Strings -->
+    <string name="salary_help_example_badge">Example</string>
+    <string name="salary_help_got_it">Got It</string>
+    <string name="cd_field_help_fmt">Info for %1$s</string>
+
+    <string name="help_gross_salary_title">Gross Salary (Monthly)</string>
+    <string name="help_gross_salary_desc">Enter your full regular monthly salary (Basic + House Rent + Medical + Conveyance + Food) without overtime. Using Bangladesh Labor Law, the app automatically calculates your Basic Salary and hourly overtime rate (Basic ÷ 104).</string>
+    <string name="help_gross_salary_example">If your regular monthly salary card shows 16,000 Tk, enter 16000. Basic becomes 9,033 Tk and OT rate becomes 86.86 Tk/hr.</string>
+
+    <string name="help_custom_salary_title">Fixed / Total Monthly Salary</string>
+    <string name="help_custom_salary_desc">In Custom mode, enter your agreed fixed monthly salary here. Unlike Auto mode, the app will not split it into fixed Labor Law allowances, and absent deductions use this salary ÷ 30.</string>
+    <string name="help_custom_salary_example">If your factory pays a flat 14,000 Tk monthly salary (or you work piece-rate only, enter 0), type 14000 or leave 0.</string>
+
+    <string name="help_custom_ot_rate_title">Custom OT Rate (Per Hour)</string>
+    <string name="help_custom_ot_rate_desc">Enter the exact overtime amount your factory pays for each hour of OT. Every overtime entry will multiply your OT hours by this rate.</string>
+    <string name="help_custom_ot_rate_example">If your factory pays 85 Tk for 1 hour of overtime, enter 85. Doing 2 hours of OT automatically adds 170 Tk.</string>
+
+    <string name="help_night_bill_title">Night Bill Rate (Per Night)</string>
+    <string name="help_night_bill_desc">The extra allowance paid for working a night shift or late-night duty. Whenever you tick Night Bill while adding OT, this amount is added to your monthly total. Leave blank if not applicable.</string>
+    <string name="help_night_bill_example">If your night bill is 100 Tk per night and you work 4 nights in a month, 400 Tk is added automatically.</string>
+
+    <string name="help_tiffin_bill_title">Tiffin Bill Rate (Per Day)</string>
+    <string name="help_tiffin_bill_desc">Daily snack or tiffin allowance given during extra duty or overtime days. Whenever you tick Tiffin Bill in an OT entry, this amount is added. Leave blank if your factory does not pay tiffin bills.</string>
+    <string name="help_tiffin_bill_example">If your tiffin allowance is 50 Tk per day and you claim it on 10 days, 500 Tk is added to your earnings.</string>
+
+    <string name="help_attendance_bonus_title">Attendance Bonus</string>
+    <string name="help_attendance_bonus_desc">Monthly reward for regular attendance without crossing your factory absent/leave limits. Earned automatically unless your absent or leave days exceed the limits set below.</string>
+    <string name="help_attendance_bonus_example">If your attendance bonus is 1,000 Tk, enter 1000. It stays added to your salary as long as you stay within the allowed limits.</string>
+
+    <string name="help_max_absent_title">Allowed Absent Days for Bonus</string>
+    <string name="help_max_absent_desc">Maximum number of absent days allowed in a month without losing your Attendance Bonus. Leave blank or enter 0 if even 1 absent day cancels the bonus.</string>
+    <string name="help_max_absent_example">If you enter 0, being absent 1 day cancels the bonus. If you enter 1, 1 absent day still keeps the bonus, but 2 days cancels it.</string>
+
+    <string name="help_max_leave_title">Allowed Leave Days for Bonus</string>
+    <string name="help_max_leave_desc">Maximum approved leave days allowed in a month without losing your Attendance Bonus. Leave this field completely blank if approved leave never cancels your bonus.</string>
+    <string name="help_max_leave_example">Enter 2 if taking up to 2 leave days keeps your bonus (3+ cancels it), or tap Clear to ignore leave days for bonus.</string>
+
+    <!-- Pay Slip PDF Ad Preparation Overlay -->
+    <string name="pdf_preparing_ad_title">Preparing Pay Slip PDF</string>
+    <string name="pdf_preparing_ad_subtitle">Please wait a moment while we ready your document...</string>
 </resources>

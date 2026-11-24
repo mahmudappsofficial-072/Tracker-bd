@@ -139,15 +139,15 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = profile.userName.ifBlank { stringResource(R.string.app_display_name) },
+                                text = summary.userName.ifBlank { stringResource(R.string.app_display_name) },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             val subInfo = listOfNotNull(
-                                profile.companyName.takeIf { it.isNotBlank() },
-                                profile.designation.takeIf { it.isNotBlank() }
+                                summary.companyName.takeIf { it.isNotBlank() },
+                                summary.designation.takeIf { it.isNotBlank() }
                             ).joinToString(" • ")
                             if (subInfo.isNotBlank()) {
                                 Text(

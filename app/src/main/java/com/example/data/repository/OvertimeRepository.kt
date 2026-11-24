@@ -287,7 +287,21 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         }
     }
 
-    private fun buildSnapshotFromProfile(
+    fun hasSnapshotWorthyProfile(profile: UserProfile): Boolean {
+        return profile.basicSalary > 0.0 ||
+            profile.customOtRate > 0.0 ||
+            profile.nightBillRate > 0.0 ||
+            profile.tiffinBillRate > 0.0 ||
+            profile.attendanceBonus > 0.0 ||
+            profile.monthlyOtTargetHours > 0.0 ||
+            profile.userName.isNotBlank() ||
+            profile.companyName.isNotBlank() ||
+            profile.designation.isNotBlank() ||
+            profile.workerId.isNotBlank() ||
+            profile.grade.isNotBlank()
+    }
+
+    fun buildSnapshotFromProfile(
         ym: String,
         profile: UserProfile,
         isLocked: Boolean,
@@ -308,10 +322,10 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return com.example.data.model.MonthlySalarySettings(
             yearMonth = ym,
             basicSalary = profile.basicSalary,
-            houseRent = if (profile.isCustomSalary) 0.0 else (autoResult?.houseRent ?: profile.houseRent),
-            medicalAllowance = if (profile.isCustomSalary) 0.0 else (autoResult?.medicalAllowance ?: 0.0),
-            conveyanceAllowance = if (profile.isCustomSalary) 0.0 else (autoResult?.conveyanceAllowance ?: profile.conveyanceAllowance),
-            foodAllowance = if (profile.isCustomSalary) 0.0 else (autoResult?.foodAllowance ?: profile.foodAllowance),
+            houseRent = if (profile.isCustomSalary || profile.basicSalary <= 0.0) 0.0 else (autoResult?.houseRent ?: 0.0),
+            medicalAllowance = if (profile.isCustomSalary || profile.basicSalary <= 0.0) 0.0 else (autoResult?.medicalAllowance ?: 0.0),
+            conveyanceAllowance = if (profile.isCustomSalary || profile.basicSalary <= 0.0) 0.0 else (autoResult?.conveyanceAllowance ?: 0.0),
+            foodAllowance = if (profile.isCustomSalary || profile.basicSalary <= 0.0) 0.0 else (autoResult?.foodAllowance ?: 0.0),
             grossSalary = gross,
             hourlyOtRate = otRate,
             customOtRate = profile.customOtRate,
@@ -331,6 +345,28 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             lockedAt = lockedAt,
             updatedAt = updatedAt
         )
+    }
+
+    suspend fun ensureMonthSnapshotExists(
+        ym: String,
+        profile: UserProfile,
+        currentCalendarYm: String = java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.US).format(java.util.Date())
+    ): com.example.data.model.MonthlySalarySettings? {
+        val existing = monthlySalaryDao.getSettingsForMonthOnce(ym)
+        if (existing != null) return existing
+        if (!hasSnapshotWorthyProfile(profile)) return null
+
+        val now = System.currentTimeMillis()
+        val isLocked = com.example.util.MonthLockPolicy.resolveIsMonthLocked(ym, null)
+        val snapshot = buildSnapshotFromProfile(
+            ym = ym,
+            profile = profile,
+            isLocked = isLocked && ym < currentCalendarYm,
+            lockedAt = if (isLocked && ym < currentCalendarYm) now else 0L,
+            updatedAt = now
+        )
+        saveMonthlySalarySettings(snapshot)
+        return snapshot
     }
 
     suspend fun setMonthLockStatus(yearMonth: String, isLocked: Boolean) {
@@ -566,7 +602,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 tiffinBillRate = 0.0,
                 customOtRate = 0.0,
                 monthlyOtTargetHours = 0.0,
-                language = LanguageManager.normalizeProfileLanguage(current?.language),
+                language = if (current != null) LanguageManager.normalizeProfileLanguage(current.language) else LanguageManager.DEFAULT_INSTALL_TAG,
                 hasAcceptedPrivacyPolicy = false,
                 privacyPolicyAcceptedAt = 0L,
                 lastCloudSyncTime = 0L,
@@ -780,6 +816,10 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                         else -> localConsentTime
                     }
 
+                    val preservedLanguage = currentLocal?.language?.takeIf { it.isNotBlank() }
+                        ?.let { LanguageManager.normalizeProfileLanguage(it) }
+                        ?: LanguageManager.DEFAULT_INSTALL_TAG
+
                     val emptyProfileWithConsent = hashMapOf<String, Any>(
                         "userName" to "",
                         "companyName" to "",
@@ -799,7 +839,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                         "tiffinBillRate" to 0.0,
                         "customOtRate" to 0.0,
                         "monthlyOtTargetHours" to 0.0,
-                        "language" to "system",
+                        "language" to preservedLanguage,
                         "lastSyncTime" to 0L,
                         // CONSENT IS PERMANENTLY PRESERVED IN FIRESTORE PER USER REQUIREMENT:
                         "hasAcceptedPrivacyPolicy" to true,
@@ -1360,7 +1400,10 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 for (doc in msQuerySnap.documents) {
                     val data = doc.data ?: continue
                     val remoteMs = mapToMonthlySalary(data) ?: continue
-                    monthlySalaryDao.insertOrUpdate(remoteMs)
+                    val existingLocal = monthlySalaryDao.getSettingsForMonthOnce(remoteMs.yearMonth)
+                    if (existingLocal == null || remoteMs.updatedAt >= existingLocal.updatedAt) {
+                        monthlySalaryDao.insertOrUpdate(remoteMs)
+                    }
                 }
             }
 

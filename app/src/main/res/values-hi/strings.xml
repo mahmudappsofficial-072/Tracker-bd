@@ -522,4 +522,45 @@
     <string name="example_tiffin_bill">जैसे: 50</string>
     <string name="example_attendance_bonus">जैसे: 1000</string>
     <string name="example_absent_days">जैसे: 2</string>
+
+    <!-- Salary Field Help Dialog Strings -->
+    <string name="salary_help_example_badge">उदाहरण</string>
+    <string name="salary_help_got_it">समझ गया</string>
+    <string name="cd_field_help_fmt">%1$s की जानकारी</string>
+
+    <string name="help_gross_salary_title">सकल मासिक वेतन (Gross Salary)</string>
+    <string name="help_gross_salary_desc">ओवरटाइम के बिना अपना पूरा नियमित मासिक वेतन (बेसिक + मकान किराया + चिकित्सा + यात्रा + भोजन भत्ता) यहाँ दर्ज करें। श्रम कानून के अनुसार ऐप स्वचालित रूप से बेसिक वेतन और प्रति घंटा ओटी दर (बेसिक ÷ 104) की गणना करेगा।</string>
+    <string name="help_gross_salary_example">यदि आपका नियमित मासिक वेतन 16,000 है, तो 16000 लिखें। बेसिक वेतन 9,033 और ओटी दर 86.86 प्रति घंटा हो जाएगी।</string>
+
+    <string name="help_custom_salary_title">नियमित / निश्चित मासिक वेतन</string>
+    <string name="help_custom_salary_desc">कस्टम मोड में कंपनी द्वारा तय अपना निश्चित मासिक वेतन यहाँ दर्ज करें। इसमें ऑटो भत्ते अलग नहीं किए जाते, और अनुपस्थिति कटौती (वेतन ÷ 30) इसी राशि पर गिनी जाती है।</string>
+    <string name="help_custom_salary_example">यदि आपका निश्चित मासिक वेतन 14,000 है तो 14000 लिखें, या केवल पीस-रेट पर काम करने पर 0 या खाली छोड़ दें।</string>
+
+    <string name="help_custom_ot_rate_title">कस्टम ओटी दर (प्रति घंटा)</string>
+    <string name="help_custom_ot_rate_desc">आपकी फैक्ट्री 1 घंटे ओवरटाइम के लिए सीधे जो राशि देती है, वह यहाँ लिखें। हर ओटी एंट्री में घंटों को इसी दर से गुणा किया जाएगा।</string>
+    <string name="help_custom_ot_rate_example">यदि 1 घंटे ओटी के 85 मिलते हैं तो 85 लिखें। 2 घंटे ओटी करने पर अपने आप 170 जुड़ जाएंगे।</string>
+
+    <string name="help_night_bill_title">नाइट बिल दर (प्रति रात)</string>
+    <string name="help_night_bill_desc">नाइट शिफ्ट या देर रात ड्यूटी करने पर प्रति रात मिलने वाला अतिरिक्त भत्ता दर्ज करें। ओटी एंट्री में नाइट बिल चुनने पर यह जुड़ जाएगा। लागू न हो तो खाली छोड़ें।</string>
+    <string name="help_night_bill_example">यदि नाइट बिल 100 प्रति रात है और आप महीने में 4 रात काम करते हैं, तो 400 अपने आप जुड़ जाएंगे।</string>
+
+    <string name="help_tiffin_bill_title">टिफिन बिल दर (प्रति दिन)</string>
+    <string name="help_tiffin_bill_desc">ओवरटाइम या अतिरिक्त ड्यूटी के दिन मिलने वाला दैनिक नाश्ता/टिफिन भत्ता यहाँ लिखें। ओटी एंट्री में टिफिन बिल चुनने पर यह जुड़ता है। लागू न हो तो खाली छोड़ें।</string>
+    <string name="help_tiffin_bill_example">यदि प्रति दिन टिफिन भत्ता 50 है और 10 दिन चुना जाता है, तो आपकी आय में 500 जुड़ जाएंगे।</string>
+
+    <string name="help_attendance_bonus_title">उपस्थिति बोनस (Attendance Bonus)</string>
+    <string name="help_attendance_bonus_desc">नियमित उपस्थिति के लिए मिलने वाला मासिक बोनस दर्ज करें। यदि आपके अनुपस्थित या अवकाश दिन नीचे तय सीमा से अधिक नहीं हैं, तो यह बोनस स्वतः जुड़ जाएगा।</string>
+    <string name="help_attendance_bonus_example">यदि उपस्थिति बोनस 1,000 है तो 1000 लिखें। नियम पूरे होने पर यह महीने के अंत में जुड़ जाएगा।</string>
+
+    <string name="help_max_absent_title">बोनस हेतु अनुमत अनुपस्थिति सीमा</string>
+    <string name="help_max_absent_desc">महीने में अधिकतम कितने दिन अनुपस्थित रहने पर भी बोनस नहीं कटेगा, वह लिखें। 1 दिन भी अनुपस्थित होने पर बोनस कटता है तो खाली छोड़ें या 0 लिखें।</string>
+    <string name="help_max_absent_example">0 लिखने पर 1 अनुपस्थिति में बोनस कट जाएगा। 1 लिखने पर 1 अनुपस्थिति तक बोनस मिलेगा, 2 पर कट जाएगा।</string>
+
+    <string name="help_max_leave_title">बोनस हेतु अनुमत अवकाश दिन</string>
+    <string name="help_max_leave_desc">महीने में अधिकतम कितने स्वीकृत अवकाश (Leave) पर बोनस सुरक्षित रहेगा, वह लिखें। यदि स्वीकृत छुट्टी से बोनस नहीं कटता तो इसे पूरी तरह खाली छोड़ दें।</string>
+    <string name="help_max_leave_example">यदि 2 छुट्टी तक बोनस मिलता है तो 2 लिखें (3 पर कटेगा), या छुट्टी की सीमा हटाने के लिए Clear दबाकर खाली रखें।</string>
+
+    <!-- Pay Slip PDF Ad Preparation Overlay -->
+    <string name="pdf_preparing_ad_title">पे स्लिप PDF तैयार हो रही है</string>
+    <string name="pdf_preparing_ad_subtitle">कृपया प्रतीक्षा करें, आपका दस्तावेज़ तैयार किया जा रहा है...</string>
 </resources>
