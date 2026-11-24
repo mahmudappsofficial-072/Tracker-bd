@@ -763,7 +763,6 @@ fun OvertimeApp(
                                 },
                                 onSaveProfile = { updated -> viewModel.updateProfile(updated) },
                                 onOpenLanguagePicker = { showLanguagePicker = true },
-                                onSyncCloud = { callback -> viewModel.syncCloudNow(callback) },
                                 trashItems = trashItems,
                                 onRestoreTrash = { viewModel.restoreTrashItem(it) },
                                 onDeleteTrashPermanently = { viewModel.deleteTrashItemPermanently(it) },

@@ -972,6 +972,151 @@ class ExampleUnitTest {
       com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(readyConfigured.copy(hasCheckedMissingOtThisSession = true))
     )
   }
+
+  @Test
+  fun testCloudSyncPolicy_enforcesZeroCostGatesDeltaRestoreAndConditionalTimestamp() {
+    // 1. Startup gate blocks offline, signed-out, and unconsented users
+    val offline = com.example.util.CloudSyncPolicy.evaluateStartupSyncDecision(
+      isSignedIn = true,
+      hasPrivacyConsent = true,
+      isOnline = false,
+      hasCompletedInitialRestoreForUid = true,
+      hasPendingLocalDirtyData = true
+    )
+    assertFalse(offline.shouldRunSync)
+    assertEquals(com.example.util.StartupSyncReason.OFFLINE, offline.reason)
+
+    val signedOut = com.example.util.CloudSyncPolicy.evaluateStartupSyncDecision(
+      isSignedIn = false,
+      hasPrivacyConsent = true,
+      isOnline = true,
+      hasCompletedInitialRestoreForUid = false,
+      hasPendingLocalDirtyData = false
+    )
+    assertFalse(signedOut.shouldRunSync)
+    assertEquals(com.example.util.StartupSyncReason.NOT_SIGNED_IN, signedOut.reason)
+
+    val noConsent = com.example.util.CloudSyncPolicy.evaluateStartupSyncDecision(
+      isSignedIn = true,
+      hasPrivacyConsent = false,
+      isOnline = true,
+      hasCompletedInitialRestoreForUid = false,
+      hasPendingLocalDirtyData = false
+    )
+    assertFalse(noConsent.shouldRunSync)
+    assertEquals(com.example.util.StartupSyncReason.NO_CONSENT, noConsent.reason)
+
+    // 2. Startup triggers initial restore on fresh install, pending dirty flush when queued, or 1-doc timestamp check otherwise
+    assertEquals(
+      com.example.util.StartupSyncReason.NEEDS_INITIAL_RESTORE,
+      com.example.util.CloudSyncPolicy.evaluateStartupSyncDecision(true, true, true, false, false).reason
+    )
+    assertEquals(
+      com.example.util.StartupSyncReason.HAS_PENDING_LOCAL_CHANGES,
+      com.example.util.CloudSyncPolicy.evaluateStartupSyncDecision(true, true, true, true, true).reason
+    )
+    assertEquals(
+      com.example.util.StartupSyncReason.SERVER_TIMESTAMP_CHECK_ONLY,
+      com.example.util.CloudSyncPolicy.evaluateStartupSyncDecision(true, true, true, true, false).reason
+    )
+
+    // 3. Mid-session reconnect runs ONLY if initial restore unfinished or local dirty queue exists (0 ops when synced)
+    val reconnectSynced = com.example.util.CloudSyncPolicy.evaluateReconnectSyncDecision(
+      isSignedIn = true,
+      hasPrivacyConsent = true,
+      isOnline = true,
+      hasCompletedInitialRestoreForUid = true,
+      hasPendingLocalDirtyData = false
+    )
+    assertFalse(reconnectSynced.shouldRunSync)
+    assertEquals(com.example.util.StartupSyncReason.NO_PENDING_RECONNECT_WORK, reconnectSynced.reason)
+
+    val reconnectDirty = com.example.util.CloudSyncPolicy.evaluateReconnectSyncDecision(
+      isSignedIn = true,
+      hasPrivacyConsent = true,
+      isOnline = true,
+      hasCompletedInitialRestoreForUid = true,
+      hasPendingLocalDirtyData = true
+    )
+    assertTrue(reconnectDirty.shouldRunSync)
+    assertEquals(com.example.util.StartupSyncReason.HAS_PENDING_LOCAL_CHANGES, reconnectDirty.reason)
+
+    // 4. Collection restore plan: FULL before initial restore, NONE when cloudSyncTime <= known, DELTA with 60s overlap when newer
+    val fullPlan = com.example.util.CloudSyncPolicy.evaluateCollectionRestorePlan(
+      forceFullSync = false,
+      hasCompletedInitialRestore = false,
+      cloudSyncTime = 1_000_000L,
+      lastKnownCloudSyncTime = 1_000_000L,
+      otWatermark = 900_000L,
+      pieceWatermark = 900_000L,
+      monthlyWatermark = 900_000L,
+      deductionWatermark = 900_000L,
+      trashWatermark = 900_000L
+    )
+    assertEquals(com.example.util.RestoreMode.FULL, fullPlan.restoreMode)
+    assertNull(fullPlan.otSince)
+    assertNull(fullPlan.deductionSince)
+
+    val nonePlan = com.example.util.CloudSyncPolicy.evaluateCollectionRestorePlan(
+      forceFullSync = false,
+      hasCompletedInitialRestore = true,
+      cloudSyncTime = 1_000_000L,
+      lastKnownCloudSyncTime = 1_000_000L,
+      otWatermark = 900_000L,
+      pieceWatermark = 900_000L,
+      monthlyWatermark = 900_000L,
+      deductionWatermark = 900_000L,
+      trashWatermark = 900_000L
+    )
+    assertEquals(com.example.util.RestoreMode.NONE, nonePlan.restoreMode)
+    assertFalse(nonePlan.shouldDownloadAny)
+
+    val deltaPlan = com.example.util.CloudSyncPolicy.evaluateCollectionRestorePlan(
+      forceFullSync = false,
+      hasCompletedInitialRestore = true,
+      cloudSyncTime = 2_000_000L,
+      lastKnownCloudSyncTime = 1_000_000L,
+      otWatermark = 500_000L,
+      pieceWatermark = 0L,
+      monthlyWatermark = 400_000L,
+      deductionWatermark = 10_000L,
+      trashWatermark = 800_000L
+    )
+    assertEquals(com.example.util.RestoreMode.DELTA, deltaPlan.restoreMode)
+    assertEquals(440_000L, deltaPlan.otSince)
+    assertNull(deltaPlan.pieceSince) // uninitialized collection watermark falls back safely to full
+    assertEquals(340_000L, deltaPlan.monthlySince)
+    assertEquals(0L, deltaPlan.deductionSince)
+    assertEquals(740_000L, deltaPlan.trashSince)
+
+    // 5. Monotonic timestamp handles clock skew across devices
+    assertEquals(2_000_001L, com.example.util.CloudSyncPolicy.computeMonotonicSyncTime(1_500_000L, 1_900_000L, 2_000_000L))
+    assertEquals(3_000_000L, com.example.util.CloudSyncPolicy.computeMonotonicSyncTime(3_000_000L, 2_000_000L))
+
+    // 6. Strict conditional "Auto Cloud Sync" UI display timestamp rule
+    val previousUiTime = 1_700_000_000_000L
+    assertEquals(
+      previousUiTime,
+      com.example.util.CloudSyncPolicy.resolveDisplayedSyncTimestamp(
+        previousSyncTime = previousUiTime,
+        transferOccurred = false,
+        transferTimeMillis = 1_800_000_000_000L
+      )
+    )
+    assertEquals(
+      1_800_000_000_000L,
+      com.example.util.CloudSyncPolicy.resolveDisplayedSyncTimestamp(
+        previousSyncTime = previousUiTime,
+        transferOccurred = true,
+        transferTimeMillis = 1_800_000_000_000L
+      )
+    )
+
+    // 7. Legacy upgrade watermark seeding for existing synced users
+    assertTrue(com.example.util.CloudSyncPolicy.shouldSeedLegacyUpgradeWatermark(false, 1_700_000_000_000L))
+    assertFalse(com.example.util.CloudSyncPolicy.shouldSeedLegacyUpgradeWatermark(false, 0L))
+    assertFalse(com.example.util.CloudSyncPolicy.shouldSeedLegacyUpgradeWatermark(true, 1_700_000_000_000L))
+  }
 }
 
 

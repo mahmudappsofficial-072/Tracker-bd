@@ -28,6 +28,9 @@ interface TrashDao {
     @Query("DELETE FROM trash_items")
     suspend fun clearAllTrash()
 
+    @Query("SELECT id FROM trash_items WHERE deletedAt < :cutoffTimestamp")
+    suspend fun getExpiredTrashIds(cutoffTimestamp: Long): List<Long>
+
     @Query("DELETE FROM trash_items WHERE deletedAt < :cutoffTimestamp")
     suspend fun purgeExpiredTrash(cutoffTimestamp: Long): Int
 

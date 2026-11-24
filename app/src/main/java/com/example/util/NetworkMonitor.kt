@@ -12,6 +12,10 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 object NetworkMonitor {
 
@@ -55,6 +59,48 @@ object NetworkMonitor {
             false
         }
     }
+
+    fun observeIsOnline(context: Context): Flow<Boolean> = callbackFlow {
+        val appContext = context.applicationContext
+        val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                trySend(isStrictlyOnline(appContext))
+            }
+
+            override fun onLost(network: Network) {
+                trySend(isStrictlyOnline(appContext))
+            }
+
+            override fun onUnavailable() {
+                trySend(false)
+            }
+
+            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                val online = hasValidatedInternet(
+                    hasInternetCapability = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
+                    hasValidatedCapability = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                )
+                trySend(online)
+            }
+        }
+
+        trySend(isStrictlyOnline(appContext))
+        val registered = try {
+            cm?.registerDefaultNetworkCallback(callback)
+            cm != null
+        } catch (_: Exception) {
+            false
+        }
+
+        awaitClose {
+            if (registered) {
+                try {
+                    cm?.unregisterNetworkCallback(callback)
+                } catch (_: Exception) {}
+            }
+        }
+    }.distinctUntilChanged()
 
     @Composable
     fun rememberIsOnline(context: Context = LocalContext.current): State<Boolean> {

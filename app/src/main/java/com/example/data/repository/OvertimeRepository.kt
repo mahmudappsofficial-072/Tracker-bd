@@ -10,11 +10,15 @@ import com.example.data.model.OvertimeRecord
 import com.example.data.model.PieceRateRecord
 import com.example.data.model.TrashItem
 import com.example.data.model.UserProfile
+import com.example.util.CloudSyncPolicy
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
+import com.example.util.NetworkMonitor
+import com.example.util.RestoreMode
 import com.google.android.gms.tasks.Task
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -43,7 +47,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 data class CloudConsentStatus(
     val hasConsent: Boolean,
-    val consentTimestamp: Long = 0L
+    val consentTimestamp: Long = 0L,
+    val rootExists: Boolean = false,
+    val rootData: Map<String, Any?>? = null
 )
 
 private suspend fun <T> Task<T>.awaitResult(): T =
@@ -84,6 +90,8 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
     private val inMemoryTombstoneSets = mutableMapOf<String, MutableSet<String>>()
     @Volatile
     private var inMemoryClearTrashBefore: Long = 0L
+    private val inMemoryLongPrefs = mutableMapOf<String, Long>()
+    private val inMemoryBoolPrefs = mutableMapOf<String, Boolean>()
     private val idCounter = java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis() * 1000L)
 
     private fun launchTrackedSync(block: suspend () -> Unit): Job {
@@ -199,21 +207,102 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         tombstonePrefs()?.edit()?.clear()?.apply()
     }
 
+    private fun isStrictlyOnlineNow(): Boolean {
+        val ctx = resolveContext() ?: return false
+        return NetworkMonitor.isStrictlyOnline(ctx)
+    }
+
+    private fun syncPrefs(): android.content.SharedPreferences? =
+        resolveContext()?.getSharedPreferences("overtime_sync_prefs", android.content.Context.MODE_PRIVATE)
+
+    private fun getBoolSyncPref(key: String, default: Boolean = false): Boolean = synchronized(tombstoneLock) {
+        val prefs = syncPrefs()
+        prefs?.getBoolean(key, default) ?: (inMemoryBoolPrefs[key] ?: default)
+    }
+
+    private fun hasSyncPrefKey(key: String): Boolean = synchronized(tombstoneLock) {
+        val prefs = syncPrefs()
+        prefs?.contains(key) ?: inMemoryBoolPrefs.containsKey(key)
+    }
+
+    private fun setBoolSyncPref(key: String, value: Boolean) = synchronized(tombstoneLock) {
+        inMemoryBoolPrefs[key] = value
+        syncPrefs()?.edit()?.putBoolean(key, value)?.apply()
+    }
+
+    private fun getLongSyncPref(key: String, default: Long = 0L): Long = synchronized(tombstoneLock) {
+        val prefs = syncPrefs()
+        prefs?.getLong(key, default) ?: (inMemoryLongPrefs[key] ?: default)
+    }
+
+    private fun setLongSyncPref(key: String, value: Long) = synchronized(tombstoneLock) {
+        inMemoryLongPrefs[key] = value
+        syncPrefs()?.edit()?.putLong(key, value)?.apply()
+    }
+
+    private fun clearAllSyncPrefs() = synchronized(tombstoneLock) {
+        inMemoryLongPrefs.clear()
+        inMemoryBoolPrefs.clear()
+        syncPrefs()?.edit()?.clear()?.apply()
+    }
+
+    private fun hasCompletedInitialRestore(uid: String): Boolean =
+        getBoolSyncPref("initial_restore_done_$uid", false)
+
+    private fun hasInitialRestoreKeyRecorded(uid: String): Boolean =
+        hasSyncPrefKey("initial_restore_done_$uid")
+
+    private fun setInitialRestoreCompleted(uid: String, done: Boolean) =
+        setBoolSyncPref("initial_restore_done_$uid", done)
+
+    private fun getLastKnownCloudSyncTime(uid: String): Long =
+        getLongSyncPref("last_known_cloud_sync_time_$uid", 0L)
+
+    private fun setLastKnownCloudSyncTime(uid: String, timestamp: Long) =
+        setLongSyncPref("last_known_cloud_sync_time_$uid", timestamp)
+
+    private fun getCollectionWatermark(uid: String, collectionKey: String): Long =
+        getLongSyncPref("watermark_${collectionKey}_$uid", 0L)
+
+    private fun setCollectionWatermark(uid: String, collectionKey: String, timestamp: Long) =
+        setLongSyncPref("watermark_${collectionKey}_$uid", timestamp)
+
+    private fun isPendingProfileSync(): Boolean = getBoolSyncPref("pending_profile_sync", false)
+
+    private fun setPendingProfileSync(pending: Boolean) = setBoolSyncPref("pending_profile_sync", pending)
+
     internal fun getDeletedOtDates(): Set<String> = getTombstoneSet("deleted_ot_dates")
     internal fun getDeletedPieceIds(): Set<String> = getTombstoneSet("deleted_piece_ids")
     internal fun getDeletedDeductionIds(): Set<String> = getTombstoneSet("deleted_deduction_ids")
     internal fun getDeletedTrashIds(): Set<String> = getTombstoneSet("deleted_trash_ids")
     internal fun getPendingOtSyncDates(): Set<String> = getTombstoneSet("pending_ot_sync_dates")
+    internal fun getPendingPieceSyncIds(): Set<String> = getTombstoneSet("pending_piece_sync_ids")
+    internal fun getPendingDeductionSyncIds(): Set<String> = getTombstoneSet("pending_deduction_sync_ids")
+    internal fun getPendingMonthlySyncYms(): Set<String> = getTombstoneSet("pending_monthly_sync_yms")
+    internal fun getPendingTrashSyncIds(): Set<String> = getTombstoneSet("pending_trash_sync_ids")
 
-    private fun getLocalProfileModifiedAt(): Long {
-        val prefs = resolveContext()?.getSharedPreferences("overtime_sync_prefs", android.content.Context.MODE_PRIVATE)
-        return prefs?.getLong("local_profile_modified_at", 0L) ?: 0L
+    fun hasPendingLocalChanges(): Boolean {
+        return isPendingProfileSync() ||
+            getPendingOtSyncDates().isNotEmpty() ||
+            getPendingPieceSyncIds().isNotEmpty() ||
+            getPendingDeductionSyncIds().isNotEmpty() ||
+            getPendingMonthlySyncYms().isNotEmpty() ||
+            getPendingTrashSyncIds().isNotEmpty() ||
+            getDeletedOtDates().isNotEmpty() ||
+            getDeletedPieceIds().isNotEmpty() ||
+            getDeletedDeductionIds().isNotEmpty() ||
+            getDeletedTrashIds().isNotEmpty() ||
+            getClearAllTrashBefore() > 0L
     }
 
-    private fun setLocalProfileModifiedAt(timestamp: Long) {
-        val prefs = resolveContext()?.getSharedPreferences("overtime_sync_prefs", android.content.Context.MODE_PRIVATE)
-        prefs?.edit()?.putLong("local_profile_modified_at", timestamp)?.apply()
+    fun hasCompletedInitialRestoreForCurrentUser(): Boolean {
+        val uid = getDocId() ?: return false
+        return hasCompletedInitialRestore(uid)
     }
+
+    private fun getLocalProfileModifiedAt(): Long = getLongSyncPref("local_profile_modified_at", 0L)
+
+    private fun setLocalProfileModifiedAt(timestamp: Long) = setLongSyncPref("local_profile_modified_at", timestamp)
 
     init {
         launchTrackedSync {
@@ -263,12 +352,21 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return userProfileDao.getUserProfileOnce() ?: UserProfile()
     }
 
-    suspend fun saveProfile(profile: UserProfile) {
-        setLocalProfileModifiedAt(System.currentTimeMillis())
-        userProfileDao.insertOrUpdateProfile(profile)
-        // Automatic real-time background sync to Firebase
+    fun triggerPendingSync() {
+        if (!hasPendingLocalChanges()) return
+        if (!isStrictlyOnlineNow()) return
+        if (getDocId() == null) return
         launchTrackedSync {
-            autoSyncProfileToCloud(profile)
+            syncPendingMutationsIfOnline()
+        }
+    }
+
+    suspend fun saveProfile(profile: UserProfile, autoSync: Boolean = true) {
+        setLocalProfileModifiedAt(System.currentTimeMillis())
+        setPendingProfileSync(true)
+        userProfileDao.insertOrUpdateProfile(profile)
+        if (autoSync) {
+            triggerPendingSync()
         }
     }
 
@@ -280,10 +378,11 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return monthlySalaryDao.getSettingsForMonthOnce(yearMonth)
     }
 
-    suspend fun saveMonthlySalarySettings(settings: com.example.data.model.MonthlySalarySettings) {
+    suspend fun saveMonthlySalarySettings(settings: com.example.data.model.MonthlySalarySettings, autoSync: Boolean = true) {
         monthlySalaryDao.insertOrUpdate(settings)
-        launchTrackedSync {
-            autoSyncMonthlySalaryToCloud(settings)
+        addToTombstoneSet("pending_monthly_sync_yms", settings.yearMonth)
+        if (autoSync) {
+            triggerPendingSync()
         }
     }
 
@@ -369,17 +468,15 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return snapshot
     }
 
-    suspend fun setMonthLockStatus(yearMonth: String, isLocked: Boolean) {
+    suspend fun setMonthLockStatus(yearMonth: String, isLocked: Boolean, autoSync: Boolean = true) {
         val now = System.currentTimeMillis()
         val lockedAt = if (isLocked) now else 0L
         val existing = monthlySalaryDao.getSettingsForMonthOnce(yearMonth)
         if (existing != null) {
             monthlySalaryDao.updateLockStatus(yearMonth, isLocked, lockedAt, now)
-            val updated = monthlySalaryDao.getSettingsForMonthOnce(yearMonth)
-            if (updated != null) {
-                launchTrackedSync {
-                    autoSyncMonthlySalaryToCloud(updated)
-                }
+            addToTombstoneSet("pending_monthly_sync_yms", yearMonth)
+            if (autoSync) {
+                triggerPendingSync()
             }
         } else {
             val profile = getProfileOnce()
@@ -390,11 +487,11 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 lockedAt = lockedAt,
                 updatedAt = now
             )
-            saveMonthlySalarySettings(snapshot)
+            saveMonthlySalarySettings(snapshot, autoSync = autoSync)
         }
     }
 
-    suspend fun autoFinalizePastMonthSnapshots(currentCalendarYm: String) {
+    suspend fun autoFinalizePastMonthSnapshots(currentCalendarYm: String, autoSync: Boolean = true) {
         withContext(Dispatchers.IO) {
             try {
                 val profile = getProfileOnce()
@@ -407,6 +504,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
 
                 val prevYm = com.example.util.MonthLockPolicy.getPreviousCalendarYearMonth()
                 val isPrevInGrace = com.example.util.MonthLockPolicy.isWithinPreviousMonthGracePeriod(prevYm)
+                var anyChanged = false
 
                 for (ym in allMonths) {
                     val existing = monthlySalaryDao.getSettingsForMonthOnce(ym)
@@ -421,10 +519,15 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                             lockedAt = if (shouldLock) now else 0L,
                             updatedAt = now
                         )
-                        saveMonthlySalarySettings(snapshot)
+                        saveMonthlySalarySettings(snapshot, autoSync = false)
+                        anyChanged = true
                     } else if (!existing.isLocked && !isGraceMonth) {
-                        setMonthLockStatus(ym, true)
+                        setMonthLockStatus(ym, true, autoSync = false)
+                        anyChanged = true
                     }
+                }
+                if (anyChanged && autoSync) {
+                    triggerPendingSync()
                 }
             } catch (e: Exception) {
                 Log.w("OvertimeRepository", "autoFinalizePastMonthSnapshots failed: ${e.message}")
@@ -437,13 +540,14 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return deductionDao.getDeductionsForMonth(yearMonth)
     }
 
-    suspend fun saveDeduction(record: com.example.data.model.DeductionRecord): Long {
+    suspend fun saveDeduction(record: com.example.data.model.DeductionRecord, autoSync: Boolean = true): Long {
         val recordWithId = if (record.id == 0L) record.copy(id = generateUniqueLocalId()) else record
-        removeFromTombstoneSet("deleted_deduction_ids", recordWithId.id.toString())
+        val idStr = recordWithId.id.toString()
+        removeFromTombstoneSet("deleted_deduction_ids", idStr)
         val id = deductionDao.insertOrUpdate(recordWithId)
-        val saved = recordWithId.copy(id = id)
-        launchTrackedSync {
-            autoSyncDeductionToCloud(saved)
+        addToTombstoneSet("pending_deduction_sync_ids", id.toString())
+        if (autoSync) {
+            triggerPendingSync()
         }
         return id
     }
@@ -453,11 +557,11 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
     }
 
     suspend fun deleteDeduction(id: Long) {
-        addToTombstoneSet("deleted_deduction_ids", id.toString())
+        val idStr = id.toString()
+        removeFromTombstoneSet("pending_deduction_sync_ids", idStr)
+        addToTombstoneSet("deleted_deduction_ids", idStr)
         deductionDao.deleteById(id)
-        launchTrackedSync {
-            autoDeleteDeductionFromCloud(id)
-        }
+        triggerPendingSync()
     }
 
     // Overtime
@@ -469,19 +573,28 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return overtimeDao.getRecordsByMonthOnce(yearMonth)
     }
 
-    suspend fun updateRunningMonthOvertimeRates(yearMonth: String, newRate: Double) {
+    suspend fun updateRunningMonthOvertimeRates(yearMonth: String, newRate: Double, autoSync: Boolean = true) {
         try {
             val records = overtimeDao.getRecordsByMonthOnce(yearMonth)
-            for (rec in records) {
-                val updated = rec.copy(
-                    hourlyRateSnapshot = newRate,
-                    calculatedAmount = rec.otHours * newRate
-                )
-                overtimeDao.insertRecord(updated)
-                addToTombstoneSet("pending_ot_sync_dates", updated.date)
-                launchTrackedSync {
-                    autoSyncOvertimeToCloud(updated)
+            if (records.isEmpty()) return
+            var anyUpdated = false
+            database.withTransaction {
+                for (rec in records) {
+                    val newCalc = rec.otHours * newRate
+                    if (rec.hourlyRateSnapshot != newRate || rec.calculatedAmount != newCalc) {
+                        val updated = rec.copy(
+                            hourlyRateSnapshot = newRate,
+                            calculatedAmount = newCalc
+                        )
+                        overtimeDao.insertRecord(updated)
+                        removeFromTombstoneSet("deleted_ot_dates", updated.date)
+                        addToTombstoneSet("pending_ot_sync_dates", updated.date)
+                        anyUpdated = true
+                    }
                 }
+            }
+            if (anyUpdated && autoSync) {
+                triggerPendingSync()
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -493,7 +606,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return overtimeDao.getAllRecords()
     }
 
-    suspend fun insertOrUpdateOvertime(record: OvertimeRecord): Long {
+    suspend fun insertOrUpdateOvertime(record: OvertimeRecord, autoSync: Boolean = true): Long {
         val existing = overtimeDao.getRecordByDate(record.date)
         val targetId = if (record.id != 0L) {
             record.id
@@ -505,12 +618,9 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         val recordToSave = record.copy(id = targetId)
         removeFromTombstoneSet("deleted_ot_dates", recordToSave.date)
         val savedId = overtimeDao.insertRecord(recordToSave)
-        val finalRecord = recordToSave.copy(id = savedId)
-        addToTombstoneSet("pending_ot_sync_dates", finalRecord.date)
-
-        // Automatic real-time background sync to Firebase
-        launchTrackedSync {
-            autoSyncOvertimeToCloud(finalRecord)
+        addToTombstoneSet("pending_ot_sync_dates", recordToSave.date)
+        if (autoSync) {
+            triggerPendingSync()
         }
         return savedId
     }
@@ -528,9 +638,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         removeFromTombstoneSet("pending_ot_sync_dates", existing.date)
         addToTombstoneSet("deleted_ot_dates", existing.date)
         overtimeDao.deleteRecordById(id)
-        launchTrackedSync {
-            autoDeleteOvertimeFromCloud(existing.date)
-        }
+        triggerPendingSync()
     }
 
     // Piece Rate
@@ -542,25 +650,23 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return pieceRateDao.getPieceRecordById(id)
     }
 
-    suspend fun insertPieceRate(record: PieceRateRecord): Long {
+    suspend fun insertPieceRate(record: PieceRateRecord, autoSync: Boolean = true): Long {
         val recordWithId = if (record.id == 0L) record.copy(id = generateUniqueLocalId()) else record
         removeFromTombstoneSet("deleted_piece_ids", recordWithId.id.toString())
         val savedId = pieceRateDao.insertPieceRecord(recordWithId)
-        val finalRecord = recordWithId.copy(id = savedId)
-        // Automatic real-time background sync to Firebase
-        launchTrackedSync {
-            autoSyncPieceRateToCloud(finalRecord)
+        addToTombstoneSet("pending_piece_sync_ids", savedId.toString())
+        if (autoSync) {
+            triggerPendingSync()
         }
         return savedId
     }
 
     suspend fun deletePieceRate(id: Long) {
-        addToTombstoneSet("deleted_piece_ids", id.toString())
+        val idStr = id.toString()
+        removeFromTombstoneSet("pending_piece_sync_ids", idStr)
+        addToTombstoneSet("deleted_piece_ids", idStr)
         pieceRateDao.deletePieceRecordById(id)
-        // Automatic real-time background deletion from Firebase
-        launchTrackedSync {
-            autoDeletePieceRateFromCloud(id)
-        }
+        triggerPendingSync()
     }
 
     suspend fun cleanupDuplicateDates() {
@@ -579,6 +685,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             deductionDao.deleteAll()
             trashDao.clearAllTrash()
             clearAllTombstones()
+            clearAllSyncPrefs()
             scheduleTrashAutoDelete()
 
             val current = userProfileDao.getUserProfileOnce()
@@ -608,7 +715,6 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 lastCloudSyncTime = 0L,
                 cloudSyncStatus = localizedString(R.string.sync_status_local_unauthenticated, "Not logged in (Local)")
             )
-            setLocalProfileModifiedAt(0L)
             userProfileDao.insertOrUpdateProfile(cleanProfile)
             true
         } catch (e: Exception) {
@@ -678,6 +784,9 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         checkUserConsentDetailsInCloud(uid).hasConsent
 
     suspend fun checkUserConsentDetailsInCloud(uid: String): CloudConsentStatus = withContext(Dispatchers.IO) {
+        if (!isStrictlyOnlineNow()) {
+            return@withContext CloudConsentStatus(hasConsent = false, consentTimestamp = 0L)
+        }
         try {
             val snap = firestore.collection("users").document(uid).get().awaitResult()
             if (snap.exists()) {
@@ -733,9 +842,19 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                     }
                 }
 
-                CloudConsentStatus(hasConsent = consented, consentTimestamp = resolvedTimestamp)
+                CloudConsentStatus(
+                    hasConsent = consented,
+                    consentTimestamp = resolvedTimestamp,
+                    rootExists = true,
+                    rootData = data
+                )
             } else {
-                CloudConsentStatus(hasConsent = false, consentTimestamp = 0L)
+                CloudConsentStatus(
+                    hasConsent = false,
+                    consentTimestamp = 0L,
+                    rootExists = false,
+                    rootData = null
+                )
             }
         } catch (e: Exception) {
             Log.w("OvertimeRepository", "Error checking user consent in cloud: ${e.message}")
@@ -895,203 +1014,301 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return null
     }
 
-    private suspend fun autoSyncProfileToCloud(profile: UserProfile) {
-        val docId = getDocId(profile) ?: return
+    private sealed class PendingBatchOp {
+        abstract val docRef: DocumentReference
+        abstract val onCommitted: () -> Unit
 
-        // Safety guard: If profile has never been synced (fresh install) and all critical fields are empty/zero,
-        // do NOT overwrite existing cloud profile!
-        val isDefaultProfile = profile.lastCloudSyncTime == 0L &&
-                profile.basicSalary == 0.0 &&
-                profile.userName.isBlank() &&
-                profile.workerId.isBlank() &&
-                profile.companyName.isBlank()
-        if (isDefaultProfile) {
-            Log.d("OvertimeRepository", "Skipping auto-push for default empty profile")
-            return
-        }
+        data class SetMerge(
+            override val docRef: DocumentReference,
+            val data: Map<String, Any>,
+            override val onCommitted: () -> Unit
+        ) : PendingBatchOp()
 
-        try {
-            val now = System.currentTimeMillis()
-            val syncedProfile = profile.copy(
-                lastCloudSyncTime = now,
-                cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
+        data class DeleteDoc(
+            override val docRef: DocumentReference,
+            override val onCommitted: () -> Unit
+        ) : PendingBatchOp()
+    }
+
+    private fun isBlankDefaultProfile(profile: UserProfile): Boolean {
+        return profile.lastCloudSyncTime == 0L &&
+            profile.basicSalary == 0.0 &&
+            profile.customOtRate == 0.0 &&
+            profile.userName.isBlank() &&
+            profile.workerId.isBlank() &&
+            profile.companyName.isBlank() &&
+            profile.nightBillRate == 0.0 &&
+            profile.tiffinBillRate == 0.0 &&
+            profile.attendanceBonus == 0.0 &&
+            profile.monthlyOtTargetHours == 0.0
+    }
+
+    /**
+     * Flushes ONLY queued dirty upserts & tombstones to Firestore in atomic 400-op WriteBatches.
+     * Clears each chunk's dirty keys ONLY after its WriteBatch commit succeeds.
+     * Piggybacks `lastSyncTime = writeSyncTime` inside the final batch so there are zero double writes.
+     */
+    private suspend fun flushPendingDirtyToCloudLocked(
+        docId: String,
+        userDocRef: DocumentReference,
+        writeSyncTime: Long,
+        allowDefaultProfilePush: Boolean = false
+    ): Boolean {
+        val ops = mutableListOf<PendingBatchOp>()
+
+        // 1. Queued Deletes (always flush deletes first so items are never resurrected)
+        for (date in getDeletedOtDates()) {
+            ops.add(
+                PendingBatchOp.DeleteDoc(
+                    docRef = userDocRef.collection("overtime_records").document(date),
+                    onCommitted = { removeFromTombstoneSet("deleted_ot_dates", date) }
+                )
             )
-            val userMap = profileToMap(syncedProfile)
-            firestore.collection("users").document(docId).set(userMap, SetOptions.merge()).awaitResult()
-            userProfileDao.insertOrUpdateProfile(syncedProfile)
-            setLocalProfileModifiedAt(0L)
-        } catch (e: Exception) {
-            Log.w("OvertimeRepository", "Auto sync profile failed: ${e.message}")
         }
-    }
-
-    private suspend fun autoSyncOvertimeToCloud(record: OvertimeRecord) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            val map = overtimeToMap(record)
-            firestore.collection("users").document(docId)
-                .collection("overtime_records").document(record.date)
-                .set(map, SetOptions.merge()).awaitResult()
-            removeFromTombstoneSet("pending_ot_sync_dates", record.date)
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto sync OT record failed: ${e.message}")
+        for (pieceId in getDeletedPieceIds()) {
+            ops.add(
+                PendingBatchOp.DeleteDoc(
+                    docRef = userDocRef.collection("piece_rate_records").document(pieceId),
+                    onCommitted = { removeFromTombstoneSet("deleted_piece_ids", pieceId) }
+                )
+            )
         }
-    }
-
-    private suspend fun autoDeleteOvertimeFromCloud(date: String) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            firestore.collection("users").document(docId)
-                .collection("overtime_records").document(date)
-                .delete().awaitResult()
-            removeFromTombstoneSet("deleted_ot_dates", date)
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto delete OT record failed: ${e.message}")
+        for (dedId in getDeletedDeductionIds()) {
+            ops.add(
+                PendingBatchOp.DeleteDoc(
+                    docRef = userDocRef.collection("deduction_records").document(dedId),
+                    onCommitted = { removeFromTombstoneSet("deleted_deduction_ids", dedId) }
+                )
+            )
         }
-    }
-
-    private suspend fun autoSyncPieceRateToCloud(record: PieceRateRecord) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            val map = pieceRateToMap(record)
-            firestore.collection("users").document(docId)
-                .collection("piece_rate_records").document(record.id.toString())
-                .set(map, SetOptions.merge()).awaitResult()
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto sync piece rate failed: ${e.message}")
+        for (trId in getDeletedTrashIds()) {
+            ops.add(
+                PendingBatchOp.DeleteDoc(
+                    docRef = userDocRef.collection("trash_records").document(trId),
+                    onCommitted = { removeFromTombstoneSet("deleted_trash_ids", trId) }
+                )
+            )
         }
-    }
 
-    private suspend fun autoDeletePieceRateFromCloud(id: Long) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            firestore.collection("users").document(docId)
-                .collection("piece_rate_records").document(id.toString())
-                .delete().awaitResult()
-            removeFromTombstoneSet("deleted_piece_ids", id.toString())
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto delete piece rate failed: ${e.message}")
-        }
-    }
-
-    private suspend fun markProfileSynced(currentProfile: UserProfile) {
-        val now = System.currentTimeMillis()
-        val latest = userProfileDao.getUserProfileOnce() ?: currentProfile
-        userProfileDao.insertOrUpdateProfile(latest.copy(
-            lastCloudSyncTime = now,
-            cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
-        ))
-        val docId = getDocId(latest)
-        if (docId != null) {
-            try {
-                firestore.collection("users").document(docId)
-                    .set(mapOf("lastSyncTime" to now), SetOptions.merge()).awaitResult()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Log.w("OvertimeRepository", "Updating cloud lastSyncTime failed: ${e.message}")
+        // Handle explicit "Clear All Trash" request once cleanly (only when clearAllTrashBefore > 0L)
+        val clearTrashBefore = getClearAllTrashBefore()
+        var resetClearAllFlagPending = false
+        if (clearTrashBefore > 0L) {
+            val expiredOrClearedSnap = userDocRef.collection("trash_records")
+                .whereLessThanOrEqualTo("deletedAt", clearTrashBefore)
+                .get()
+                .awaitResult()
+            if (expiredOrClearedSnap.isEmpty) {
+                setClearAllTrashBefore(0L)
+            } else {
+                resetClearAllFlagPending = true
+                for (doc in expiredOrClearedSnap.documents) {
+                    ops.add(
+                        PendingBatchOp.DeleteDoc(
+                            docRef = doc.reference,
+                            onCommitted = {}
+                        )
+                    )
+                }
             }
         }
-    }
 
-    private suspend fun autoSyncMonthlySalaryToCloud(settings: com.example.data.model.MonthlySalarySettings) {
-        val docId = getDocId() ?: return
-        try {
-            val map = monthlySalaryToMap(settings)
-            firestore.collection("users").document(docId)
-                .collection("monthly_salary_settings").document(settings.yearMonth)
-                .set(map, SetOptions.merge()).awaitResult()
-            Log.d("OvertimeRepository", "Auto sync monthly salary settings success: ${settings.yearMonth}")
-            markProfileSynced(getProfileOnce())
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto sync monthly salary settings failed: ${e.message}")
+        // 2. Queued Dirty Upserts
+        val pendingOtDates = getPendingOtSyncDates()
+        for (date in pendingOtDates) {
+            val rec = overtimeDao.getRecordByDate(date)
+            if (rec != null) {
+                ops.add(
+                    PendingBatchOp.SetMerge(
+                        docRef = userDocRef.collection("overtime_records").document(rec.date),
+                        data = overtimeToMap(rec, updateTime = writeSyncTime),
+                        onCommitted = { removeFromTombstoneSet("pending_ot_sync_dates", date) }
+                    )
+                )
+            } else {
+                removeFromTombstoneSet("pending_ot_sync_dates", date)
+            }
         }
-    }
 
-    private suspend fun autoSyncDeductionToCloud(record: com.example.data.model.DeductionRecord) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            val map = deductionToMap(record)
-            firestore.collection("users").document(docId)
-                .collection("deduction_records").document(record.id.toString())
-                .set(map, SetOptions.merge()).awaitResult()
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto sync deduction failed: ${e.message}")
+        val pendingPieceIds = getPendingPieceSyncIds()
+        for (idStr in pendingPieceIds) {
+            val id = idStr.toLongOrNull()
+            val rec = if (id != null) pieceRateDao.getPieceRecordById(id) else null
+            if (rec != null) {
+                ops.add(
+                    PendingBatchOp.SetMerge(
+                        docRef = userDocRef.collection("piece_rate_records").document(rec.id.toString()),
+                        data = pieceRateToMap(rec, updateTime = writeSyncTime),
+                        onCommitted = { removeFromTombstoneSet("pending_piece_sync_ids", idStr) }
+                    )
+                )
+            } else {
+                removeFromTombstoneSet("pending_piece_sync_ids", idStr)
+            }
         }
-    }
 
-    private suspend fun autoDeleteDeductionFromCloud(id: Long) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            firestore.collection("users").document(docId)
-                .collection("deduction_records").document(id.toString())
-                .delete().awaitResult()
-            removeFromTombstoneSet("deleted_deduction_ids", id.toString())
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto delete deduction failed: ${e.message}")
+        val pendingDeductionIds = getPendingDeductionSyncIds()
+        for (idStr in pendingDeductionIds) {
+            val id = idStr.toLongOrNull()
+            val rec = if (id != null) deductionDao.getDeductionById(id) else null
+            if (rec != null) {
+                ops.add(
+                    PendingBatchOp.SetMerge(
+                        docRef = userDocRef.collection("deduction_records").document(rec.id.toString()),
+                        data = deductionToMap(rec),
+                        onCommitted = { removeFromTombstoneSet("pending_deduction_sync_ids", idStr) }
+                    )
+                )
+            } else {
+                removeFromTombstoneSet("pending_deduction_sync_ids", idStr)
+            }
         }
-    }
 
-    private suspend fun autoSyncTrashToCloud(item: TrashItem) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            val map = trashToMap(item)
-            firestore.collection("users").document(docId)
-                .collection("trash_records").document(item.id.toString())
-                .set(map, SetOptions.merge()).awaitResult()
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto sync trash failed: ${e.message}")
+        val pendingMonthlyYms = getPendingMonthlySyncYms()
+        for (ym in pendingMonthlyYms) {
+            val ms = monthlySalaryDao.getSettingsForMonthOnce(ym)
+            if (ms != null) {
+                val effectiveMs = if (ms.updatedAt < writeSyncTime) ms.copy(updatedAt = writeSyncTime) else ms
+                ops.add(
+                    PendingBatchOp.SetMerge(
+                        docRef = userDocRef.collection("monthly_salary_settings").document(ms.yearMonth),
+                        data = monthlySalaryToMap(effectiveMs),
+                        onCommitted = { removeFromTombstoneSet("pending_monthly_sync_yms", ym) }
+                    )
+                )
+            } else {
+                removeFromTombstoneSet("pending_monthly_sync_yms", ym)
+            }
         }
-    }
 
-    private suspend fun autoDeleteTrashFromCloud(id: Long) {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            firestore.collection("users").document(docId)
-                .collection("trash_records").document(id.toString())
-                .delete().awaitResult()
-            removeFromTombstoneSet("deleted_trash_ids", id.toString())
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto delete trash failed: ${e.message}")
+        val pendingTrashIds = getPendingTrashSyncIds()
+        if (pendingTrashIds.isNotEmpty()) {
+            val localTrashMap = trashDao.getAllTrashItemsOnce().associateBy { it.id.toString() }
+            for (idStr in pendingTrashIds) {
+                val tr = localTrashMap[idStr]
+                if (tr != null) {
+                    ops.add(
+                        PendingBatchOp.SetMerge(
+                            docRef = userDocRef.collection("trash_records").document(tr.id.toString()),
+                            data = trashToMap(tr),
+                            onCommitted = { removeFromTombstoneSet("pending_trash_sync_ids", idStr) }
+                        )
+                    )
+                } else {
+                    removeFromTombstoneSet("pending_trash_sync_ids", idStr)
+                }
+            }
         }
-    }
 
-    private suspend fun autoClearAllTrashFromCloud() {
-        val currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return
-        try {
-            deleteCollectionInBatches(
-                firestore.collection("users").document(docId).collection("trash_records")
+        // 3. Profile (Piggybacks lastSyncTime inside users/{uid})
+        var profileWritten = false
+        if (isPendingProfileSync()) {
+            val latestProfile = getProfileOnce()
+            if (!allowDefaultProfilePush && isBlankDefaultProfile(latestProfile)) {
+                setPendingProfileSync(false)
+                setLocalProfileModifiedAt(0L)
+            } else {
+                val profileForMap = latestProfile.copy(lastCloudSyncTime = writeSyncTime)
+                ops.add(
+                    PendingBatchOp.SetMerge(
+                        docRef = userDocRef,
+                        data = profileToMap(profileForMap),
+                        onCommitted = {
+                            setPendingProfileSync(false)
+                            setLocalProfileModifiedAt(0L)
+                        }
+                    )
+                )
+                profileWritten = true
+            }
+        }
+
+        if (ops.isEmpty()) {
+            return false
+        }
+
+        if (!profileWritten) {
+            ops.add(
+                PendingBatchOp.SetMerge(
+                    docRef = userDocRef,
+                    data = mapOf("lastSyncTime" to writeSyncTime),
+                    onCommitted = {}
+                )
             )
+        }
+
+        for (chunk in ops.chunked(400)) {
+            val batch = firestore.batch()
+            for (op in chunk) {
+                when (op) {
+                    is PendingBatchOp.SetMerge -> batch.set(op.docRef, op.data, SetOptions.merge())
+                    is PendingBatchOp.DeleteDoc -> batch.delete(op.docRef)
+                }
+            }
+            batch.commit().awaitResult()
+            for (op in chunk) {
+                op.onCommitted()
+            }
+        }
+
+        if (resetClearAllFlagPending) {
             setClearAllTrashBefore(0L)
-            markProfileSynced(currentProfile)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.w("OvertimeRepository", "Auto clear all trash failed: ${e.message}")
+        }
+        return true
+    }
+
+    /**
+     * Immediate batch sync for online user actions & automatic flush on reconnect.
+     * Performs 0 Firestore reads when initial restore has already completed for this account.
+     */
+    suspend fun syncPendingMutationsIfOnline(): Boolean = withContext(Dispatchers.IO) {
+        if (!hasPendingLocalChanges()) return@withContext false
+        if (!isStrictlyOnlineNow()) return@withContext false
+        val docId = getDocId() ?: return@withContext false
+
+        syncMutex.withLock {
+            if (!hasPendingLocalChanges() || !isStrictlyOnlineNow()) return@withLock false
+            val currentProfile = getProfileOnce()
+            if (!currentProfile.hasAcceptedPrivacyPolicy) return@withLock false
+
+            // Ensure initial cloud restore runs before advancing sync watermarks on a fresh install
+            if (!hasCompletedInitialRestore(docId) && !CloudSyncPolicy.shouldSeedLegacyUpgradeWatermark(hasInitialRestoreKeyRecorded(docId), currentProfile.lastCloudSyncTime)) {
+                val res = fullAutoSyncAndRestoreLocked(forceFullSync = false)
+                return@withLock res.first
+            }
+
+            try {
+                val userDocRef = firestore.collection("users").document(docId)
+                val now = System.currentTimeMillis()
+                val knownCloudTime = maxOf(getLastKnownCloudSyncTime(docId), currentProfile.lastCloudSyncTime)
+                val writeSyncTime = CloudSyncPolicy.computeMonotonicSyncTime(now, knownCloudTime)
+
+                val didWrite = flushPendingDirtyToCloudLocked(
+                    docId = docId,
+                    userDocRef = userDocRef,
+                    writeSyncTime = writeSyncTime,
+                    allowDefaultProfilePush = false
+                )
+                if (didWrite) {
+                    setLastKnownCloudSyncTime(docId, writeSyncTime)
+                    val refreshedProfile = getProfileOnce()
+                    userProfileDao.insertOrUpdateProfile(
+                        refreshedProfile.copy(
+                            lastCloudSyncTime = CloudSyncPolicy.resolveDisplayedSyncTimestamp(
+                                previousSyncTime = refreshedProfile.lastCloudSyncTime,
+                                transferOccurred = true,
+                                transferTimeMillis = now
+                            ),
+                            cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
+                        )
+                    )
+                }
+                didWrite
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.w("OvertimeRepository", "Pending batch sync deferred (offline/transient): ${e.message}")
+                false
+            }
         }
     }
 
@@ -1111,398 +1328,468 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         }
     }
 
-    // Full 2-Way Sync & Restore Engine:
-    // Optimized for minimum Firestore Reads & Writes with smart delta sync
-    suspend fun fullAutoSyncAndRestore(forceFullSync: Boolean = false): Pair<Boolean, String> = syncMutex.withLock {
-        fullAutoSyncAndRestoreLocked(forceFullSync)
+    // Full 2-Way Sync & Delta Restore Engine:
+    // Checks ONLY 1 root doc (`users/{uid}`) on launch -> 0 collection reads & 0 writes when up-to-date.
+    suspend fun fullAutoSyncAndRestore(
+        forceFullSync: Boolean = false,
+        prefetchedRootExists: Boolean? = null,
+        prefetchedRootData: Map<String, Any?>? = null
+    ): Pair<Boolean, String> = syncMutex.withLock {
+        fullAutoSyncAndRestoreLocked(
+            forceFullSync = forceFullSync,
+            prefetchedRootExists = prefetchedRootExists,
+            prefetchedRootData = prefetchedRootData
+        )
     }
 
-    private suspend fun fullAutoSyncAndRestoreLocked(forceFullSync: Boolean = false): Pair<Boolean, String> {
+    private suspend fun fullAutoSyncAndRestoreLocked(
+        forceFullSync: Boolean = false,
+        prefetchedRootExists: Boolean? = null,
+        prefetchedRootData: Map<String, Any?>? = null
+    ): Pair<Boolean, String> {
         var currentProfile = getProfileOnce()
-        val docId = getDocId(currentProfile) ?: return Pair(false, localizedString(R.string.sync_not_logged_in, "Not logged in"))
+        val docId = getDocId(currentProfile)
+            ?: return Pair(false, localizedString(R.string.sync_not_logged_in, "Not logged in"))
+
+        if (!isStrictlyOnlineNow()) {
+            return Pair(false, localizedString(R.string.sync_connection_error_fmt, "Cloud connection error: %1\$s", "Offline"))
+        }
+
         val now = System.currentTimeMillis()
-        val lastSync = currentProfile.lastCloudSyncTime
+        val userDocRef = firestore.collection("users").document(docId)
 
         return try {
-            val userDocRef = firestore.collection("users").document(docId)
-
-            // 1. Sync Profile directly from server to avoid stale cached profiles
-            val cloudProfileSnap = try {
-                userDocRef.get(Source.SERVER).awaitResult()
-            } catch (_: Exception) {
-                userDocRef.get().awaitResult()
+            // 1. Read ONLY 1 root user document (unless already prefetched during sign-in consent check)
+            val rootExists: Boolean
+            val rootData: Map<String, Any?>?
+            if (prefetchedRootExists != null) {
+                rootExists = prefetchedRootExists
+                rootData = prefetchedRootData
+            } else {
+                val cloudProfileSnap = try {
+                    userDocRef.get(Source.SERVER).awaitResult()
+                } catch (_: Exception) {
+                    userDocRef.get().awaitResult()
+                }
+                rootExists = cloudProfileSnap.exists()
+                rootData = cloudProfileSnap.data
             }
 
             var cloudSyncTime = 0L
-            val localIsDefaultOrBlank = lastSync == 0L ||
-                    (currentProfile.basicSalary == 0.0 && currentProfile.companyName.isBlank() && currentProfile.workerId.isBlank())
+            var profileRestored = false
+            var consentLocallyUpdated = false
+
+            // Legacy app-upgrade seeding: existing signed-in users keep their existing watermarks
+            // without triggering a redundant full re-download on first run after this update.
+            if (CloudSyncPolicy.shouldSeedLegacyUpgradeWatermark(
+                    hasInitialRestoreKeyRecorded = hasInitialRestoreKeyRecorded(docId),
+                    localLastCloudSyncTime = currentProfile.lastCloudSyncTime
+                )
+            ) {
+                val seedTime = currentProfile.lastCloudSyncTime
+                setInitialRestoreCompleted(docId, true)
+                setLastKnownCloudSyncTime(docId, seedTime)
+                setCollectionWatermark(docId, "ot", seedTime)
+                setCollectionWatermark(docId, "piece", seedTime)
+                setCollectionWatermark(docId, "monthly", seedTime)
+                setCollectionWatermark(docId, "deduction", seedTime)
+                setCollectionWatermark(docId, "trash", seedTime)
+            }
+
+            val hasCompletedInitial = hasCompletedInitialRestore(docId)
+            val preSyncKnownCloudSyncTime = getLastKnownCloudSyncTime(docId)
             val localModifiedAt = getLocalProfileModifiedAt()
-            var profileUploaded = false
 
-            if (cloudProfileSnap.exists()) {
-                val data = cloudProfileSnap.data
-                if (data != null) {
-                    val cloudBasic = getDoubleFromField(data["basicSalary"])
-                    val cloudName = (data["userName"] as? String)?.trim() ?: ""
-                    val cloudCompany = (data["companyName"] as? String)?.trim() ?: ""
-                    val cloudDesignation = (data["designation"] as? String)?.trim() ?: ""
-                    val cloudWorkerId = (data["workerId"] as? String)?.trim() ?: ""
-                    val cloudGrade = (data["grade"] as? String)?.trim() ?: ""
-                    val cloudHouseRent = getDoubleFromField(data["houseRent"])
-                    val cloudMedical = getDoubleFromField(data["medicalAllowance"])
-                    val cloudConveyance = getDoubleFromField(data["conveyanceAllowance"])
-                    val cloudFood = getDoubleFromField(data["foodAllowance"])
-                    val cloudAttendanceBonus = getDoubleFromField(data["attendanceBonus"])
-                    val cloudNightBill = getDoubleFromField(data["nightBillRate"])
-                    val cloudTiffinBill = getDoubleFromField(data["tiffinBillRate"])
-                    val cloudCustomOt = getDoubleFromField(data["customOtRate"])
-                    val cloudTargetHours = getDoubleFromField(data["monthlyOtTargetHours"])
-                    val cloudIsCustom = getBooleanFromField(data["isCustomSalary"])
-                    val cloudMaxAbsent = ((data["maxAbsentForBonus"] as? Number)?.toInt() ?: 0).coerceAtLeast(0)
-                    val cloudMaxLeave = if (data.containsKey("maxLeaveForBonus")) {
-                        val num = (data["maxLeaveForBonus"] as? Number)?.toInt()
-                        if (num == null || num < 0) null else num
-                    } else null
-                    val cloudLang = (data["language"] as? String)?.trim() ?: ""
-                    cloudSyncTime = (data["lastSyncTime"] as? Number)?.toLong() ?: 0L
-                    val cloudConsentAudit = data["consentAudit"] as? Map<*, *>
-                    val cloudHasConsent = getBooleanFromField(data["hasAcceptedPrivacyPolicy"]) ||
-                            (cloudConsentAudit?.get("isConsentGiven") as? Boolean == true)
-                    val cloudConsentTime = extractConsentTimestampMillis(data)
-                    val mergedConsent = currentProfile.hasAcceptedPrivacyPolicy || cloudHasConsent
-                    val mergedConsentTime = when {
-                        currentProfile.privacyPolicyAcceptedAt > 0L && cloudConsentTime > 0L ->
-                            minOf(currentProfile.privacyPolicyAcceptedAt, cloudConsentTime)
-                        cloudConsentTime > 0L -> cloudConsentTime
-                        else -> currentProfile.privacyPolicyAcceptedAt
-                    }
+            if (rootExists && rootData != null) {
+                val cloudBasic = getDoubleFromField(rootData["basicSalary"])
+                val cloudName = (rootData["userName"] as? String)?.trim() ?: ""
+                val cloudCompany = (rootData["companyName"] as? String)?.trim() ?: ""
+                val cloudDesignation = (rootData["designation"] as? String)?.trim() ?: ""
+                val cloudWorkerId = (rootData["workerId"] as? String)?.trim() ?: ""
+                val cloudGrade = (rootData["grade"] as? String)?.trim() ?: ""
+                val cloudHouseRent = getDoubleFromField(rootData["houseRent"])
+                val cloudMedical = getDoubleFromField(rootData["medicalAllowance"])
+                val cloudConveyance = getDoubleFromField(rootData["conveyanceAllowance"])
+                val cloudFood = getDoubleFromField(rootData["foodAllowance"])
+                val cloudAttendanceBonus = getDoubleFromField(rootData["attendanceBonus"])
+                val cloudNightBill = getDoubleFromField(rootData["nightBillRate"])
+                val cloudTiffinBill = getDoubleFromField(rootData["tiffinBillRate"])
+                val cloudCustomOt = getDoubleFromField(rootData["customOtRate"])
+                val cloudTargetHours = getDoubleFromField(rootData["monthlyOtTargetHours"])
+                val cloudIsCustom = getBooleanFromField(rootData["isCustomSalary"])
+                val cloudMaxAbsent = ((rootData["maxAbsentForBonus"] as? Number)?.toInt() ?: 0).coerceAtLeast(0)
+                val cloudMaxLeave = if (rootData.containsKey("maxLeaveForBonus")) {
+                    val num = (rootData["maxLeaveForBonus"] as? Number)?.toInt()
+                    if (num == null || num < 0) null else num
+                } else null
+                val cloudLang = (rootData["language"] as? String)?.trim() ?: ""
+                cloudSyncTime = (rootData["lastSyncTime"] as? Number)?.toLong() ?: 0L
 
-                    // Check if cloud document contains meaningful user profile data
-                    val cloudHasData = cloudBasic > 0.0 ||
-                            (cloudName.isNotBlank() && cloudName != "মোঃ শ্রমিক ভাই") ||
-                            cloudCompany.isNotBlank() ||
-                            cloudWorkerId.isNotBlank() ||
-                            cloudDesignation.isNotBlank() ||
-                            cloudNightBill > 0.0 ||
-                            cloudTiffinBill > 0.0 ||
-                            cloudAttendanceBonus > 0.0 ||
-                            cloudTargetHours > 0.0
+                val cloudConsentAudit = rootData["consentAudit"] as? Map<*, *>
+                val cloudHasConsent = getBooleanFromField(rootData["hasAcceptedPrivacyPolicy"]) ||
+                    (cloudConsentAudit?.get("isConsentGiven") as? Boolean == true)
+                val cloudConsentTime = extractConsentTimestampMillis(rootData)
+                val mergedConsent = currentProfile.hasAcceptedPrivacyPolicy || cloudHasConsent
+                val mergedConsentTime = when {
+                    currentProfile.privacyPolicyAcceptedAt > 0L && cloudConsentTime > 0L ->
+                        minOf(currentProfile.privacyPolicyAcceptedAt, cloudConsentTime)
+                    cloudConsentTime > 0L -> cloudConsentTime
+                    else -> currentProfile.privacyPolicyAcceptedAt
+                }
 
-                    val hasPendingLocalProfileEdit = localModifiedAt > lastSync && cloudSyncTime <= localModifiedAt
+                if (mergedConsent != currentProfile.hasAcceptedPrivacyPolicy || mergedConsentTime != currentProfile.privacyPolicyAcceptedAt) {
+                    currentProfile = currentProfile.copy(
+                        hasAcceptedPrivacyPolicy = mergedConsent,
+                        privacyPolicyAcceptedAt = mergedConsentTime
+                    )
+                    userProfileDao.insertOrUpdateProfile(currentProfile)
+                    consentLocallyUpdated = true
+                }
 
-                    // Restore from cloud when local is fresh/empty and cloud has data, or when cloud data has strictly newer timestamp (unless local has newer offline edit)
-                    val shouldRestore = cloudHasData && !hasPendingLocalProfileEdit && (localIsDefaultOrBlank || cloudSyncTime > lastSync || currentProfile.basicSalary == 0.0)
+                if (!mergedConsent) {
+                    return Pair(true, localizedString(R.string.sync_success_toast, "Auto cloud sync completed!"))
+                }
 
-                    if (shouldRestore) {
-                        val restoredProfile = currentProfile.copy(
-                            userName = if (cloudName.isNotBlank()) cloudName else currentProfile.userName,
-                            companyName = if (cloudCompany.isNotBlank()) cloudCompany else currentProfile.companyName,
-                            designation = if (cloudDesignation.isNotBlank()) cloudDesignation else currentProfile.designation,
-                            workerId = if (cloudWorkerId.isNotBlank()) cloudWorkerId else currentProfile.workerId,
-                            grade = if (cloudGrade.isNotBlank()) cloudGrade else currentProfile.grade,
-                            isCustomSalary = cloudIsCustom,
-                            basicSalary = if (cloudBasic > 0.0) cloudBasic else currentProfile.basicSalary,
-                            houseRent = if (cloudIsCustom) 0.0 else if (cloudHouseRent > 0.0) cloudHouseRent else currentProfile.houseRent,
-                            medicalAllowance = if (cloudIsCustom) 0.0 else if (cloudMedical > 0.0) cloudMedical else 750.0,
-                            conveyanceAllowance = if (cloudIsCustom) 0.0 else if (cloudConveyance > 0.0) cloudConveyance else currentProfile.conveyanceAllowance,
-                            foodAllowance = if (cloudIsCustom) 0.0 else if (cloudFood > 0.0) cloudFood else currentProfile.foodAllowance,
-                            attendanceBonus = if (cloudAttendanceBonus > 0.0) cloudAttendanceBonus else currentProfile.attendanceBonus,
-                            maxAbsentForBonus = if (data.containsKey("maxAbsentForBonus")) cloudMaxAbsent else currentProfile.maxAbsentForBonus,
-                            maxLeaveForBonus = if (data.containsKey("maxLeaveForBonus")) cloudMaxLeave else currentProfile.maxLeaveForBonus,
-                            nightBillRate = if (cloudNightBill > 0.0) cloudNightBill else currentProfile.nightBillRate,
-                            tiffinBillRate = if (cloudTiffinBill > 0.0) cloudTiffinBill else currentProfile.tiffinBillRate,
-                            customOtRate = if (cloudCustomOt > 0.0) cloudCustomOt else currentProfile.customOtRate,
-                            monthlyOtTargetHours = if (cloudTargetHours > 0.0) cloudTargetHours else currentProfile.monthlyOtTargetHours,
-                            language = if (cloudLang.isNotBlank()) LanguageManager.normalizeProfileLanguage(cloudLang) else currentProfile.language,
-                            hasAcceptedPrivacyPolicy = mergedConsent,
-                            privacyPolicyAcceptedAt = mergedConsentTime,
-                            lastCloudSyncTime = if (cloudSyncTime > 0L) cloudSyncTime else now,
-                            cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
-                        )
-                        userProfileDao.insertOrUpdateProfile(restoredProfile)
-                        currentProfile = restoredProfile
-                        setLocalProfileModifiedAt(0L)
-                    } else if (!localIsDefaultOrBlank || hasPendingLocalProfileEdit) {
-                        val toUpload = currentProfile.copy(
-                            hasAcceptedPrivacyPolicy = mergedConsent,
-                            privacyPolicyAcceptedAt = mergedConsentTime,
-                            lastCloudSyncTime = now,
-                            cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
-                        )
-                        userDocRef.set(profileToMap(toUpload), SetOptions.merge()).awaitResult()
-                        currentProfile = toUpload
+                val cloudHasData = cloudBasic > 0.0 ||
+                    cloudCustomOt > 0.0 ||
+                    (cloudName.isNotBlank() && cloudName != "মোঃ শ্রমিক ভাই") ||
+                    cloudCompany.isNotBlank() ||
+                    cloudWorkerId.isNotBlank() ||
+                    cloudDesignation.isNotBlank() ||
+                    cloudNightBill > 0.0 ||
+                    cloudTiffinBill > 0.0 ||
+                    cloudAttendanceBonus > 0.0 ||
+                    cloudTargetHours > 0.0
+
+                val hasPendingLocalProfileEdit = isPendingProfileSync() ||
+                    (localModifiedAt > preSyncKnownCloudSyncTime && cloudSyncTime <= localModifiedAt)
+
+                val shouldCheckProfileRestore = cloudHasData && !hasPendingLocalProfileEdit &&
+                    (!hasCompletedInitial || cloudSyncTime > preSyncKnownCloudSyncTime || forceFullSync)
+
+                if (shouldCheckProfileRestore) {
+                    val restoredCandidate = currentProfile.copy(
+                        userName = if (cloudName.isNotBlank()) cloudName else currentProfile.userName,
+                        companyName = if (cloudCompany.isNotBlank()) cloudCompany else currentProfile.companyName,
+                        designation = if (cloudDesignation.isNotBlank()) cloudDesignation else currentProfile.designation,
+                        workerId = if (cloudWorkerId.isNotBlank()) cloudWorkerId else currentProfile.workerId,
+                        grade = if (cloudGrade.isNotBlank()) cloudGrade else currentProfile.grade,
+                        isCustomSalary = cloudIsCustom,
+                        basicSalary = if (cloudBasic > 0.0) cloudBasic else currentProfile.basicSalary,
+                        houseRent = if (cloudIsCustom) 0.0 else if (cloudHouseRent > 0.0) cloudHouseRent else currentProfile.houseRent,
+                        medicalAllowance = if (cloudIsCustom) 0.0 else if (cloudMedical > 0.0) cloudMedical else 750.0,
+                        conveyanceAllowance = if (cloudIsCustom) 0.0 else if (cloudConveyance > 0.0) cloudConveyance else currentProfile.conveyanceAllowance,
+                        foodAllowance = if (cloudIsCustom) 0.0 else if (cloudFood > 0.0) cloudFood else currentProfile.foodAllowance,
+                        attendanceBonus = if (cloudAttendanceBonus > 0.0) cloudAttendanceBonus else currentProfile.attendanceBonus,
+                        maxAbsentForBonus = if (rootData.containsKey("maxAbsentForBonus")) cloudMaxAbsent else currentProfile.maxAbsentForBonus,
+                        maxLeaveForBonus = if (rootData.containsKey("maxLeaveForBonus")) cloudMaxLeave else currentProfile.maxLeaveForBonus,
+                        nightBillRate = if (cloudNightBill > 0.0) cloudNightBill else currentProfile.nightBillRate,
+                        tiffinBillRate = if (cloudTiffinBill > 0.0) cloudTiffinBill else currentProfile.tiffinBillRate,
+                        customOtRate = if (cloudCustomOt > 0.0) cloudCustomOt else currentProfile.customOtRate,
+                        monthlyOtTargetHours = if (cloudTargetHours > 0.0) cloudTargetHours else currentProfile.monthlyOtTargetHours,
+                        language = if (cloudLang.isNotBlank()) LanguageManager.normalizeProfileLanguage(cloudLang) else currentProfile.language
+                    )
+                    if (restoredCandidate != currentProfile) {
+                        currentProfile = restoredCandidate
                         userProfileDao.insertOrUpdateProfile(currentProfile)
                         setLocalProfileModifiedAt(0L)
-                        profileUploaded = true
-                    } else if (mergedConsent != currentProfile.hasAcceptedPrivacyPolicy || mergedConsentTime != currentProfile.privacyPolicyAcceptedAt) {
-                        val consentSyncedProfile = currentProfile.copy(
-                            hasAcceptedPrivacyPolicy = mergedConsent,
-                            privacyPolicyAcceptedAt = mergedConsentTime
-                        )
-                        userProfileDao.insertOrUpdateProfile(consentSyncedProfile)
-                        currentProfile = consentSyncedProfile
+                        setPendingProfileSync(false)
+                        profileRestored = true
                     }
+                } else if (!hasCompletedInitial && !isBlankDefaultProfile(currentProfile)) {
+                    // Fresh sign-in carrying un-synced local profile while cloud had no profile data
+                    setPendingProfileSync(true)
                 }
             } else {
-                val localHasData = currentProfile.basicSalary > 0.0 ||
-                        currentProfile.userName.isNotBlank() ||
-                        currentProfile.companyName.isNotBlank() ||
-                        currentProfile.workerId.isNotBlank()
-                if (localHasData) {
-                    val toUpload = currentProfile.copy(
-                        lastCloudSyncTime = now,
-                        cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
+                if (!currentProfile.hasAcceptedPrivacyPolicy) {
+                    return Pair(true, localizedString(R.string.sync_success_toast, "Auto cloud sync completed!"))
+                }
+                if (!isBlankDefaultProfile(currentProfile)) {
+                    setPendingProfileSync(true)
+                }
+            }
+
+            // If first-time sign-in/install has un-tracked local Room data, mark it dirty so initial migration uploads cleanly
+            if (!hasCompletedInitial) {
+                val localOtsInit = overtimeDao.getAllRecordsList()
+                if (localOtsInit.isNotEmpty()) {
+                    for (ot in localOtsInit) addToTombstoneSet("pending_ot_sync_dates", ot.date)
+                }
+                val localPieceInit = pieceRateDao.getAllPieceRecordsList()
+                if (localPieceInit.isNotEmpty()) {
+                    for (pr in localPieceInit) addToTombstoneSet("pending_piece_sync_ids", pr.id.toString())
+                }
+                val localMsInit = monthlySalaryDao.getAllSettings()
+                if (localMsInit.isNotEmpty()) {
+                    for (ms in localMsInit) addToTombstoneSet("pending_monthly_sync_yms", ms.yearMonth)
+                }
+                val localDedInit = deductionDao.getAllDeductions()
+                if (localDedInit.isNotEmpty()) {
+                    for (ded in localDedInit) addToTombstoneSet("pending_deduction_sync_ids", ded.id.toString())
+                }
+                val localTrInit = trashDao.getAllTrashItemsOnce()
+                if (localTrInit.isNotEmpty()) {
+                    for (tr in localTrInit) addToTombstoneSet("pending_trash_sync_ids", tr.id.toString())
+                }
+            }
+
+            val hasPendingLocal = hasPendingLocalChanges()
+            val restorePlan = CloudSyncPolicy.evaluateCollectionRestorePlan(
+                forceFullSync = forceFullSync,
+                hasCompletedInitialRestore = hasCompletedInitial,
+                cloudSyncTime = cloudSyncTime,
+                lastKnownCloudSyncTime = preSyncKnownCloudSyncTime,
+                otWatermark = getCollectionWatermark(docId, "ot"),
+                pieceWatermark = getCollectionWatermark(docId, "piece"),
+                monthlyWatermark = getCollectionWatermark(docId, "monthly"),
+                deductionWatermark = getCollectionWatermark(docId, "deduction"),
+                trashWatermark = getCollectionWatermark(docId, "trash")
+            )
+
+            // Fast exit when nothing changed anywhere: 1 root doc read total, 0 writes, timestamp UNTOUCHED
+            if (!hasPendingLocal && !restorePlan.shouldDownloadAny && !profileRestored) {
+                if (cloudSyncTime > preSyncKnownCloudSyncTime) {
+                    setLastKnownCloudSyncTime(docId, cloudSyncTime)
+                }
+                if (consentLocallyUpdated && currentProfile.cloudSyncStatus.isBlank()) {
+                    userProfileDao.insertOrUpdateProfile(
+                        currentProfile.copy(cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)"))
                     )
-                    userDocRef.set(profileToMap(toUpload), SetOptions.merge()).awaitResult()
-                    currentProfile = toUpload
-                    userProfileDao.insertOrUpdateProfile(currentProfile)
-                    setLocalProfileModifiedAt(0L)
-                    profileUploaded = true
                 }
+                return Pair(true, localizedString(R.string.sync_success_toast, "Auto cloud sync completed!"))
             }
 
-            // SMART DECISION FLAGS:
-            // 1. Full collection download: Only needed if fresh install, manual full sync requested, or cloud has newer changes!
-            val shouldDownloadCloudCollections = forceFullSync || localIsDefaultOrBlank || (cloudSyncTime > lastSync)
-
-            // 2. Upload scope: If fresh/force full sync upload all; otherwise only upload records modified after lastSync!
-            val isInitialUpload = forceFullSync || localIsDefaultOrBlank || (lastSync == 0L)
-            var anyLocalDataUploaded = false
-
-            // Flush pending local deletions FIRST so deleted items are never resurrected from cloud
-            val pendingOtDeletes = getDeletedOtDates()
-            if (pendingOtDeletes.isNotEmpty()) {
-                for (chunk in pendingOtDeletes.toList().chunked(400)) {
-                    val batch = firestore.batch()
-                    for (date in chunk) {
-                        batch.delete(userDocRef.collection("overtime_records").document(date))
-                    }
-                    batch.commit().awaitResult()
-                    removeAllFromTombstoneSet("deleted_ot_dates", chunk)
-                }
-            }
-
-            val pendingPieceDeletes = getDeletedPieceIds()
-            if (pendingPieceDeletes.isNotEmpty()) {
-                for (chunk in pendingPieceDeletes.toList().chunked(400)) {
-                    val batch = firestore.batch()
-                    for (pieceId in chunk) {
-                        batch.delete(userDocRef.collection("piece_rate_records").document(pieceId))
-                    }
-                    batch.commit().awaitResult()
-                    removeAllFromTombstoneSet("deleted_piece_ids", chunk)
-                }
-            }
-
-            val pendingDeductionDeletes = getDeletedDeductionIds()
-            if (pendingDeductionDeletes.isNotEmpty()) {
-                for (chunk in pendingDeductionDeletes.toList().chunked(400)) {
-                    val batch = firestore.batch()
-                    for (dedId in chunk) {
-                        batch.delete(userDocRef.collection("deduction_records").document(dedId))
-                    }
-                    batch.commit().awaitResult()
-                    removeAllFromTombstoneSet("deleted_deduction_ids", chunk)
-                }
-            }
-
-            val pendingTrashDeletes = getDeletedTrashIds()
-            if (pendingTrashDeletes.isNotEmpty()) {
-                for (chunk in pendingTrashDeletes.toList().chunked(400)) {
-                    val batch = firestore.batch()
-                    for (trId in chunk) {
-                        batch.delete(userDocRef.collection("trash_records").document(trId))
-                    }
-                    batch.commit().awaitResult()
-                    removeAllFromTombstoneSet("deleted_trash_ids", chunk)
-                }
-            }
-
-            // 2 & 3. Overtime records
-            val pendingOtSyncDates = getPendingOtSyncDates()
-            val localOts = overtimeDao.getAllRecordsList()
-            val otsToUpload = if (isInitialUpload) {
-                localOts
+            // 2. Flush dirty local deletes & edits in atomic WriteBatches FIRST
+            val writeSyncTime = CloudSyncPolicy.computeMonotonicSyncTime(now, cloudSyncTime, preSyncKnownCloudSyncTime)
+            val wroteToCloud = if (hasPendingLocal) {
+                flushPendingDirtyToCloudLocked(
+                    docId = docId,
+                    userDocRef = userDocRef,
+                    writeSyncTime = writeSyncTime,
+                    allowDefaultProfilePush = false
+                )
             } else {
-                localOts.filter { it.createdAt > lastSync || it.date in pendingOtSyncDates }
-            }
-            if (otsToUpload.isNotEmpty()) {
-                anyLocalDataUploaded = true
-                for (chunk in otsToUpload.chunked(400)) {
-                    val batch = firestore.batch()
-                    for (ot in chunk) {
-                        batch.set(userDocRef.collection("overtime_records").document(ot.date), overtimeToMap(ot), SetOptions.merge())
-                    }
-                    batch.commit().awaitResult()
-                    removeAllFromTombstoneSet("pending_ot_sync_dates", chunk.map { it.date })
-                }
+                false
             }
 
-            if (shouldDownloadCloudCollections) {
+            // 3. Download FULL (initial/legacy safety) or DELTA (only records changed since watermark)
+            var anyRecordRestored = false
+            if (restorePlan.shouldDownloadAny) {
+                // 3a. Overtime records
                 val activeOtTombstones = getDeletedOtDates()
-                val otQuerySnap = userDocRef.collection("overtime_records").get().awaitResult()
+                val pendingOtDates = getPendingOtSyncDates()
+                val otColRef = userDocRef.collection("overtime_records")
+                val otQuerySnap = if (restorePlan.otSince == null) {
+                    otColRef.get().awaitResult()
+                } else {
+                    otColRef.whereGreaterThan("updatedAt", restorePlan.otSince).get().awaitResult()
+                }
+                var maxOtAt = getCollectionWatermark(docId, "ot")
+                var otInserted = false
                 for (doc in otQuerySnap.documents) {
                     val data = doc.data ?: continue
+                    val docUpdated = (data["updatedAt"] as? Number)?.toLong()
+                        ?: (data["createdAt"] as? Number)?.toLong() ?: 0L
+                    if (docUpdated > maxOtAt) maxOtAt = docUpdated
                     val remoteOt = mapToOvertime(data) ?: continue
-                    if (remoteOt.date in activeOtTombstones) continue
+                    if (remoteOt.date in activeOtTombstones || remoteOt.date in pendingOtDates) continue
                     val existingLocal = overtimeDao.getRecordByDate(remoteOt.date)
                     if (existingLocal == null) {
                         overtimeDao.insertRecord(remoteOt.copy(id = 0L))
+                        anyRecordRestored = true
+                        otInserted = true
                     } else {
-                        overtimeDao.insertRecord(remoteOt.copy(id = existingLocal.id))
+                        val target = remoteOt.copy(id = existingLocal.id)
+                        if (target != existingLocal) {
+                            overtimeDao.insertRecord(target)
+                            anyRecordRestored = true
+                        }
                     }
                 }
-                overtimeDao.cleanupDuplicateDates()
-            }
+                if (otInserted) overtimeDao.cleanupDuplicateDates()
+                setCollectionWatermark(docId, "ot", maxOf(maxOtAt, cloudSyncTime))
 
-            // 4 & 5. Piece Rate records
-            val localPieces = pieceRateDao.getAllPieceRecordsList()
-            val piecesToUpload = if (isInitialUpload) localPieces else localPieces.filter { it.createdAt > lastSync }
-            if (piecesToUpload.isNotEmpty()) {
-                anyLocalDataUploaded = true
-                for (chunk in piecesToUpload.chunked(400)) {
-                    val batch = firestore.batch()
-                    for (pr in chunk) {
-                        batch.set(userDocRef.collection("piece_rate_records").document(pr.id.toString()), pieceRateToMap(pr), SetOptions.merge())
-                    }
-                    batch.commit().awaitResult()
-                }
-            }
-
-            if (shouldDownloadCloudCollections) {
+                // 3b. Piece Rate records
                 val activePieceTombstones = getDeletedPieceIds()
-                val prQuerySnap = userDocRef.collection("piece_rate_records").get().awaitResult()
+                val pendingPieceIds = getPendingPieceSyncIds()
+                val prColRef = userDocRef.collection("piece_rate_records")
+                val prQuerySnap = if (restorePlan.pieceSince == null) {
+                    prColRef.get().awaitResult()
+                } else {
+                    prColRef.whereGreaterThan("updatedAt", restorePlan.pieceSince).get().awaitResult()
+                }
+                var maxPieceAt = getCollectionWatermark(docId, "piece")
                 for (doc in prQuerySnap.documents) {
                     val data = doc.data ?: continue
+                    val docUpdated = (data["updatedAt"] as? Number)?.toLong()
+                        ?: (data["createdAt"] as? Number)?.toLong() ?: 0L
+                    if (docUpdated > maxPieceAt) maxPieceAt = docUpdated
                     val remotePr = mapToPieceRate(data) ?: continue
                     val targetId = if (remotePr.id > 0L) remotePr.id else (doc.id.toLongOrNull() ?: generateUniqueLocalId())
-                    if (targetId.toString() in activePieceTombstones || doc.id in activePieceTombstones) continue
-                    pieceRateDao.insertPieceRecord(remotePr.copy(id = targetId))
-                }
-            }
-
-            // 6 & 7. Monthly Salary Settings
-            val localMonthlySettings = monthlySalaryDao.getAllSettings()
-            val monthlyToUpload = if (isInitialUpload) localMonthlySettings else localMonthlySettings.filter { it.updatedAt > lastSync }
-            if (monthlyToUpload.isNotEmpty()) {
-                anyLocalDataUploaded = true
-                for (chunk in monthlyToUpload.chunked(400)) {
-                    val batch = firestore.batch()
-                    for (ms in chunk) {
-                        batch.set(userDocRef.collection("monthly_salary_settings").document(ms.yearMonth), monthlySalaryToMap(ms), SetOptions.merge())
+                    val idStr = targetId.toString()
+                    if (idStr in activePieceTombstones || doc.id in activePieceTombstones || idStr in pendingPieceIds) continue
+                    val candidate = remotePr.copy(id = targetId)
+                    val existingLocal = pieceRateDao.getPieceRecordById(targetId)
+                    if (existingLocal == null || candidate != existingLocal) {
+                        pieceRateDao.insertPieceRecord(candidate)
+                        anyRecordRestored = true
                     }
-                    batch.commit().awaitResult()
                 }
-            }
+                setCollectionWatermark(docId, "piece", maxOf(maxPieceAt, cloudSyncTime))
 
-            if (shouldDownloadCloudCollections) {
-                val msQuerySnap = userDocRef.collection("monthly_salary_settings").get().awaitResult()
+                // 3c. Monthly Salary Settings
+                val pendingMonthlyYms = getPendingMonthlySyncYms()
+                val msColRef = userDocRef.collection("monthly_salary_settings")
+                val msQuerySnap = if (restorePlan.monthlySince == null) {
+                    msColRef.get().awaitResult()
+                } else {
+                    msColRef.whereGreaterThan("updatedAt", restorePlan.monthlySince).get().awaitResult()
+                }
+                var maxMonthlyAt = getCollectionWatermark(docId, "monthly")
                 for (doc in msQuerySnap.documents) {
                     val data = doc.data ?: continue
                     val remoteMs = mapToMonthlySalary(data) ?: continue
+                    if (remoteMs.updatedAt > maxMonthlyAt) maxMonthlyAt = remoteMs.updatedAt
+                    if (remoteMs.yearMonth in pendingMonthlyYms) continue
                     val existingLocal = monthlySalaryDao.getSettingsForMonthOnce(remoteMs.yearMonth)
-                    if (existingLocal == null || remoteMs.updatedAt >= existingLocal.updatedAt) {
+                    if (existingLocal == null || (remoteMs.updatedAt >= existingLocal.updatedAt && remoteMs != existingLocal)) {
                         monthlySalaryDao.insertOrUpdate(remoteMs)
+                        anyRecordRestored = true
                     }
                 }
-            }
+                setCollectionWatermark(docId, "monthly", maxOf(maxMonthlyAt, cloudSyncTime))
 
-            // 8 & 9. Deductions
-            val localDeductions = deductionDao.getAllDeductions()
-            val deductionsToUpload = if (isInitialUpload) localDeductions else localDeductions.filter { it.createdAt > lastSync }
-            if (deductionsToUpload.isNotEmpty()) {
-                anyLocalDataUploaded = true
-                for (chunk in deductionsToUpload.chunked(400)) {
-                    val batch = firestore.batch()
-                    for (ded in chunk) {
-                        batch.set(userDocRef.collection("deduction_records").document(ded.id.toString()), deductionToMap(ded), SetOptions.merge())
-                    }
-                    batch.commit().awaitResult()
-                }
-            }
-
-            if (shouldDownloadCloudCollections) {
+                // 3d. Deductions
                 val activeDedTombstones = getDeletedDeductionIds()
-                val dedQuerySnap = userDocRef.collection("deduction_records").get().awaitResult()
+                val pendingDedIds = getPendingDeductionSyncIds()
+                val dedColRef = userDocRef.collection("deduction_records")
+                val dedQuerySnap = if (restorePlan.deductionSince == null) {
+                    dedColRef.get().awaitResult()
+                } else {
+                    dedColRef.whereGreaterThan("createdAt", restorePlan.deductionSince).get().awaitResult()
+                }
+                var maxDedAt = getCollectionWatermark(docId, "deduction")
                 for (doc in dedQuerySnap.documents) {
                     val data = doc.data ?: continue
                     val remoteDed = mapToDeduction(data) ?: continue
+                    if (remoteDed.createdAt > maxDedAt) maxDedAt = remoteDed.createdAt
                     val targetId = if (remoteDed.id > 0L) remoteDed.id else (doc.id.toLongOrNull() ?: generateUniqueLocalId())
-                    if (targetId.toString() in activeDedTombstones || doc.id in activeDedTombstones) continue
-                    deductionDao.insertOrUpdate(remoteDed.copy(id = targetId))
-                }
-            }
-
-            // 10 & 11. Trash records
-            val localTrash = trashDao.getAllTrashItemsOnce()
-            val trashToUpload = if (isInitialUpload) localTrash else localTrash.filter { it.deletedAt > lastSync }
-            if (trashToUpload.isNotEmpty()) {
-                anyLocalDataUploaded = true
-                for (chunk in trashToUpload.chunked(400)) {
-                    val batch = firestore.batch()
-                    for (tr in chunk) {
-                        batch.set(userDocRef.collection("trash_records").document(tr.id.toString()), trashToMap(tr), SetOptions.merge())
+                    val idStr = targetId.toString()
+                    if (idStr in activeDedTombstones || doc.id in activeDedTombstones || idStr in pendingDedIds) continue
+                    val candidate = remoteDed.copy(id = targetId)
+                    val existingLocal = deductionDao.getDeductionById(targetId)
+                    if (existingLocal == null || candidate != existingLocal) {
+                        deductionDao.insertOrUpdate(candidate)
+                        anyRecordRestored = true
                     }
-                    batch.commit().awaitResult()
                 }
-            }
+                setCollectionWatermark(docId, "deduction", maxOf(maxDedAt, cloudSyncTime))
 
-            val clearTrashBefore = getClearAllTrashBefore()
-            if (shouldDownloadCloudCollections || localTrash.isNotEmpty() || clearTrashBefore > 0L) {
+                // 3e. Trash records + mirror remote deletes locally
                 val activeTrashTombstones = getDeletedTrashIds()
-                val trashQuerySnap = userDocRef.collection("trash_records").get().awaitResult()
+                val pendingTrashIds = getPendingTrashSyncIds()
+                val clearTrashBefore = getClearAllTrashBefore()
+                val trColRef = userDocRef.collection("trash_records")
+                val trashQuerySnap = if (restorePlan.trashSince == null) {
+                    trColRef.get().awaitResult()
+                } else {
+                    trColRef.whereGreaterThan("deletedAt", restorePlan.trashSince).get().awaitResult()
+                }
                 val cutoff = now - com.example.receiver.TrashAutoDeleteScheduler.TWENTY_FOUR_HOURS_MILLIS
+                val localTrashById = trashDao.getAllTrashItemsOnce().associateBy { it.id }
                 val trashPurgeBatch = firestore.batch()
                 var anyTrashToPurgeInCloud = false
+                var maxTrashAt = getCollectionWatermark(docId, "trash")
 
                 for (doc in trashQuerySnap.documents) {
                     val data = doc.data ?: continue
                     val remoteTrash = mapToTrash(data) ?: continue
+                    if (remoteTrash.deletedAt > maxTrashAt) maxTrashAt = remoteTrash.deletedAt
                     val targetId = if (remoteTrash.id > 0L) remoteTrash.id else (doc.id.toLongOrNull() ?: generateUniqueLocalId())
-                    val isTombstoned = (targetId.toString() in activeTrashTombstones) ||
+                    val idStr = targetId.toString()
+                    val isTombstoned = (idStr in activeTrashTombstones) ||
                         (doc.id in activeTrashTombstones) ||
                         (clearTrashBefore > 0L && remoteTrash.deletedAt <= clearTrashBefore)
                     if (remoteTrash.deletedAt <= cutoff || isTombstoned) {
                         trashPurgeBatch.delete(doc.reference)
                         anyTrashToPurgeInCloud = true
-                    } else {
-                        trashDao.insertTrashItem(remoteTrash.copy(id = targetId))
+                    } else if (idStr !in pendingTrashIds) {
+                        val candidate = remoteTrash.copy(id = targetId)
+                        val existingTrash = localTrashById[targetId]
+                        if (existingTrash == null || candidate != existingTrash) {
+                            trashDao.insertTrashItem(candidate)
+                            anyRecordRestored = true
+                        }
+                        // Mirror remote Trash move onto local active tables so another device's deletion applies here too
+                        when (remoteTrash.itemType) {
+                            "OT" -> if (remoteTrash.date.isNotBlank() && remoteTrash.date !in pendingOtDates) {
+                                val existingOt = overtimeDao.getRecordByDate(remoteTrash.date)
+                                if (existingOt != null && existingOt.createdAt <= remoteTrash.deletedAt) {
+                                    overtimeDao.deleteRecordById(existingOt.id)
+                                    anyRecordRestored = true
+                                }
+                            }
+                            "PIECE" -> if (remoteTrash.originalId > 0L && remoteTrash.originalId.toString() !in pendingPieceIds) {
+                                val existingPiece = pieceRateDao.getPieceRecordById(remoteTrash.originalId)
+                                if (existingPiece != null && existingPiece.createdAt <= remoteTrash.deletedAt) {
+                                    pieceRateDao.deletePieceRecordById(existingPiece.id)
+                                    anyRecordRestored = true
+                                }
+                            }
+                            "ADVANCE", "APON_BAZAR", "DEDUCTION" -> if (remoteTrash.originalId > 0L && remoteTrash.originalId.toString() !in pendingDedIds) {
+                                val existingDed = deductionDao.getDeductionById(remoteTrash.originalId)
+                                if (existingDed != null && existingDed.createdAt <= remoteTrash.deletedAt) {
+                                    deductionDao.deleteById(existingDed.id)
+                                    anyRecordRestored = true
+                                }
+                            }
+                        }
                     }
                 }
                 if (anyTrashToPurgeInCloud) {
                     try {
                         trashPurgeBatch.commit().awaitResult()
-                        if (clearTrashBefore > 0L) {
-                            setClearAllTrashBefore(0L)
-                        }
                     } catch (e: Exception) {
                         Log.w("OvertimeRepository", "Purge expired/deleted trash batch failed: ${e.message}")
                     }
-                } else if (clearTrashBefore > 0L) {
-                    setClearAllTrashBefore(0L)
                 }
-            }
-            scheduleTrashAutoDelete()
-
-            // Update timestamp on server if any local data was uploaded
-            if (anyLocalDataUploaded) {
-                try {
-                    userDocRef.set(mapOf("lastSyncTime" to now), SetOptions.merge()).awaitResult()
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                    Log.w("OvertimeRepository", "Updating lastSyncTime failed: ${e.message}")
-                }
+                setCollectionWatermark(docId, "trash", maxOf(maxTrashAt, cloudSyncTime))
+                setInitialRestoreCompleted(docId, true)
+                scheduleTrashAutoDelete()
             }
 
-            // 8. Ensure profile in Room DB has latest sync timestamp and status using currentProfile
-            // Preserve accurate timestamp: update lastCloudSyncTime only if actual upload or download/restore occurred, or if never synced before!
-            val didSyncOccur = anyLocalDataUploaded || profileUploaded || shouldDownloadCloudCollections || (currentProfile.lastCloudSyncTime == 0L)
-            val effectiveSyncTime = if (didSyncOccur) now else currentProfile.lastCloudSyncTime
-            val finalProfile = currentProfile.copy(
-                lastCloudSyncTime = if (effectiveSyncTime > 0L) effectiveSyncTime else now,
-                cloudSyncStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
+            // 4. Advance known server watermark
+            val latestServerSyncTime = maxOf(
+                if (wroteToCloud) writeSyncTime else 0L,
+                cloudSyncTime,
+                preSyncKnownCloudSyncTime
             )
-            userProfileDao.insertOrUpdateProfile(finalProfile)
+            if (latestServerSyncTime > preSyncKnownCloudSyncTime) {
+                setLastKnownCloudSyncTime(docId, latestServerSyncTime)
+            }
+
+            // 5. Conditional Auto Cloud Sync display timestamp:
+            // Updates ONLY if data was genuinely written or genuinely restored/merged!
+            val didRealCloudTransfer = wroteToCloud || profileRestored || anyRecordRestored
+            val nextDisplayedSyncTime = CloudSyncPolicy.resolveDisplayedSyncTimestamp(
+                previousSyncTime = currentProfile.lastCloudSyncTime,
+                transferOccurred = didRealCloudTransfer,
+                transferTimeMillis = now
+            )
+
+            val refreshedProfile = getProfileOnce()
+            val activeStatus = localizedString(R.string.sync_status_active, "Auto Backup Active (Synced)")
+            if (nextDisplayedSyncTime != refreshedProfile.lastCloudSyncTime ||
+                refreshedProfile.cloudSyncStatus != activeStatus
+            ) {
+                userProfileDao.insertOrUpdateProfile(
+                    refreshedProfile.copy(
+                        lastCloudSyncTime = nextDisplayedSyncTime,
+                        cloudSyncStatus = activeStatus
+                    )
+                )
+            }
+
             Pair(true, localizedString(R.string.sync_success_toast, "Auto cloud sync completed!"))
         } catch (e: Exception) {
             if (e is CancellationException && e !is TimeoutCancellationException) throw e
@@ -1511,15 +1798,10 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         }
     }
 
-    // Called by ViewModel if needed
-    suspend fun syncWithCloud(): Pair<Boolean, String> {
-        return fullAutoSyncAndRestore(forceFullSync = true)
-    }
-
     /**
      * Strictly verifies active internet + server reachability, waits for in-flight background writes,
-     * flushes any offline Firestore pending writes, runs a full 2-way sync, and confirms server connectivity
-     * (Source.SERVER, no cache fallback) before allowing sign-out and local database wipe.
+     * flushes pending dirty local changes/deletes (without wastefully re-downloading collections right before local wipe),
+     * and confirms server connectivity (Source.SERVER) before allowing sign-out.
      */
     suspend fun prepareAndVerifyCloudBeforeSignOut(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         val offlineMsg = localizedString(
@@ -1558,21 +1840,34 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 // Wait again inside mutex for any tail sync tasks spawned right before lock acquisition
                 awaitPendingCloudWrites(5_000L)
 
-                // Step A: Flush any queued offline Firestore writes/deletes to the server BEFORE downloading/syncing
+                // Step A: Flush any queued dirty local changes/deletes directly in atomic WriteBatch
+                if (hasPendingLocalChanges()) {
+                    val userDocRef = firestore.collection("users").document(docId)
+                    val currentProfile = getProfileOnce()
+                    val knownCloudTime = maxOf(getLastKnownCloudSyncTime(docId), currentProfile.lastCloudSyncTime)
+                    val writeSyncTime = CloudSyncPolicy.computeMonotonicSyncTime(System.currentTimeMillis(), knownCloudTime)
+                    val flushedDirty = withTimeoutOrNull(15_000L) {
+                        flushPendingDirtyToCloudLocked(
+                            docId = docId,
+                            userDocRef = userDocRef,
+                            writeSyncTime = writeSyncTime,
+                            allowDefaultProfilePush = false
+                        )
+                        true
+                    } ?: false
+                    if (!flushedDirty || hasPendingLocalChanges()) {
+                        return@withLock Pair(false, syncFailMsg)
+                    }
+                    setLastKnownCloudSyncTime(docId, writeSyncTime)
+                }
+
+                // Step B: Wait for Firestore SDK pending writes buffer to drain
                 val pendingFlushed = withTimeoutOrNull(12_000L) {
                     firestore.waitForPendingWrites().awaitResult()
                     true
                 } ?: false
                 if (!pendingFlushed) {
                     return@withLock Pair(false, syncFailMsg)
-                }
-
-                // Step B: Full bidirectional sync so all Room records (OT, piece rate, deductions, settings, profile, trash) reach cloud
-                val syncResult = withTimeoutOrNull(15_000L) {
-                    fullAutoSyncAndRestoreLocked(forceFullSync = true)
-                } ?: return@withLock Pair(false, syncFailMsg)
-                if (!syncResult.first) {
-                    return@withLock Pair(false, syncResult.second.ifBlank { syncFailMsg })
                 }
 
                 // Step C: Strict server-only verification (never fallback to local cache)
@@ -1642,7 +1937,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         return map
     }
 
-    private fun overtimeToMap(record: OvertimeRecord): Map<String, Any> {
+    private fun overtimeToMap(record: OvertimeRecord, updateTime: Long = System.currentTimeMillis()): Map<String, Any> {
         val map = hashMapOf<String, Any>(
             "id" to record.id,
             "date" to record.date,
@@ -1656,7 +1951,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             "hourlyRateSnapshot" to record.hourlyRateSnapshot,
             "calculatedAmount" to record.calculatedAmount,
             "createdAt" to record.createdAt,
-            "updatedAt" to System.currentTimeMillis()
+            "updatedAt" to updateTime
         )
         return map
     }
@@ -1680,7 +1975,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         )
     }
 
-    private fun pieceRateToMap(record: PieceRateRecord): Map<String, Any> {
+    private fun pieceRateToMap(record: PieceRateRecord, updateTime: Long = System.currentTimeMillis()): Map<String, Any> {
         val map = hashMapOf<String, Any>(
             "id" to record.id,
             "date" to record.date,
@@ -1691,7 +1986,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             "totalAmount" to record.totalAmount,
             "note" to record.note,
             "createdAt" to record.createdAt,
-            "updatedAt" to System.currentTimeMillis()
+            "updatedAt" to updateTime
         )
         return map
     }
@@ -1864,10 +2159,11 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         removeFromTombstoneSet("pending_ot_sync_dates", record.date)
         addToTombstoneSet("deleted_ot_dates", record.date)
         savedTrash?.let { trash ->
-            removeFromTombstoneSet("deleted_trash_ids", trash.id.toString())
-            launchTrackedSync { autoSyncTrashToCloud(trash) }
+            val trIdStr = trash.id.toString()
+            removeFromTombstoneSet("deleted_trash_ids", trIdStr)
+            addToTombstoneSet("pending_trash_sync_ids", trIdStr)
         }
-        launchTrackedSync { autoDeleteOvertimeFromCloud(record.date) }
+        triggerPendingSync()
         scheduleTrashAutoDelete()
     }
 
@@ -1880,12 +2176,15 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             savedTrash = trash.copy(id = id)
             pieceRateDao.deletePieceRecordById(record.id)
         }
-        addToTombstoneSet("deleted_piece_ids", record.id.toString())
+        val pieceIdStr = record.id.toString()
+        removeFromTombstoneSet("pending_piece_sync_ids", pieceIdStr)
+        addToTombstoneSet("deleted_piece_ids", pieceIdStr)
         savedTrash?.let { trash ->
-            removeFromTombstoneSet("deleted_trash_ids", trash.id.toString())
-            launchTrackedSync { autoSyncTrashToCloud(trash) }
+            val trIdStr = trash.id.toString()
+            removeFromTombstoneSet("deleted_trash_ids", trIdStr)
+            addToTombstoneSet("pending_trash_sync_ids", trIdStr)
         }
-        launchTrackedSync { autoDeletePieceRateFromCloud(record.id) }
+        triggerPendingSync()
         scheduleTrashAutoDelete()
     }
 
@@ -1898,12 +2197,15 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             savedTrash = trash.copy(id = id)
             deductionDao.deleteById(record.id)
         }
-        addToTombstoneSet("deleted_deduction_ids", record.id.toString())
+        val dedIdStr = record.id.toString()
+        removeFromTombstoneSet("pending_deduction_sync_ids", dedIdStr)
+        addToTombstoneSet("deleted_deduction_ids", dedIdStr)
         savedTrash?.let { trash ->
-            removeFromTombstoneSet("deleted_trash_ids", trash.id.toString())
-            launchTrackedSync { autoSyncTrashToCloud(trash) }
+            val trIdStr = trash.id.toString()
+            removeFromTombstoneSet("deleted_trash_ids", trIdStr)
+            addToTombstoneSet("pending_trash_sync_ids", trIdStr)
         }
-        launchTrackedSync { autoDeleteDeductionFromCloud(record.id) }
+        triggerPendingSync()
         scheduleTrashAutoDelete()
     }
 
@@ -1912,68 +2214,71 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             "OT" -> {
                 val record = item.toOvertimeRecord()
                 if (record != null) {
-                    insertOrUpdateOvertime(record.copy(id = 0L))
+                    insertOrUpdateOvertime(record.copy(id = 0L), autoSync = false)
                 }
             }
             "PIECE" -> {
                 val record = item.toPieceRateRecord()
                 if (record != null) {
-                    insertPieceRate(record.copy(id = 0L))
+                    insertPieceRate(record.copy(id = 0L), autoSync = false)
                 }
             }
             "ADVANCE", "APON_BAZAR", "DEDUCTION" -> {
                 val record = item.toDeductionRecord()
                 if (record != null) {
-                    saveDeduction(record.copy(id = 0L))
+                    saveDeduction(record.copy(id = 0L, createdAt = System.currentTimeMillis()), autoSync = false)
                 }
             }
         }
-        addToTombstoneSet("deleted_trash_ids", item.id.toString())
+        val trIdStr = item.id.toString()
+        removeFromTombstoneSet("pending_trash_sync_ids", trIdStr)
+        addToTombstoneSet("deleted_trash_ids", trIdStr)
         trashDao.deleteTrashItem(item)
-        launchTrackedSync { autoDeleteTrashFromCloud(item.id) }
+        triggerPendingSync()
         scheduleTrashAutoDelete()
     }
 
     suspend fun deleteTrashItemPermanently(item: TrashItem) = withContext(Dispatchers.IO) {
-        addToTombstoneSet("deleted_trash_ids", item.id.toString())
+        val trIdStr = item.id.toString()
+        removeFromTombstoneSet("pending_trash_sync_ids", trIdStr)
+        addToTombstoneSet("deleted_trash_ids", trIdStr)
         trashDao.deleteTrashItem(item)
-        launchTrackedSync { autoDeleteTrashFromCloud(item.id) }
+        triggerPendingSync()
         scheduleTrashAutoDelete()
     }
 
     suspend fun clearAllTrash() = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
+        val existingIds = trashDao.getAllTrashItemsOnce().map { it.id.toString() }
+        for (idStr in existingIds) {
+            removeFromTombstoneSet("pending_trash_sync_ids", idStr)
+            addToTombstoneSet("deleted_trash_ids", idStr)
+        }
         setClearAllTrashBefore(now)
         trashDao.clearAllTrash()
-        launchTrackedSync { autoClearAllTrashFromCloud() }
+        triggerPendingSync()
         scheduleTrashAutoDelete()
     }
 
+    /**
+     * Zero-read expired trash purge: queries only expired local trash IDs and deletes
+     * those exact IDs from Firestore in batch (no full collection read on startup).
+     */
     suspend fun purgeExpiredTrash(): Int = withContext(Dispatchers.IO) {
         val cutoff = System.currentTimeMillis() - com.example.receiver.TrashAutoDeleteScheduler.TWENTY_FOUR_HOURS_MILLIS
-        val purgedCount = trashDao.purgeExpiredTrash(cutoff)
-        val docId = getDocId()
-        if (docId != null) {
-            try {
-                val trSnap = firestore.collection("users").document(docId)
-                    .collection("trash_records").get().awaitResult()
-                if (!trSnap.isEmpty) {
-                    val batch = firestore.batch()
-                    var anyExpired = false
-                    for (doc in trSnap.documents) {
-                        val deletedAt = (doc.data?.get("deletedAt") as? Number)?.toLong() ?: 0L
-                        if (deletedAt > 0L && deletedAt <= cutoff) {
-                            batch.delete(doc.reference)
-                            anyExpired = true
-                        }
-                    }
-                    if (anyExpired) {
-                        batch.commit().awaitResult()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.w("OvertimeRepository", "Purge expired trash from cloud failed: ${e.message}")
+        val expiredIds = trashDao.getExpiredTrashIds(cutoff)
+        val purgedCount = if (expiredIds.isNotEmpty()) {
+            for (id in expiredIds) {
+                val idStr = id.toString()
+                removeFromTombstoneSet("pending_trash_sync_ids", idStr)
+                addToTombstoneSet("deleted_trash_ids", idStr)
             }
+            trashDao.purgeExpiredTrash(cutoff)
+        } else {
+            0
+        }
+        if (expiredIds.isNotEmpty()) {
+            triggerPendingSync()
         }
         scheduleTrashAutoDelete()
         purgedCount

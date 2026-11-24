@@ -79,7 +79,6 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
         repository = OvertimeRepository(db, application)
         viewModelScope.launch {
             repository.cleanupDuplicateDates()
-            repository.purgeExpiredTrash()
             var isFirstEmission = true
             com.example.data.auth.AuthManager.currentUser.collect { user ->
                 try {
@@ -87,36 +86,42 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
                         if (!isManualSignInActive) {
                             val localProfile = repository.getProfileOnce()
                             val hasLocalConsent = localProfile.hasAcceptedPrivacyPolicy
-                            val cloudConsent = if (hasLocalConsent) null else repository.checkUserConsentDetailsInCloud(user.uid)
+                            val isOnline = com.example.util.NetworkMonitor.isStrictlyOnline(getApplication())
+                            val cloudConsent = if (!hasLocalConsent && isOnline) {
+                                repository.checkUserConsentDetailsInCloud(user.uid)
+                            } else {
+                                null
+                            }
                             val alreadyConsented = if (hasLocalConsent) true else (cloudConsent?.hasConsent == true)
 
-                            if (alreadyConsented) {
-                                if (!hasLocalConsent) {
-                                    val cloudConsentTime = cloudConsent?.consentTimestamp ?: 0L
-                                    if (cloudConsentTime > 0L) {
-                                        repository.markConsentGivenLocally(cloudConsentTime)
-                                    } else {
-                                        repository.markConsentGivenLocally()
-                                    }
+                            if (alreadyConsented && !hasLocalConsent) {
+                                val cloudConsentTime = cloudConsent?.consentTimestamp ?: 0L
+                                if (cloudConsentTime > 0L) {
+                                    repository.markConsentGivenLocally(cloudConsentTime)
+                                } else {
+                                    repository.markConsentGivenLocally()
                                 }
+                            }
 
-                                // Smart Auto-Sync Gate:
-                                // If fresh install or empty profile, restore immediately.
-                                // Otherwise, only auto-sync if cooldown (6 hours) has elapsed since last sync!
-                                val isFreshInstallOrEmpty = localProfile.lastCloudSyncTime == 0L ||
-                                        (localProfile.basicSalary == 0.0 && localProfile.userName.isBlank() && localProfile.companyName.isBlank())
-                                val now = System.currentTimeMillis()
-                                val timeSinceLastSync = now - localProfile.lastCloudSyncTime
-                                val autoSyncCooldown = 6 * 60 * 60 * 1000L // 6 hours cooldown
+                            val startupDecision = com.example.util.CloudSyncPolicy.evaluateStartupSyncDecision(
+                                isSignedIn = true,
+                                hasPrivacyConsent = alreadyConsented,
+                                isOnline = isOnline,
+                                hasCompletedInitialRestoreForUid = repository.hasCompletedInitialRestoreForCurrentUser(),
+                                hasPendingLocalDirtyData = repository.hasPendingLocalChanges()
+                            )
 
-                                if (isFreshInstallOrEmpty || timeSinceLastSync >= autoSyncCooldown) {
-                                    repository.fullAutoSyncAndRestore(forceFullSync = false)
-                                    val syncedProfile = repository.getProfileOnce()
-                                    val normalizedLang = LanguageManager.normalizeProfileLanguage(syncedProfile.language)
-                                    if (normalizedLang != LanguageManager.getSelectedSettingTag(getApplication())) {
-                                        withContext(Dispatchers.Main.immediate) {
-                                            LanguageManager.applyAppLanguage(normalizedLang)
-                                        }
+                            if (startupDecision.shouldRunSync) {
+                                repository.fullAutoSyncAndRestore(
+                                    forceFullSync = false,
+                                    prefetchedRootExists = cloudConsent?.rootExists,
+                                    prefetchedRootData = cloudConsent?.rootData
+                                )
+                                val syncedProfile = repository.getProfileOnce()
+                                val normalizedLang = LanguageManager.normalizeProfileLanguage(syncedProfile.language)
+                                if (normalizedLang != LanguageManager.getSelectedSettingTag(getApplication())) {
+                                    withContext(Dispatchers.Main.immediate) {
+                                        LanguageManager.applyAppLanguage(normalizedLang)
                                     }
                                 }
                             }
@@ -134,6 +139,39 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
                         delay(50)
                         _isInitialSyncComplete.value = true
                     }
+                }
+            }
+        }
+        viewModelScope.launch {
+            var wasOnline: Boolean? = null
+            com.example.util.NetworkMonitor.observeIsOnline(getApplication()).collect { isOnline ->
+                val transitionedToOnline = (wasOnline == false && isOnline)
+                wasOnline = isOnline
+                if (!transitionedToOnline || isManualSignInActive) return@collect
+
+                val user = com.example.data.auth.AuthManager.currentUser.value ?: return@collect
+                val localProfile = repository.getProfileOnce()
+                val reconnectDecision = com.example.util.CloudSyncPolicy.evaluateReconnectSyncDecision(
+                    isSignedIn = true,
+                    hasPrivacyConsent = localProfile.hasAcceptedPrivacyPolicy,
+                    isOnline = true,
+                    hasCompletedInitialRestoreForUid = repository.hasCompletedInitialRestoreForCurrentUser(),
+                    hasPendingLocalDirtyData = repository.hasPendingLocalChanges()
+                )
+                if (!reconnectDecision.shouldRunSync) return@collect
+
+                try {
+                    when (reconnectDecision.reason) {
+                        com.example.util.StartupSyncReason.NEEDS_INITIAL_RESTORE ->
+                            repository.fullAutoSyncAndRestore(forceFullSync = false)
+                        com.example.util.StartupSyncReason.HAS_PENDING_LOCAL_CHANGES ->
+                            repository.syncPendingMutationsIfOnline()
+                        else -> Unit
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w("OvertimeViewModel", "Reconnect sync error (${user.uid}): ${e.message}")
                 }
             }
         }
@@ -369,8 +407,8 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val currentCalendarYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
             // Finalize any unlocked past months using the previous profile before overwriting it
-            repository.autoFinalizePastMonthSnapshots(currentCalendarYm)
-            repository.saveProfile(updated)
+            repository.autoFinalizePastMonthSnapshots(currentCalendarYm, autoSync = false)
+            repository.saveProfile(updated, autoSync = false)
             // Only update selected month if it is current or future; never overwrite past months
             val ym = if (_selectedYearMonth.value >= currentCalendarYm) _selectedYearMonth.value else currentCalendarYm
             val existingYm = repository.getMonthlySalarySettingsOnce(ym)
@@ -383,12 +421,13 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
                 lockedAt = existingYm?.lockedAt ?: (if (ym < currentCalendarYm) now else 0L),
                 updatedAt = now
             )
-            repository.saveMonthlySalarySettings(snapshot)
-            // Synchronize running month records with the new rate and amount in Room and Firestore
-            repository.updateRunningMonthOvertimeRates(currentCalendarYm, otRate)
+            repository.saveMonthlySalarySettings(snapshot, autoSync = false)
+            // Synchronize running month records with the new rate and amount in Room and batch-sync once
+            repository.updateRunningMonthOvertimeRates(currentCalendarYm, otRate, autoSync = false)
             if (ym > currentCalendarYm) {
-                repository.updateRunningMonthOvertimeRates(ym, otRate)
+                repository.updateRunningMonthOvertimeRates(ym, otRate, autoSync = false)
             }
+            repository.triggerPendingSync()
         }
     }
 
@@ -573,9 +612,9 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
     fun updateTargetHours(target: Double) {
         viewModelScope.launch {
             val currentCalendarYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
-            repository.autoFinalizePastMonthSnapshots(currentCalendarYm)
+            repository.autoFinalizePastMonthSnapshots(currentCalendarYm, autoSync = false)
             val updated = repository.getProfileOnce().copy(monthlyOtTargetHours = target)
-            repository.saveProfile(updated)
+            repository.saveProfile(updated, autoSync = false)
             val ym = if (_selectedYearMonth.value >= currentCalendarYm) _selectedYearMonth.value else currentCalendarYm
             val existingYm = repository.getMonthlySalarySettingsOnce(ym)
             val now = System.currentTimeMillis()
@@ -586,14 +625,8 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
                 lockedAt = existingYm?.lockedAt ?: (if (ym < currentCalendarYm) now else 0L),
                 updatedAt = now
             )
-            repository.saveMonthlySalarySettings(snapshot)
-        }
-    }
-
-    fun syncCloudNow(onComplete: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            val res = repository.syncWithCloud()
-            onComplete(res.first, res.second)
+            repository.saveMonthlySalarySettings(snapshot, autoSync = false)
+            repository.triggerPendingSync()
         }
     }
 
@@ -619,7 +652,7 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
                                 else -> System.currentTimeMillis()
                             }
                             repository.markConsentGivenLocally(effectiveConsentTime)
-                            completePostSignIn(user)
+                            completePostSignIn(user, cloudConsent)
                             isManualSignInActive = false
                         } else {
                             _pendingConsentUser.value = user
@@ -640,9 +673,16 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
-    private suspend fun completePostSignIn(user: FirebaseUser) {
-        // First restore all profile, overtime, and piece-rate data from Firebase
-        repository.fullAutoSyncAndRestore()
+    private suspend fun completePostSignIn(
+        user: FirebaseUser,
+        cloudConsent: com.example.data.repository.CloudConsentStatus? = null
+    ) {
+        // Restore profile, overtime, piece-rate, deduction, monthly, and trash data without double-reading root doc
+        repository.fullAutoSyncAndRestore(
+            forceFullSync = false,
+            prefetchedRootExists = cloudConsent?.rootExists,
+            prefetchedRootData = cloudConsent?.rootData
+        )
 
         // Only update the user name with Google display name if the restored profile's name is still empty
         val profileAfterSync = repository.getProfileOnce()

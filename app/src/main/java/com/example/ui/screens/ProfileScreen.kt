@@ -45,7 +45,6 @@ fun ProfileScreen(
     onSignOut: ((Boolean, String) -> Unit) -> Unit = { it(false, "") },
     onSaveProfile: (UserProfile) -> Unit,
     onOpenLanguagePicker: () -> Unit = {},
-    onSyncCloud: ((Boolean, String) -> Unit) -> Unit = {},
     trashItems: List<TrashItem> = emptyList(),
     onRestoreTrash: (TrashItem) -> Unit = {},
     onDeleteTrashPermanently: (TrashItem) -> Unit = {},
