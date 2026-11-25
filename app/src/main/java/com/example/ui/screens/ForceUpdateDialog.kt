@@ -25,8 +25,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.example.R
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.util.AppUpdateInfo
 import com.example.util.ResponsiveUtils
 
@@ -55,6 +57,7 @@ fun ForceUpdateDialog(
                 onDismissOptional()
             }
         },
+        shape = RoundedCornerShape(spacing.heroRadius),
         properties = DialogProperties(
             dismissOnBackPress = !isForce,
             dismissOnClickOutside = !isForce
@@ -62,7 +65,7 @@ fun ForceUpdateDialog(
         icon = {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(spacing.avatarSize)
                     .clip(CircleShape)
                     .background(
                         if (isForce) MaterialTheme.colorScheme.errorContainer
@@ -74,14 +77,14 @@ fun ForceUpdateDialog(
                     imageVector = if (isForce) Icons.Default.SystemUpdate else Icons.Default.NewReleases,
                     contentDescription = null,
                     tint = if (isForce) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(spacing.iconLg)
                 )
             }
         },
         title = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
             ) {
                 Text(
                     text = updateInfo.getEffectiveTitle(context, lang),
@@ -90,11 +93,11 @@ fun ForceUpdateDialog(
                     textAlign = TextAlign.Center
                 )
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(spacing.badgeRadius),
                     color = if (isForce) MaterialTheme.colorScheme.errorContainer
                     else MaterialTheme.colorScheme.secondaryContainer
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(
                             if (isForce) R.string.update_required_badge else R.string.update_new_version_badge
                         ),
@@ -102,6 +105,7 @@ fun ForceUpdateDialog(
                         color = if (isForce) MaterialTheme.colorScheme.onErrorContainer
                         else MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.SemiBold,
+                        minFontSize = 8.sp,
                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                     )
                 }
@@ -110,7 +114,7 @@ fun ForceUpdateDialog(
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(spacing.dialogInnerGap),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -121,7 +125,7 @@ fun ForceUpdateDialog(
                 )
 
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(spacing.subCardRadius),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -142,17 +146,19 @@ fun ForceUpdateDialog(
                 onClick = {
                     openPlayStore(context, updateInfo.getEffectiveUrl(), lang)
                 },
+                contentPadding = spacing.compactButtonContentPadding,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = spacing.minTouchTarget)
                     .testTag("force_update_play_store_button"),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(spacing.cardRadius)
             ) {
-                Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
+                Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
+                Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                AutoFitSingleLineText(
                     text = updateInfo.getEffectiveUpdateBtnText(context, lang),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    minFontSize = 9.5.sp
                 )
             }
         },
@@ -165,14 +171,16 @@ fun ForceUpdateDialog(
                         onDismissOptional()
                     }
                 },
+                contentPadding = spacing.compactButtonContentPadding,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = spacing.minTouchTarget)
                     .testTag("update_dialog_dismiss_button")
             ) {
-                Text(
+                AutoFitSingleLineText(
                     text = updateInfo.getEffectiveDismissBtnText(context, lang),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    minFontSize = 9.5.sp
                 )
             }
         }

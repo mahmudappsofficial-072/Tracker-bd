@@ -1187,6 +1187,58 @@ class ExampleUnitTest {
     assertFalse(com.example.util.CloudSyncPolicy.shouldSeedLegacyUpgradeWatermark(false, 0L))
     assertFalse(com.example.util.CloudSyncPolicy.shouldSeedLegacyUpgradeWatermark(true, 1_700_000_000_000L))
   }
+
+  @Test
+  fun testResponsiveDensityTiersAndCompactSpacingScale() {
+    assertEquals(
+      com.example.util.ScreenDensityTier.MICRO_COMPACT,
+      com.example.util.ResponsiveUtils.classifyDensityTier(320, 568, 1.0f)
+    )
+    assertEquals(
+      com.example.util.ScreenDensityTier.MICRO_COMPACT,
+      com.example.util.ResponsiveUtils.classifyDensityTier(360, 590, 1.0f)
+    )
+    assertEquals(
+      com.example.util.ScreenDensityTier.MICRO_COMPACT,
+      com.example.util.ResponsiveUtils.classifyDensityTier(350, 680, 1.2f)
+    )
+    assertEquals(
+      com.example.util.ScreenDensityTier.EXTRA_COMPACT,
+      com.example.util.ResponsiveUtils.classifyDensityTier(360, 740, 1.0f)
+    )
+    assertEquals(
+      com.example.util.ScreenDensityTier.EXTRA_COMPACT,
+      com.example.util.ResponsiveUtils.classifyDensityTier(411, 680, 1.0f)
+    )
+    assertEquals(
+      com.example.util.ScreenDensityTier.EXTRA_COMPACT,
+      com.example.util.ResponsiveUtils.classifyDensityTier(411, 890, 1.2f)
+    )
+    assertEquals(
+      com.example.util.ScreenDensityTier.STANDARD_COMPACT,
+      com.example.util.ResponsiveUtils.classifyDensityTier(411, 890, 1.0f)
+    )
+
+    val standard = com.example.util.ResponsiveUtils.spacingFor(411, 890, 1.0f)
+    val extra = com.example.util.ResponsiveUtils.spacingFor(360, 680, 1.0f)
+    val micro = com.example.util.ResponsiveUtils.spacingFor(320, 568, 1.0f)
+
+    assertEquals(androidx.compose.ui.unit.Dp(6f), standard.screenH)
+    assertEquals(androidx.compose.ui.unit.Dp(5f), standard.screenV)
+    assertEquals(androidx.compose.ui.unit.Dp(7f), standard.heroCardPadding)
+    assertEquals(androidx.compose.ui.unit.Dp(6f), standard.cardPadding)
+    assertEquals(androidx.compose.ui.unit.Dp(4f), standard.pillCardPadding)
+    assertEquals(androidx.compose.ui.unit.Dp(10f), standard.heroRadius)
+    assertEquals(androidx.compose.ui.unit.Dp(8f), standard.cardRadius)
+    assertEquals(androidx.compose.ui.unit.Dp(48f), standard.minTouchTarget)
+    assertFalse(standard.isCompact)
+    assertFalse(standard.isShortScreen)
+
+    assertTrue(micro.screenH <= extra.screenH && extra.screenH <= standard.screenH)
+    assertTrue(micro.heroCardPadding <= extra.heroCardPadding && extra.heroCardPadding <= standard.heroCardPadding)
+    assertTrue(micro.avatarSize <= extra.avatarSize && extra.avatarSize <= standard.avatarSize)
+    assertTrue(com.example.util.ResponsiveUtils.spacingFor(411, 650, 1.0f).isShortScreen)
+  }
 }
 
 

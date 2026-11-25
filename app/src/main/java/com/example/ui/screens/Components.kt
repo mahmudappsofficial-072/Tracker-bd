@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.OvertimeRecord
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.ui.theme.WarningOrange
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
@@ -93,40 +94,42 @@ fun LanguagePickerBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = Modifier.testTag("language_picker_sheet"),
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+        shape = RoundedCornerShape(topStart = spacing.heroRadius, topEnd = spacing.heroRadius)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.sheetBodyH)
-                .padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+                .padding(bottom = spacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(38.dp)
+                    modifier = Modifier.size(spacing.avatarSize)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Language,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.app_language_label),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxFontSize = 15.5.sp,
+                        minFontSize = 11.sp
                     )
                     Text(
                         text = stringResource(R.string.language_picker_subtitle),
@@ -136,7 +139,7 @@ fun LanguagePickerBottomSheet(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = spacing.rowGapSm))
 
             // Option 0: System Default (auto-detect with English fallback)
             val isSystemSelected = selectedSettingTag == LanguageManager.SYSTEM_TAG
@@ -145,7 +148,7 @@ fun LanguagePickerBottomSheet(
                     onSelectLanguage(LanguageManager.SYSTEM_TAG)
                     onDismiss()
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(spacing.cardRadius),
                 color = if (isSystemSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                 border = if (isSystemSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
@@ -157,7 +160,7 @@ fun LanguagePickerBottomSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = spacing.cardPadding, vertical = spacing.rowGapMd),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -169,19 +172,23 @@ fun LanguagePickerBottomSheet(
                             imageVector = Icons.Default.PhoneAndroid,
                             contentDescription = null,
                             tint = if (isSystemSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
                         Column {
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.system_default_title),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyLarge,
+                                maxFontSize = 14.5.sp,
+                                minFontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.system_default_subtitle_fmt, systemResolvedLabel),
                                 style = MaterialTheme.typography.bodySmall,
+                                maxFontSize = 12.sp,
+                                minFontSize = 9.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -204,7 +211,7 @@ fun LanguagePickerBottomSheet(
                         onSelectLanguage(option.tag)
                         onDismiss()
                     },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
@@ -216,7 +223,7 @@ fun LanguagePickerBottomSheet(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                            .padding(horizontal = spacing.cardPadding, vertical = spacing.rowGapMd),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -226,19 +233,23 @@ fun LanguagePickerBottomSheet(
                         ) {
                             Text(
                                 text = option.flagEmoji,
-                                fontSize = 22.sp
+                                fontSize = 19.sp
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(spacing.rowGapMd))
                             Column {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = option.nativeLabel,
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.bodyLarge,
+                                    maxFontSize = 14.5.sp,
+                                    minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                Text(
+                                AutoFitSingleLineText(
                                     text = option.englishLabel,
                                     style = MaterialTheme.typography.bodySmall,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 9.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -336,12 +347,12 @@ fun ProfessionalDatePickerField(
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)) {
         @OptIn(ExperimentalLayoutApi::class)
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm),
+            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
         ) {
             FilterChip(
                 selected = selectedDate == todayDateStr,
@@ -349,7 +360,7 @@ fun ProfessionalDatePickerField(
                     hideKeyboard()
                     onDateSelected(todayDateStr)
                 },
-                label = { Text(stringResource(R.string.date_chip_today), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+                label = { AutoFitSingleLineText(stringResource(R.string.date_chip_today), maxFontSize = 11.5.sp, minFontSize = 8.5.sp, fontWeight = FontWeight.SemiBold) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -363,7 +374,7 @@ fun ProfessionalDatePickerField(
                     hideKeyboard()
                     onDateSelected(yesterdayDateStr)
                 },
-                label = { Text(stringResource(R.string.date_chip_yesterday), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+                label = { AutoFitSingleLineText(stringResource(R.string.date_chip_yesterday), maxFontSize = 11.5.sp, minFontSize = 8.5.sp, fontWeight = FontWeight.SemiBold) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -376,14 +387,14 @@ fun ProfessionalDatePickerField(
                     hideKeyboard()
                     showDatePickerDialog = true
                 },
-                label = { Text(stringResource(R.string.date_chip_calendar), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+                label = { AutoFitSingleLineText(stringResource(R.string.date_chip_calendar), maxFontSize = 11.5.sp, minFontSize = 8.5.sp, fontWeight = FontWeight.SemiBold) },
                 modifier = Modifier.testTag("date_chip_calendar")
             )
         }
 
         // Tappable Date Card
         Card(
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(spacing.cardRadius),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -397,40 +408,45 @@ fun ProfessionalDatePickerField(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.cardPadding, vertical = 9.dp),
+                    .padding(horizontal = spacing.cardPadding, vertical = spacing.listItemPadding),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)) {
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
                         contentDescription = stringResource(R.string.cd_select_date),
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(spacing.iconMd)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(spacing.rowGapMd))
                     Column {
-                        Text(
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.selected_date_tap_label),
                             style = MaterialTheme.typography.labelSmall,
+                            maxFontSize = 11.sp,
+                            minFontSize = 8.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Text(
+                        AutoFitSingleLineText(
                             text = formattedDisplayDate,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
+                            maxFontSize = 13.5.sp,
+                            minFontSize = 9.5.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(spacing.badgeRadius),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.change),
-                        fontSize = 11.sp,
+                        maxFontSize = 11.sp,
+                        minFontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
@@ -571,16 +587,18 @@ fun QuickOtEntryDialog(
                             imageVector = Icons.Default.AccessTime,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(
                                 if (initialRecord != null && initialRecord.id != 0L) R.string.edit_ot_entry_title
                                 else R.string.quick_ot_entry_title
                             ),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = 16.sp,
+                            minFontSize = 11.sp
                         )
                     }
                     IconButton(
@@ -623,8 +641,8 @@ fun QuickOtEntryDialog(
                 @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm),
+                    verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                 ) {
                     ShiftType.entries.forEach { shift ->
                         val isSelected = selectedShift == shift.code
@@ -654,11 +672,10 @@ fun QuickOtEntryDialog(
                                 }
                             },
                             label = {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = shift.getLabel(),
-                                    fontSize = 11.sp,
-                                    maxLines = 1,
-                                    softWrap = false
+                                    maxFontSize = 11.sp,
+                                    minFontSize = 8.sp
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
@@ -675,7 +692,7 @@ fun QuickOtEntryDialog(
 
                 if (isOffOrLeaveShift) {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(spacing.cardRadius),
                         color = when (selectedShift) {
                             ShiftType.ABSENT.code -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
                             ShiftType.LEAVE.code -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
@@ -733,7 +750,7 @@ fun QuickOtEntryDialog(
                     val hrsShort = stringResource(R.string.hours_short)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                     ) {
                         presetHours.take(4).forEach { h ->
                             AssistChip(
@@ -743,12 +760,11 @@ fun QuickOtEntryDialog(
                                     hoursText = h.toInt().toString()
                                 },
                                 label = {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = "${LaborLawCalculator.formatNumber(h, isBnDigits, 0)} $hrsShort",
-                                        fontSize = 11.sp,
+                                        maxFontSize = 11.sp,
+                                        minFontSize = 7.5.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        softWrap = false,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -761,7 +777,7 @@ fun QuickOtEntryDialog(
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                     ) {
                         presetHours.drop(4).forEach { h ->
                             AssistChip(
@@ -771,12 +787,11 @@ fun QuickOtEntryDialog(
                                     hoursText = h.toInt().toString()
                                 },
                                 label = {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = "${LaborLawCalculator.formatNumber(h, isBnDigits, 0)} $hrsShort",
-                                        fontSize = 11.sp,
+                                        maxFontSize = 11.sp,
+                                        minFontSize = 7.5.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        softWrap = false,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -815,9 +830,9 @@ fun QuickOtEntryDialog(
 
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = spacing.subCardPadding, vertical = spacing.rowGapSm)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
@@ -939,7 +954,7 @@ fun QuickOtEntryDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
@@ -947,11 +962,13 @@ fun QuickOtEntryDialog(
                             hideKeyboard()
                             onDismiss()
                         },
+                        shape = RoundedCornerShape(spacing.cardRadius),
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        Text(stringResource(R.string.cancel))
+                        AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                     Button(
                         onClick = {
@@ -980,12 +997,14 @@ fun QuickOtEntryDialog(
                                 onSave(date, finalHours, hasNightBill, hasTiffinBill, isHoliday, selectedShift, note)
                             }
                         },
+                        shape = RoundedCornerShape(spacing.cardRadius),
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_ot_button")
                     ) {
-                        Text(stringResource(R.string.save))
+                        AutoFitSingleLineText(stringResource(R.string.save), maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                 }
             }
@@ -1215,13 +1234,15 @@ fun AddPieceRateDialog(
                             imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.add_piece_work_title),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = 16.sp,
+                            minFontSize = 11.sp
                         )
                     }
                     IconButton(onClick = {
@@ -1254,7 +1275,7 @@ fun AddPieceRateDialog(
                 Text(stringResource(R.string.popular_tasks_label), style = MaterialTheme.typography.labelSmall)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                 ) {
                     popularItems.forEach { item ->
                         AssistChip(
@@ -1263,7 +1284,7 @@ fun AddPieceRateDialog(
                                 itemName = item
                                 itemNameError = false
                             },
-                            label = { Text(item, fontSize = 11.sp) }
+                            label = { AutoFitSingleLineText(item, maxFontSize = 11.sp, minFontSize = 8.sp) }
                         )
                     }
                 }
@@ -1333,16 +1354,19 @@ fun AddPieceRateDialog(
                 }
 
                 Card(
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(
                             R.string.total_piece_income_fmt,
                             LaborLawCalculator.formatCurrency(total, isBnDigits)
                         ),
                         modifier = Modifier.padding(spacing.subCardPadding),
                         fontWeight = FontWeight.Bold,
+                        maxFontSize = 14.5.sp,
+                        minFontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
@@ -1367,7 +1391,7 @@ fun AddPieceRateDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
@@ -1375,11 +1399,13 @@ fun AddPieceRateDialog(
                             hideKeyboard()
                             onDismiss()
                         },
+                        shape = RoundedCornerShape(spacing.cardRadius),
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        Text(stringResource(R.string.cancel))
+                        AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                     Button(
                         onClick = {
@@ -1394,12 +1420,14 @@ fun AddPieceRateDialog(
                                 onSave(itemName.trim(), count, rate, date, note)
                             }
                         },
+                        shape = RoundedCornerShape(spacing.cardRadius),
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_piece_button")
                     ) {
-                        Text(stringResource(R.string.save))
+                        AutoFitSingleLineText(stringResource(R.string.save), maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                 }
             }
@@ -1474,13 +1502,15 @@ fun TargetGoalDialog(
                             imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.set_target_hours_title),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = 16.sp,
+                            minFontSize = 11.sp
                         )
                     }
                     IconButton(onClick = {
@@ -1524,8 +1554,8 @@ fun TargetGoalDialog(
                 val hrsShort = stringResource(R.string.hours_short)
                 @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm),
+                    verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     listOf(40, 50, 60, 70, 80).forEach { preset ->
@@ -1535,7 +1565,13 @@ fun TargetGoalDialog(
                                 hideKeyboard()
                                 targetText = preset.toString()
                             },
-                            label = { Text("${LaborLawCalculator.formatNumber(preset.toDouble(), isBnDigits, 0)} $hrsShort") }
+                            label = {
+                                AutoFitSingleLineText(
+                                    text = "${LaborLawCalculator.formatNumber(preset.toDouble(), isBnDigits, 0)} $hrsShort",
+                                    maxFontSize = 11.5.sp,
+                                    minFontSize = 8.sp
+                                )
+                            }
                         )
                     }
                 }
@@ -1544,36 +1580,41 @@ fun TargetGoalDialog(
                 val estimatedEarnings = parsedHours * hourlyRate
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier.padding(spacing.subCardPadding),
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                        verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.est_ot_earnings_label),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                maxFontSize = 12.sp,
+                                minFontSize = 8.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                             )
                             if (hourlyRate > 0) {
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
+                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(
                                             R.string.rate_per_hour_fmt,
                                             LaborLawCalculator.formatCurrency(hourlyRate, isBnDigits)
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
+                                        maxFontSize = 10.5.sp,
+                                        minFontSize = 8.sp,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
@@ -1582,7 +1623,7 @@ fun TargetGoalDialog(
                             }
                         }
 
-                        Text(
+                        AutoFitSingleLineText(
                             text = if (hourlyRate > 0) {
                                 LaborLawCalculator.formatCurrency(estimatedEarnings, isBnDigits)
                             } else {
@@ -1590,6 +1631,8 @@ fun TargetGoalDialog(
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            maxFontSize = 16.sp,
+                            minFontSize = 11.sp,
                             color = if (hourlyRate > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
@@ -1621,7 +1664,7 @@ fun TargetGoalDialog(
 
                         HorizontalDivider(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                            modifier = Modifier.padding(vertical = 2.dp)
+                            modifier = Modifier.padding(vertical = spacing.rowGapSm)
                         )
 
                         Row(
@@ -1629,24 +1672,24 @@ fun TargetGoalDialog(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.est_month_end_total_pay),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
+                                maxFontSize = 12.5.sp,
+                                minFontSize = 8.5.sp,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(end = 8.dp)
+                                    .padding(end = spacing.rowGapSm)
                             )
-                            Text(
+                            AutoFitSingleLineText(
                                 text = formattedProjected,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
+                                maxFontSize = 16.sp,
+                                minFontSize = 10.5.sp,
                                 color = if (isNegativeProjected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                maxLines = 1,
-                                softWrap = false,
                                 modifier = Modifier.testTag("dialog_projected_total_value")
                             )
                         }
@@ -1666,30 +1709,32 @@ fun TargetGoalDialog(
                         if (totalDeductions > 0.0 || isBonusCancelled) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 if (totalDeductions > 0.0) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(
                                             R.string.deductions_summary_fmt,
                                             LaborLawCalculator.formatCurrency(totalDeductions, isBnDigits)
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
+                                        maxFontSize = 11.sp,
+                                        minFontSize = 8.sp,
                                         color = MaterialTheme.colorScheme.error,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
                                 }
                                 if (isBonusCancelled) {
                                     Surface(
-                                        shape = RoundedCornerShape(6.dp),
+                                        shape = RoundedCornerShape(spacing.badgeRadius),
                                         color = WarningOrange.copy(alpha = 0.14f)
                                     ) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.bonus_lost_badge),
-                                            fontSize = 10.sp,
+                                            maxFontSize = 10.sp,
+                                            minFontSize = 7.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = WarningOrange,
                                             modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
@@ -1711,7 +1756,7 @@ fun TargetGoalDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
@@ -1719,11 +1764,13 @@ fun TargetGoalDialog(
                             hideKeyboard()
                             onDismiss()
                         },
+                        shape = RoundedCornerShape(spacing.cardRadius),
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        Text(stringResource(R.string.cancel))
+                        AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                     Button(
                         onClick = {
@@ -1731,12 +1778,14 @@ fun TargetGoalDialog(
                             val target = LaborLawCalculator.parseLocalizedDouble(targetText)
                             onSave(target)
                         },
+                        shape = RoundedCornerShape(spacing.cardRadius),
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_target_button")
                     ) {
-                        Text(stringResource(R.string.save))
+                        AutoFitSingleLineText(stringResource(R.string.save), maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                 }
             }
@@ -1761,7 +1810,7 @@ fun InitialPrivacyConsentDialog(
 
     AlertDialog(
         onDismissRequest = onDecline,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(spacing.heroRadius),
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -1770,27 +1819,31 @@ fun InitialPrivacyConsentDialog(
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(spacing.avatarSize)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.VerifiedUser,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
+                Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                Column(modifier = Modifier.weight(1f)) {
+                    AutoFitSingleLineText(
                         text = titleText ?: stringResource(R.string.privacy_consent_title),
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        maxFontSize = 15.5.sp,
+                        minFontSize = 11.sp
                     )
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.app_display_name),
                         style = MaterialTheme.typography.bodySmall,
+                        maxFontSize = 12.sp,
+                        minFontSize = 9.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -1822,17 +1875,17 @@ fun InitialPrivacyConsentDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(spacing.dialogInnerGap)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 ) {
                     Box(modifier = Modifier.padding(spacing.cardPadding)) {
                         Text(
                             text = annotatedText,
                             style = MaterialTheme.typography.bodyMedium,
-                            lineHeight = 20.sp
+                            lineHeight = 19.sp
                         )
                     }
                 }
@@ -1842,11 +1895,14 @@ fun InitialPrivacyConsentDialog(
             Button(
                 onClick = onAgree,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                contentPadding = spacing.compactButtonContentPadding,
                 modifier = Modifier.testTag("consent_agree_button")
             ) {
-                Text(
+                AutoFitSingleLineText(
                     text = confirmButtonText ?: stringResource(R.string.privacy_consent_confirm_default),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxFontSize = 13.5.sp,
+                    minFontSize = 9.sp
                 )
             }
         },
@@ -1854,10 +1910,13 @@ fun InitialPrivacyConsentDialog(
             OutlinedButton(
                 onClick = onDecline,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                contentPadding = spacing.compactButtonContentPadding,
                 modifier = Modifier.testTag("consent_decline_button")
             ) {
-                Text(
-                    text = dismissButtonText ?: stringResource(R.string.privacy_consent_decline_default)
+                AutoFitSingleLineText(
+                    text = dismissButtonText ?: stringResource(R.string.privacy_consent_decline_default),
+                    maxFontSize = 13.5.sp,
+                    minFontSize = 9.sp
                 )
             }
         }
@@ -1887,21 +1946,21 @@ fun PastMonthLockBanner(
 
     Card(
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(spacing.cardRadius),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = spacing.listItemPadding, vertical = 6.dp),
+                .padding(horizontal = spacing.listItemPadding, vertical = spacing.rowGapMd),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
         ) {
             Icon(
                 imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
                 contentDescription = null,
                 tint = contentColor,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(spacing.iconMd)
             )
             Text(
                 text = stringResource(
@@ -1921,21 +1980,20 @@ fun PastMonthLockBanner(
                     onClick = onUnlockClick,
                     contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier
-                        .heightIn(min = 36.dp)
+                        .heightIn(min = spacing.compactButtonHeight)
                         .testTag("unlock_month_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.LockOpen,
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(spacing.iconSm)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
+                    Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.unlock),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false
+                        maxFontSize = 11.sp,
+                        minFontSize = 8.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             } else {
@@ -1943,21 +2001,20 @@ fun PastMonthLockBanner(
                     onClick = onLockClick,
                     contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier
-                        .heightIn(min = 36.dp)
+                        .heightIn(min = spacing.compactButtonHeight)
                         .testTag("lock_month_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(spacing.iconSm)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
+                    Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.lock),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false
+                        maxFontSize = 11.sp,
+                        minFontSize = 8.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -1974,29 +2031,32 @@ fun MonthLockedInfoAndUnlockDialogs(
     onDismissUnlockConfirm: () -> Unit,
     onConfirmUnlock: () -> Unit
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     if (showLockedInfo) {
         AlertDialog(
             onDismissRequest = onDismissLockedInfo,
+            shape = RoundedCornerShape(spacing.heroRadius),
             icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(stringResource(R.string.month_locked_dialog_title)) },
             text = { Text(stringResource(R.string.month_locked_dialog_msg)) },
             confirmButton = {
-                Button(onClick = onDismissLockedInfo) {
-                    Text(stringResource(R.string.ok))
+                Button(onClick = onDismissLockedInfo, contentPadding = spacing.compactButtonContentPadding) {
+                    AutoFitSingleLineText(stringResource(R.string.ok), maxFontSize = 13.5.sp, minFontSize = 9.5.sp)
                 }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = onRequestUnlock,
+                    contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier.testTag("dialog_unlock_month_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.LockOpen,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(spacing.iconMd)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.unlock_temporarily_btn))
+                    Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                    AutoFitSingleLineText(stringResource(R.string.unlock_temporarily_btn), maxFontSize = 13.sp, minFontSize = 9.sp)
                 }
             }
         )
@@ -2005,20 +2065,22 @@ fun MonthLockedInfoAndUnlockDialogs(
     if (showUnlockConfirm) {
         AlertDialog(
             onDismissRequest = onDismissUnlockConfirm,
+            shape = RoundedCornerShape(spacing.heroRadius),
             icon = { Icon(Icons.Default.LockOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = { Text(stringResource(R.string.unlock_confirm_dialog_title)) },
             text = { Text(stringResource(R.string.unlock_confirm_dialog_msg)) },
             confirmButton = {
                 Button(
                     onClick = onConfirmUnlock,
+                    contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier.testTag("confirm_unlock_month_button")
                 ) {
-                    Text(stringResource(R.string.unlock))
+                    AutoFitSingleLineText(stringResource(R.string.unlock), maxFontSize = 13.5.sp, minFontSize = 9.5.sp)
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismissUnlockConfirm) {
-                    Text(stringResource(R.string.cancel))
+                TextButton(onClick = onDismissUnlockConfirm, contentPadding = spacing.compactButtonContentPadding) {
+                    AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 13.5.sp, minFontSize = 9.5.sp)
                 }
             }
         )

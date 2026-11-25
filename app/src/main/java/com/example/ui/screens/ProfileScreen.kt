@@ -27,6 +27,7 @@ import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.model.TrashItem
 import com.example.data.model.UserProfile
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.NetworkMonitor
@@ -127,20 +128,24 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.tab_profile),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                        maxFontSize = 20.sp,
+                        minFontSize = 14.sp,
+                        modifier = Modifier.weight(1f).padding(end = spacing.rowGapMd)
                     )
                     FilledTonalIconButton(
                         onClick = { showSettingsDialog = true },
                         modifier = Modifier.testTag("settings_button")
                     ) {
-                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.cd_settings))
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.cd_settings),
+                            modifier = Modifier.size(spacing.iconLg)
+                        )
                     }
                 }
             }
@@ -148,7 +153,7 @@ fun ProfileScreen(
             // Card 1: Worker Identity Hero Card
             item {
                 Card(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(spacing.heroRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -171,46 +176,48 @@ fun ProfileScreen(
                                         model = currentUser?.photoUrl,
                                         contentDescription = stringResource(R.string.cd_profile_photo),
                                         contentScale = ContentScale.Crop,
-                                        modifier = Modifier.size(48.dp).clip(CircleShape)
+                                        modifier = Modifier.size(spacing.avatarSize).clip(CircleShape)
                                     )
                                 } else {
                                     Surface(
                                         shape = CircleShape,
                                         color = MaterialTheme.colorScheme.primaryContainer,
-                                        modifier = Modifier.size(48.dp)
+                                        modifier = Modifier.size(spacing.avatarSize)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Icon(
                                                 Icons.Default.Person,
                                                 contentDescription = null,
                                                 tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(28.dp)
+                                                modifier = Modifier.size(spacing.iconLg)
                                             )
                                         }
                                     }
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                 Column {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = profile.userName.ifBlank { stringResource(R.string.your_name_placeholder) },
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        maxFontSize = 15.5.sp,
+                                        minFontSize = 11.sp
                                     )
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = "${profile.companyName.ifBlank { stringResource(R.string.company_placeholder) }} • ${profile.designation.ifBlank { stringResource(R.string.designation_placeholder) }}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        maxFontSize = 12.sp,
+                                        minFontSize = 8.5.sp
                                     )
                                     val displayGrade = LanguageManager.formatDisplayGrade(context, profile.grade, effectiveLang)
                                         .ifBlank { stringResource(R.string.grade_fallback_label) }
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = "${stringResource(R.string.id_short_label)}: ${profile.workerId.ifBlank { stringResource(R.string.not_applicable) }} • $displayGrade",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.primary
+                                        color = MaterialTheme.colorScheme.primary,
+                                        maxFontSize = 11.sp,
+                                        minFontSize = 8.sp
                                     )
                                 }
                             }
@@ -222,7 +229,7 @@ fun ProfileScreen(
                                     Icons.Default.Edit,
                                     contentDescription = stringResource(R.string.cd_edit_profile),
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(spacing.iconMd)
                                 )
                             }
                         }
@@ -274,7 +281,7 @@ fun ProfileScreen(
             item {
                 val isSalaryConfigured = displayGross > 0.0 || (effectiveHourlyOtRate ?: 0.0) > 0.0
                 Card(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(spacing.heroRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier.fillMaxWidth().testTag("salary_summary_card")
@@ -289,19 +296,22 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.salary_setup_card_title),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                                    maxFontSize = 15.5.sp,
+                                    minFontSize = 11.sp,
+                                    modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                                 )
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
+                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                     color = MaterialTheme.colorScheme.tertiaryContainer
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.badge_setup_pending),
-                                        fontSize = 11.sp,
+                                        maxFontSize = 11.sp,
+                                        minFontSize = 8.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer,
                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
@@ -316,13 +326,13 @@ fun ProfileScreen(
                             )
 
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(spacing.cardRadius),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(
                                     modifier = Modifier.padding(spacing.subCardPadding),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                                 ) {
                                     OnboardingStepRow(
                                         stepNumber = 1,
@@ -352,18 +362,20 @@ fun ProfileScreen(
                                     pendingSalaryHighlight = null
                                     showSalarySheet = true
                                 },
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(min = spacing.minTouchTarget)
                                     .testTag("edit_profile_button"),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(spacing.cardRadius)
                             ) {
-                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
+                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.start_salary_setup_btn),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
+                                    maxFontSize = 14.sp,
+                                    minFontSize = 10.sp
                                 )
                             }
                         } else {
@@ -372,20 +384,24 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.salary_allowances_view_title),
                                     fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxFontSize = 15.5.sp,
+                                    minFontSize = 11.sp,
+                                    modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                                 )
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
+                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                     color = if (!profile.isCustomSalary) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(
                                             if (!profile.isCustomSalary) R.string.badge_labor_law else R.string.badge_custom_rules
                                         ),
-                                        fontSize = 11.sp,
+                                        maxFontSize = 11.sp,
+                                        minFontSize = 8.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (!profile.isCustomSalary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onTertiaryContainer,
                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
@@ -396,7 +412,7 @@ fun ProfileScreen(
                             // Highlight Metrics (Gross & OT Rate)
                             Surface(
                                 color = MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(spacing.cardRadius),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
@@ -406,33 +422,39 @@ fun ProfileScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column {
-                                        Text(
+                                    Column(modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)) {
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.total_regular_salary_label),
-                                            fontSize = 12.sp,
+                                            maxFontSize = 11.5.sp,
+                                            minFontSize = 8.5.sp,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = LaborLawCalculator.formatCurrency(displayGross, isBnDigits),
-                                            fontSize = 20.sp,
+                                            maxFontSize = 19.sp,
+                                            minFontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     }
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
+                                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.effective_ot_rate_label),
-                                            fontSize = 12.sp,
+                                            maxFontSize = 11.5.sp,
+                                            minFontSize = 8.5.sp,
+                                            textAlign = TextAlign.End,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = if (effectiveHourlyOtRate != null && effectiveHourlyOtRate > 0.0) {
                                                 LaborLawCalculator.formatCurrency(effectiveHourlyOtRate, isBnDigits) +
                                                     stringResource(R.string.currency_per_hour_suffix)
                                             } else {
                                                 "—"
                                             },
-                                            fontSize = 18.sp,
+                                            maxFontSize = 17.sp,
+                                            minFontSize = 11.sp,
+                                            textAlign = TextAlign.End,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
                                         )
@@ -442,13 +464,13 @@ fun ProfileScreen(
 
                             if (!profile.isCustomSalary && autoResult.grossSalary > 0.0) {
                                 Surface(
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(spacing.subCardRadius),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(spacing.subCardPadding),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                     ) {
                                         SalaryBreakdownRow(stringResource(R.string.row_basic_salary), autoResult.basicSalary, isBnDigits)
                                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
@@ -466,7 +488,7 @@ fun ProfileScreen(
                                 if (profile.nightBillRate > 0.0 || profile.tiffinBillRate > 0.0) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                                     ) {
                                         if (profile.nightBillRate > 0.0) {
                                             BenefitChip(
@@ -508,18 +530,20 @@ fun ProfileScreen(
                                     pendingSalaryHighlight = null
                                     showSalarySheet = true
                                 },
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(min = spacing.minTouchTarget)
                                     .testTag("edit_profile_button"),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(spacing.cardRadius)
                             ) {
-                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
+                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.setup_edit_salary_btn),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
+                                    maxFontSize = 14.sp,
+                                    minFontSize = 10.sp
                                 )
                             }
                         }
@@ -654,7 +678,7 @@ private fun InfoChipCard(
 ) {
     val spacing = ResponsiveUtils.rememberAppSpacing()
     Surface(
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(spacing.subCardRadius),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
         modifier = modifier
     ) {
@@ -662,17 +686,21 @@ private fun InfoChipCard(
             modifier = Modifier.padding(spacing.subCardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Column {
-                Text(text = label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(spacing.iconMd))
+            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+            Column(modifier = Modifier.weight(1f)) {
+                AutoFitSingleLineText(
+                    text = label,
+                    maxFontSize = 10.5.sp,
+                    minFontSize = 8.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                AutoFitSingleLineText(
                     text = value,
-                    fontSize = 13.sp,
+                    maxFontSize = 12.5.sp,
+                    minFontSize = 9.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -685,27 +713,25 @@ private fun SalaryBreakdownRow(
     amount: Double,
     isBnDigits: Boolean
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
+        AutoFitSingleLineText(
             text = label,
-            fontSize = 12.sp,
-            maxLines = 1,
-            softWrap = false,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
+            maxFontSize = 12.sp,
+            minFontSize = 8.5.sp,
+            modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
+        AutoFitSingleLineText(
             text = LaborLawCalculator.formatCurrency(amount, isBnDigits),
-            fontSize = 13.sp,
+            maxFontSize = 13.sp,
+            minFontSize = 9.sp,
             fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            softWrap = false,
+            textAlign = TextAlign.End,
             color = MaterialTheme.colorScheme.onSurface
         )
     }
@@ -719,25 +745,26 @@ private fun BenefitChip(
 ) {
     val spacing = ResponsiveUtils.rememberAppSpacing()
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(spacing.subCardRadius),
         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
         modifier = modifier
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = spacing.subCardPadding, vertical = 5.dp),
+            modifier = Modifier.padding(horizontal = spacing.subCardPadding, vertical = spacing.compactActionPadV),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
+            AutoFitSingleLineText(
                 text = label,
-                fontSize = 11.sp,
+                maxFontSize = 11.sp,
+                minFontSize = 8.sp,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.weight(1f, fill = false)
+                modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
+            AutoFitSingleLineText(
                 text = value,
-                fontSize = 12.sp,
+                maxFontSize = 12.sp,
+                minFontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 textAlign = TextAlign.End
@@ -753,29 +780,31 @@ private fun OnboardingStepRow(
     subtitle: String,
     isBnDigits: Boolean
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
     ) {
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(spacing.actionCircleSize)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     text = LaborLawCalculator.formatNumber(stepNumber.toDouble(), isBnDigits, 0),
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(
+            AutoFitSingleLineText(
                 text = title,
-                fontSize = 13.sp,
+                maxFontSize = 13.sp,
+                minFontSize = 9.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )

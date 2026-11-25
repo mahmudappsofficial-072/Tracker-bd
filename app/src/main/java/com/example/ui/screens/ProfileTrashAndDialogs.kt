@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.example.R
 import com.example.data.model.TrashItem
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.ResponsiveUtils
@@ -66,19 +67,22 @@ fun TrashManagementDialog(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = spacing.rowGapSm)
                     ) {
                         Icon(
                             imageVector = Icons.Default.DeleteSweep,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.trash_bin_title),
                             fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            minFontSize = 11.sp
                         )
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -86,12 +90,13 @@ fun TrashManagementDialog(
                             TextButton(
                                 onClick = { showClearAllConfirm = true },
                                 contentPadding = spacing.compactButtonContentPadding,
-                                modifier = Modifier.heightIn(min = 36.dp)
+                                modifier = Modifier.heightIn(min = spacing.compactButtonHeight)
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.empty_all),
                                     color = MaterialTheme.colorScheme.error,
-                                    fontSize = 12.sp,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -119,7 +124,7 @@ fun TrashManagementDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = spacing.badgeV))
 
                 if (trashItems.isEmpty()) {
                     Box(
@@ -128,19 +133,22 @@ fun TrashManagementDialog(
                             .padding(vertical = spacing.emptyStateVertical),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.DeleteOutline,
                                 contentDescription = null,
-                                modifier = Modifier.size(48.dp),
+                                modifier = Modifier.size(spacing.avatarSize),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.trash_empty_title),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                minFontSize = 10.sp
                             )
                             Text(
                                 text = stringResource(R.string.trash_empty_subtitle),
@@ -154,7 +162,7 @@ fun TrashManagementDialog(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        verticalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                     ) {
                         items(trashItems.size, key = { trashItems[it].id }) { index ->
                             val item = trashItems[index]
@@ -197,7 +205,7 @@ fun TrashManagementDialog(
                             }
 
                             Card(
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(spacing.cardRadius),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -229,29 +237,34 @@ fun TrashManagementDialog(
                                             else -> item.itemType
                                         }
 
-                                        Surface(shape = RoundedCornerShape(4.dp), color = badgeColor) {
-                                            Text(
+                                        Surface(shape = RoundedCornerShape(spacing.badgeRadius), color = badgeColor) {
+                                            AutoFitSingleLineText(
                                                 text = badgeLabel,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = badgeTextColor,
+                                                minFontSize = 8.sp,
                                                 modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                             )
                                         }
 
-                                        Text(
+                                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
+
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.trash_hours_left_fmt, remainingHours),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.error,
-                                            fontWeight = FontWeight.SemiBold
+                                            fontWeight = FontWeight.SemiBold,
+                                            minFontSize = 8.sp
                                         )
                                     }
 
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
+                                    Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                    AutoFitSingleLineText(
                                         text = displayTitle,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        minFontSize = 10.sp
                                     )
                                     Text(
                                         text = displaySubtitle,
@@ -259,7 +272,7 @@ fun TrashManagementDialog(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
 
-                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Spacer(modifier = Modifier.height(spacing.rowGapMd))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.End,
@@ -268,35 +281,41 @@ fun TrashManagementDialog(
                                         TextButton(
                                             onClick = { itemToDeletePermanently = item },
                                             contentPadding = spacing.compactButtonContentPadding,
-                                            modifier = Modifier.heightIn(min = 36.dp)
+                                            modifier = Modifier.heightIn(min = spacing.compactButtonHeight)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.DeleteForever,
                                                 contentDescription = null,
-                                                modifier = Modifier.size(16.dp),
+                                                modifier = Modifier.size(spacing.iconSm),
                                                 tint = MaterialTheme.colorScheme.error
                                             )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(
+                                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                            AutoFitSingleLineText(
                                                 text = stringResource(R.string.delete_permanently),
                                                 color = MaterialTheme.colorScheme.error,
-                                                fontSize = 12.sp
+                                                maxFontSize = 12.sp,
+                                                minFontSize = 9.sp
                                             )
                                         }
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                         Button(
                                             onClick = { onRestore(item) },
                                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                             contentPadding = spacing.compactButtonContentPadding,
-                                            modifier = Modifier.heightIn(min = 36.dp)
+                                            shape = RoundedCornerShape(spacing.subCardRadius),
+                                            modifier = Modifier.heightIn(min = spacing.compactButtonHeight)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Restore,
                                                 contentDescription = null,
-                                                modifier = Modifier.size(16.dp)
+                                                modifier = Modifier.size(spacing.iconSm)
                                             )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(stringResource(R.string.restore), fontSize = 12.sp)
+                                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                            AutoFitSingleLineText(
+                                                text = stringResource(R.string.restore),
+                                                maxFontSize = 12.sp,
+                                                minFontSize = 9.sp
+                                            )
                                         }
                                     }
                                 }
@@ -315,11 +334,16 @@ fun TrashManagementDialog(
                 ) {
                     Button(
                         onClick = onDismiss,
+                        shape = RoundedCornerShape(spacing.cardRadius),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        Text(stringResource(R.string.close))
+                        AutoFitSingleLineText(
+                            text = stringResource(R.string.close),
+                            fontWeight = FontWeight.SemiBold,
+                            minFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -329,22 +353,41 @@ fun TrashManagementDialog(
     if (itemToDeletePermanently != null) {
         AlertDialog(
             onDismissRequest = { itemToDeletePermanently = null },
-            title = { Text(stringResource(R.string.trash_delete_perm_title)) },
-            text = { Text(stringResource(R.string.trash_delete_perm_msg)) },
+            shape = RoundedCornerShape(spacing.heroRadius),
+            title = {
+                AutoFitSingleLineText(
+                    text = stringResource(R.string.trash_delete_perm_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    minFontSize = 11.sp
+                )
+            },
+            text = { Text(stringResource(R.string.trash_delete_perm_msg), style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
                 Button(
                     onClick = {
                         itemToDeletePermanently?.let { onDeletePermanently(it) }
                         itemToDeletePermanently = null
                     },
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(stringResource(R.string.delete_permanently))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.delete_permanently),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { itemToDeletePermanently = null }) {
-                    Text(stringResource(R.string.cancel))
+                TextButton(
+                    onClick = { itemToDeletePermanently = null },
+                    contentPadding = spacing.compactButtonContentPadding
+                ) {
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.cancel),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )
@@ -353,22 +396,41 @@ fun TrashManagementDialog(
     if (showClearAllConfirm) {
         AlertDialog(
             onDismissRequest = { showClearAllConfirm = false },
-            title = { Text(stringResource(R.string.trash_empty_confirm_title)) },
-            text = { Text(stringResource(R.string.trash_empty_confirm_msg)) },
+            shape = RoundedCornerShape(spacing.heroRadius),
+            title = {
+                AutoFitSingleLineText(
+                    text = stringResource(R.string.trash_empty_confirm_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    minFontSize = 11.sp
+                )
+            },
+            text = { Text(stringResource(R.string.trash_empty_confirm_msg), style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
                 Button(
                     onClick = {
                         onClearAll()
                         showClearAllConfirm = false
                     },
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(stringResource(R.string.empty_all))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.empty_all),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearAllConfirm = false }) {
-                    Text(stringResource(R.string.cancel))
+                TextButton(
+                    onClick = { showClearAllConfirm = false },
+                    contentPadding = spacing.compactButtonContentPadding
+                ) {
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.cancel),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )
@@ -394,20 +456,22 @@ fun ProfileConfirmationDialogs(
     if (showDeleteAllConfirmDialog) {
         AlertDialog(
             onDismissRequest = onDismissDeleteAll,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(spacing.heroRadius),
             icon = {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(spacing.avatarSize)
                 )
             },
             title = {
-                Text(
+                AutoFitSingleLineText(
                     text = stringResource(R.string.delete_all_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.error
+                    color = MaterialTheme.colorScheme.error,
+                    minFontSize = 11.sp
                 )
             },
             text = {
@@ -418,28 +482,36 @@ fun ProfileConfirmationDialogs(
                         stringResource(R.string.delete_all_dialog_msg_local)
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    lineHeight = 20.sp
+                    lineHeight = 18.sp
                 )
             },
             confirmButton = {
                 Button(
                     onClick = onConfirmDeleteAll,
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.testTag("confirm_delete_all_button")
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.delete_all_confirm_btn),
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onError
+                        color = MaterialTheme.colorScheme.onError,
+                        minFontSize = 9.5.sp
                     )
                 }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = onDismissDeleteAll,
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier.testTag("cancel_delete_all_button")
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.cancel),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )
@@ -448,29 +520,41 @@ fun ProfileConfirmationDialogs(
     if (showOfflineSignOutAlert) {
         AlertDialog(
             onDismissRequest = onDismissOfflineSignOut,
+            shape = RoundedCornerShape(spacing.heroRadius),
             icon = {
                 Icon(
                     imageVector = Icons.Default.WifiOff,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(spacing.avatarSize)
                 )
             },
             title = {
-                Text(
+                AutoFitSingleLineText(
                     text = stringResource(R.string.offline_signout_title),
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    minFontSize = 11.sp
                 )
             },
             text = {
-                Text(text = stringResource(R.string.offline_signout_msg))
+                Text(
+                    text = stringResource(R.string.offline_signout_msg),
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = 18.sp
+                )
             },
             confirmButton = {
                 Button(
                     onClick = onDismissOfflineSignOut,
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier.testTag("offline_signout_ok_button")
                 ) {
-                    Text(stringResource(R.string.ok))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.ok),
+                        minFontSize = 10.sp
+                    )
                 }
             }
         )
@@ -479,22 +563,29 @@ fun ProfileConfirmationDialogs(
     if (showSignOutConfirmDialog) {
         AlertDialog(
             onDismissRequest = { if (!isSigningOut) onDismissSignOutConfirm() },
+            shape = RoundedCornerShape(spacing.heroRadius),
             properties = DialogProperties(
                 dismissOnBackPress = !isSigningOut,
                 dismissOnClickOutside = !isSigningOut
             ),
             title = {
-                Text(
+                AutoFitSingleLineText(
                     text = stringResource(R.string.confirm_signout_title),
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    minFontSize = 11.sp
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(text = stringResource(R.string.confirm_signout_msg))
+                Column(verticalArrangement = Arrangement.spacedBy(spacing.dialogInnerGap)) {
+                    Text(
+                        text = stringResource(R.string.confirm_signout_msg),
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 18.sp
+                    )
                     if (!isOnline && !isSigningOut) {
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(spacing.subCardRadius),
                             color = MaterialTheme.colorScheme.errorContainer
                         ) {
                             Row(
@@ -505,13 +596,14 @@ fun ProfileConfirmationDialogs(
                                     imageVector = Icons.Default.WifiOff,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(spacing.iconMd)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                 Text(
                                     text = stringResource(R.string.no_internet_signout_warning),
                                     color = MaterialTheme.colorScheme.onErrorContainer,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 15.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -520,16 +612,17 @@ fun ProfileConfirmationDialogs(
                     if (isSigningOut) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 4.dp)
+                            modifier = Modifier.padding(top = spacing.badgeV)
                         ) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(spacing.iconMd),
                                 strokeWidth = 2.dp
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
+                            Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.syncing_verifying_cloud),
-                                fontSize = 13.sp,
+                                maxFontSize = 12.5.sp,
+                                minFontSize = 9.5.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -541,18 +634,27 @@ fun ProfileConfirmationDialogs(
                 Button(
                     onClick = onConfirmSignOut,
                     enabled = isOnline && !isSigningOut,
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.testTag("confirm_sign_out_button")
                 ) {
-                    Text(stringResource(R.string.signout_action_btn))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.signout_action_btn),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = onDismissSignOutConfirm,
-                    enabled = !isSigningOut
+                    enabled = !isSigningOut,
+                    contentPadding = spacing.compactButtonContentPadding
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.cancel),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )

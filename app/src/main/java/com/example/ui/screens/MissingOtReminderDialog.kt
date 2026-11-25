@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.OvertimeRecord
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.ResponsiveUtils
@@ -198,14 +199,14 @@ fun MissingOtReminderDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 520.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(spacing.heroRadius))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {}
                 )
                 .testTag("missing_ot_reminder_dialog"),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(spacing.heroRadius),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
@@ -223,7 +224,7 @@ fun MissingOtReminderDialog(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(spacing.avatarSize)
                             .background(
                                 color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
                                 shape = CircleShape
@@ -234,7 +235,7 @@ fun MissingOtReminderDialog(
                             imageVector = Icons.Default.EventBusy,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
 
@@ -250,15 +251,16 @@ fun MissingOtReminderDialog(
                 Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
 
                 // Title
-                Text(
+                AutoFitSingleLineText(
                     text = stringResource(R.string.missing_ot_dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    minFontSize = 11.sp
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(spacing.rowGapSm))
 
                 // Descriptive Sub-text
                 val subText = if (isSingleDate) {
@@ -275,7 +277,7 @@ fun MissingOtReminderDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
+                    lineHeight = 18.sp
                 )
 
                 Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
@@ -287,7 +289,7 @@ fun MissingOtReminderDialog(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
                         ),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
                         Column(
                             modifier = Modifier
@@ -303,26 +305,28 @@ fun MissingOtReminderDialog(
                                     imageVector = Icons.Default.CalendarMonth,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(spacing.iconMd)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                AutoFitSingleLineText(
                                     text = MissingOtDetector.formatDisplayDate(context, primaryMissingDate, lang),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    minFontSize = 10.sp
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(spacing.rowGapMd))
 
                             Button(
                                 onClick = { onAddOtForDate(primaryMissingDate) },
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(min = spacing.minTouchTarget)
                                     .testTag("add_missing_ot_btn"),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(spacing.cardRadius),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary
                                 )
@@ -330,13 +334,14 @@ fun MissingOtReminderDialog(
                                 Icon(
                                     imageVector = Icons.Default.Add,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(spacing.iconMd)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.add_overtime_btn),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
+                                    maxFontSize = 14.sp,
+                                    minFontSize = 10.sp
                                 )
                             }
                         }
@@ -347,8 +352,8 @@ fun MissingOtReminderDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f, fill = false)
-                            .heightIn(max = 260.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                            .heightIn(max = if (spacing.isShortScreen) 180.dp else 240.dp),
+                        verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                     ) {
                         items(missingDates, key = { it }) { dateStr ->
                             Card(
@@ -356,55 +361,55 @@ fun MissingOtReminderDialog(
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 ),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(spacing.cardRadius)
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .heightIn(min = spacing.minTouchTarget)
-                                        .padding(horizontal = spacing.listItemPadding, vertical = 7.dp),
+                                        .padding(horizontal = spacing.listItemPadding, vertical = spacing.rowGapMd),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = spacing.rowGapSm)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.CalendarMonth,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(18.dp)
+                                            modifier = Modifier.size(spacing.iconMd)
                                         )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
+                                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                        AutoFitSingleLineText(
                                             text = MissingOtDetector.formatDisplayDate(context, dateStr, lang),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            minFontSize = 9.5.sp
                                         )
                                     }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
 
                                     Button(
                                         onClick = { onAddOtForDate(dateStr) },
                                         contentPadding = spacing.compactButtonContentPadding,
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = RoundedCornerShape(spacing.subCardRadius),
                                         modifier = Modifier
-                                            .heightIn(min = 36.dp)
+                                            .heightIn(min = spacing.compactButtonHeight)
                                             .testTag("add_missing_date_${dateStr}")
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
                                             contentDescription = null,
-                                            modifier = Modifier.size(14.dp)
+                                            modifier = Modifier.size(spacing.iconSm)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
+                                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.add),
-                                            fontSize = 13.sp,
+                                            maxFontSize = 13.sp,
+                                            minFontSize = 9.5.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
@@ -419,16 +424,18 @@ fun MissingOtReminderDialog(
                 // Bottom dismiss button
                 OutlinedButton(
                     onClick = onDismiss,
+                    contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = spacing.minTouchTarget)
                         .testTag("dismiss_missing_ot_btn"),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(spacing.cardRadius)
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.later_dismiss_btn),
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        minFontSize = 9.5.sp
                     )
                 }
             }

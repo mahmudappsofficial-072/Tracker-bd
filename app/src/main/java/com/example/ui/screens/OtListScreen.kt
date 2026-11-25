@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.OvertimeRecord
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.ui.theme.NightBlue
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningOrange
@@ -89,7 +90,7 @@ fun OtListScreen(
             // Month Switcher Header
             item {
                 Card(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
@@ -99,29 +100,43 @@ fun OtListScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconButton(onClick = onPreviousMonth) {
+                            IconButton(
+                                onClick = onPreviousMonth,
+                                modifier = Modifier.size(spacing.compactButtonHeight)
+                            ) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                    contentDescription = stringResource(R.string.cd_previous_month)
+                                    contentDescription = stringResource(R.string.cd_previous_month),
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
                             }
                             val formattedMonth = LanguageManager.formatYearMonth(selectedMonth, lang)
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.ot_records_header_fmt, formattedMonth),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                maxFontSize = 15.sp,
+                                minFontSize = 11.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = spacing.rowGapSm)
                             )
-                            IconButton(onClick = onNextMonth) {
+                            IconButton(
+                                onClick = onNextMonth,
+                                modifier = Modifier.size(spacing.compactButtonHeight)
+                            ) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = stringResource(R.string.cd_next_month)
+                                    contentDescription = stringResource(R.string.cd_next_month),
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
                             }
                         }
 
                         if (!isRunningMonth) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
                             PastMonthLockBanner(
                                 selectedMonth = selectedMonth,
                                 isLocked = isLocked,
@@ -130,35 +145,31 @@ fun OtListScreen(
                             )
                         }
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = spacing.rowGapSm))
 
                         val daysUnit = stringResource(R.string.days_unit)
                         val hoursUnit = stringResource(R.string.hours_unit)
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                         ) {
                             Column(
                                 modifier = Modifier.weight(1f),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.total_days_label),
-                                    fontSize = 10.sp,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = 10.sp,
+                                    minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Text(
+                                AutoFitSingleLineText(
                                     text = "${LaborLawCalculator.formatNumber(records.size.toDouble(), isBnDigits, 0)} $daysUnit",
-                                    fontSize = 12.sp,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -166,22 +177,18 @@ fun OtListScreen(
                                 modifier = Modifier.weight(1f),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.total_ot_hours),
-                                    fontSize = 10.sp,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = 10.sp,
+                                    minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Text(
+                                AutoFitSingleLineText(
                                     text = "${LaborLawCalculator.formatNumber(totalHours, isBnDigits)} $hoursUnit",
-                                    fontSize = 12.sp,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -190,22 +197,18 @@ fun OtListScreen(
                                 modifier = Modifier.weight(1f),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.ot_amount_label),
-                                    fontSize = 10.sp,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = 10.sp,
+                                    minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Text(
+                                AutoFitSingleLineText(
                                     text = LaborLawCalculator.formatCurrency(totalAmount, isBnDigits),
-                                    fontSize = 12.sp,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -214,28 +217,24 @@ fun OtListScreen(
                                 modifier = Modifier.weight(1f),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.attendance_bonus),
-                                    fontSize = 10.sp,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = 10.sp,
+                                    minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 val isBonusEarned = attendanceBonus > 0
                                 val isBonusLost = isBonusCancelled
-                                Text(
+                                AutoFitSingleLineText(
                                     text = when {
                                         isBonusEarned -> stringResource(R.string.bonus_earned_check)
                                         isBonusLost -> stringResource(R.string.bonus_deducted_cross)
                                         else -> "0"
                                     },
-                                    fontSize = 12.sp,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
                                     textAlign = TextAlign.Center,
                                     color = if (isBonusEarned) SuccessGreen else if (isBonusLost) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -257,19 +256,22 @@ fun OtListScreen(
                             Icon(
                                 Icons.Default.DateRange,
                                 contentDescription = null,
-                                modifier = Modifier.size(48.dp),
+                                modifier = Modifier.size(spacing.avatarSize),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.no_ot_records_title),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleSmall,
+                                maxFontSize = 14.sp,
+                                minFontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
                             Text(
                                 text = stringResource(R.string.no_ot_records_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
+                                fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )
                         }
@@ -278,7 +280,7 @@ fun OtListScreen(
             } else {
                 items(records, key = { it.id }) { record ->
                     Card(
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(spacing.subCardRadius),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier
@@ -297,7 +299,12 @@ fun OtListScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = spacing.rowGapSm)
+                                ) {
                                     val isAbsent = record.shiftType == "ABSENT"
                                     val isLeave = record.shiftType == "LEAVE"
                                     val isWeeklyOff = record.shiftType == "WEEKLY_OFF"
@@ -323,30 +330,36 @@ fun OtListScreen(
                                     }
 
                                     Surface(
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = RoundedCornerShape(spacing.badgeRadius),
                                         color = badgeBg,
-                                        modifier = Modifier.padding(end = 8.dp)
+                                        modifier = Modifier.padding(end = spacing.rowGapMd)
                                     ) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = badgeText,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = if (isAbsent || isLeave || isWeeklyOff) 12.sp else 14.sp,
+                                            maxFontSize = if (isAbsent || isLeave || isWeeklyOff) 11.sp else 12.5.sp,
+                                            minFontSize = 8.5.sp,
                                             color = badgeTextColor,
-                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = 4.dp)
+                                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                         )
                                     }
 
-                                    Column {
-                                        Text(
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        AutoFitSingleLineText(
                                             text = record.date,
                                             fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.bodyLarge
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            maxFontSize = 13.5.sp,
+                                            minFontSize = 10.sp
                                         )
                                         if (record.note.isNotBlank()) {
                                             Text(
                                                 text = if (record.shiftType == "LEAVE") stringResource(R.string.leave_reason_fmt, record.note) else record.note,
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                fontSize = 10.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
@@ -358,47 +371,50 @@ fun OtListScreen(
                                     } else {
                                         stringResource(R.string.badge_salary_deduction)
                                     }
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = deductionText,
                                         fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        maxFontSize = 14.sp,
+                                        minFontSize = 10.sp,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 } else {
                                     val itemRate = if (isRunningMonth) hourlyRate else (if (record.hourlyRateSnapshot > 0.0) record.hourlyRateSnapshot else hourlyRate)
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = LaborLawCalculator.formatCurrency(record.otHours * itemRate, isBnDigits),
                                         fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        maxFontSize = 14.sp,
+                                        minFontSize = 10.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
+                                Box(modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)) {
                                     @OptIn(ExperimentalLayoutApi::class)
                                     FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm),
+                                        verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                     ) {
                                         val shiftType = ShiftType.fromCode(record.shiftType)
                                         Surface(
-                                            shape = RoundedCornerShape(4.dp),
+                                            shape = RoundedCornerShape(spacing.badgeRadius),
                                             color = shiftType.color.copy(alpha = 0.15f)
                                         ) {
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = shiftType.getLabel(),
-                                                fontSize = 11.sp,
+                                                maxFontSize = 10.sp,
+                                                minFontSize = 8.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                maxLines = 1,
-                                                softWrap = false,
                                                 color = shiftType.color,
                                                 modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                             )
@@ -406,15 +422,14 @@ fun OtListScreen(
 
                                         if (record.hasNightBill) {
                                             Surface(
-                                                shape = RoundedCornerShape(4.dp),
+                                                shape = RoundedCornerShape(spacing.badgeRadius),
                                                 color = NightBlue.copy(alpha = 0.15f)
                                             ) {
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = stringResource(R.string.badge_night_bill),
-                                                    fontSize = 11.sp,
+                                                    maxFontSize = 10.sp,
+                                                    minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
-                                                    maxLines = 1,
-                                                    softWrap = false,
                                                     color = NightBlue,
                                                     modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                 )
@@ -422,15 +437,14 @@ fun OtListScreen(
                                         }
                                         if (record.hasTiffinBill) {
                                             Surface(
-                                                shape = RoundedCornerShape(4.dp),
+                                                shape = RoundedCornerShape(spacing.badgeRadius),
                                                 color = WarningOrange.copy(alpha = 0.15f)
                                             ) {
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = stringResource(R.string.badge_tiffin_bill),
-                                                    fontSize = 11.sp,
+                                                    maxFontSize = 10.sp,
+                                                    minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
-                                                    maxLines = 1,
-                                                    softWrap = false,
                                                     color = WarningOrange,
                                                     modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                 )
@@ -438,15 +452,14 @@ fun OtListScreen(
                                         }
                                         if (record.isHoliday) {
                                             Surface(
-                                                shape = RoundedCornerShape(4.dp),
+                                                shape = RoundedCornerShape(spacing.badgeRadius),
                                                 color = MaterialTheme.colorScheme.tertiaryContainer
                                             ) {
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = stringResource(R.string.badge_holiday),
-                                                    fontSize = 11.sp,
+                                                    maxFontSize = 10.sp,
+                                                    minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
-                                                    maxLines = 1,
-                                                    softWrap = false,
                                                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                                                     modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                 )
@@ -458,29 +471,31 @@ fun OtListScreen(
                                 if (!isLocked) {
                                     Row {
                                         IconButton(
-                                            onClick = { onEditClick(record) }
+                                            onClick = { onEditClick(record) },
+                                            modifier = Modifier.size(spacing.compactButtonHeight)
                                         ) {
                                             Icon(
                                                 Icons.Default.Edit,
                                                 contentDescription = stringResource(R.string.cd_edit),
                                                 tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(18.dp)
+                                                modifier = Modifier.size(spacing.iconMd)
                                             )
                                         }
                                         IconButton(
-                                            onClick = { recordToDelete = record.id }
+                                            onClick = { recordToDelete = record.id },
+                                            modifier = Modifier.size(spacing.compactButtonHeight)
                                         ) {
                                             Icon(
                                                 Icons.Default.Delete,
                                                 contentDescription = stringResource(R.string.cd_delete),
                                                 tint = MaterialTheme.colorScheme.error,
-                                                modifier = Modifier.size(18.dp)
+                                                modifier = Modifier.size(spacing.iconMd)
                                             )
                                         }
                                     }
                                 } else {
                                     Surface(
-                                        shape = RoundedCornerShape(6.dp),
+                                        shape = RoundedCornerShape(spacing.badgeRadius),
                                         color = MaterialTheme.colorScheme.surfaceVariant,
                                         modifier = Modifier.clickable { showLockedInfoDialog = true }
                                     ) {
@@ -492,12 +507,13 @@ fun OtListScreen(
                                                 Icons.Default.Lock,
                                                 contentDescription = null,
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(12.dp)
+                                                modifier = Modifier.size(spacing.iconSm)
                                             )
-                                            Spacer(modifier = Modifier.width(3.dp))
-                                            Text(
+                                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                            AutoFitSingleLineText(
                                                 text = stringResource(R.string.locked),
-                                                fontSize = 11.sp,
+                                                maxFontSize = 10.sp,
+                                                minFontSize = 8.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontWeight = FontWeight.Medium
                                             )

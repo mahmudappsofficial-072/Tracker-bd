@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.util.ResponsiveUtils
 
 @Composable
@@ -75,14 +76,14 @@ fun SalaryModeGuideDialog(
             modifier = cardModifier
                 .fillMaxWidth()
                 .widthIn(max = 500.dp)
-                .clip(RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(spacing.heroRadius))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {}
                 )
                 .testTag("salary_mode_guide_dialog"),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(spacing.heroRadius),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
             shadowElevation = 8.dp
@@ -91,17 +92,17 @@ fun SalaryModeGuideDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(spacing.dialogCardPadding),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(spacing.dialogInnerGap)
             ) {
                 // Header Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(spacing.avatarSize)
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
@@ -117,29 +118,30 @@ fun SalaryModeGuideDialog(
                             imageVector = Icons.Default.Balance,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.salary_mode_guide_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            minFontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = stringResource(R.string.salary_mode_guide_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 16.sp
+                            lineHeight = 15.sp
                         )
                     }
 
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(spacing.minTouchTarget)
                             .testTag("salary_mode_guide_close_btn")
                     ) {
                         Icon(
@@ -156,7 +158,7 @@ fun SalaryModeGuideDialog(
                         .fillMaxWidth()
                         .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                 ) {
                     ModeSelectionOptionCard(
                         title = stringResource(R.string.mode_auto_tab),
@@ -214,12 +216,13 @@ private fun ModeSelectionOptionCard(
     testTag: String,
     onClick: () -> Unit
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .testTag(testTag),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(spacing.cardRadius),
         color = containerColor,
         border = BorderStroke(
             width = if (isSelected) 1.5.dp else 1.dp,
@@ -229,46 +232,48 @@ private fun ModeSelectionOptionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(spacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = accentColor.copy(alpha = 0.14f),
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(spacing.avatarSize)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
                             tint = accentColor,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(spacing.iconMd)
                         )
                     }
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(spacing.badgeRadius),
                         color = accentColor.copy(alpha = 0.16f)
                     ) {
-                        Text(
+                        AutoFitSingleLineText(
                             text = badgeText,
-                            fontSize = 10.sp,
+                            maxFontSize = 10.sp,
+                            minFontSize = 7.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = onAccentContentColor,
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                         )
                     }
-                    Text(
+                    AutoFitSingleLineText(
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
+                        minFontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -278,22 +283,22 @@ private fun ModeSelectionOptionCard(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
                         tint = accentColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(spacing.iconLg)
                     )
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)) {
                 Text(
                     text = "$forLabel $forDescription",
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
+                    fontSize = 11.5.sp,
+                    lineHeight = 15.5.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "$howLabel $howDescription",
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
+                    fontSize = 11.5.sp,
+                    lineHeight = 15.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -303,21 +308,25 @@ private fun ModeSelectionOptionCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 32.dp),
+                    .heightIn(min = spacing.compactButtonHeight),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
+                AutoFitSingleLineText(
                     text = ctaText,
-                    fontSize = 13.sp,
+                    maxFontSize = 13.sp,
+                    minFontSize = 9.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = accentColor
+                    color = accentColor,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = spacing.rowGapSm)
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = accentColor,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(spacing.iconMd)
                 )
             }
         }

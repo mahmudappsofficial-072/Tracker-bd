@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,6 +42,7 @@ import com.example.R
 import com.example.data.model.DeductionRecord
 import com.example.data.model.OvertimeRecord
 import com.example.data.model.UserProfile
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.ui.theme.NightBlue
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningOrange
@@ -99,7 +101,7 @@ fun HomeScreen(
     val isCompactScreen = spacing.isCompact
     val pillCardPadding = spacing.pillCardPadding
     val pillTitleSize = if (isCompactScreen) 10.sp else 11.sp
-    val pillValueSize = if (isCompactScreen) 13.sp else 14.sp
+    val pillValueSize = if (isCompactScreen) 12.5.sp else 13.5.sp
 
     val chipLabel = if (selectedSettingTag == LanguageManager.SYSTEM_TAG) {
         "${stringResource(R.string.lang_chip_system_short)} (${effectiveLang.uppercase(Locale.US)})"
@@ -119,13 +121,13 @@ fun HomeScreen(
             item {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = spacing.cardPadding, vertical = 9.dp),
+                            .padding(horizontal = spacing.cardPadding, vertical = spacing.rowGapMd),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -133,56 +135,52 @@ fun HomeScreen(
                             painter = painterResource(id = R.drawable.ic_app_logo),
                             contentDescription = stringResource(R.string.cd_app_logo),
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(spacing.headerLogoSize)
                                 .clip(CircleShape)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = spacing.rowGapSm)
+                        ) {
+                            AutoFitSingleLineText(
                                 text = summary.userName.ifBlank { stringResource(R.string.app_display_name) },
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                maxFontSize = if (isCompactScreen) 14.sp else 15.sp,
+                                minFontSize = 10.sp
                             )
                             val subInfo = listOfNotNull(
                                 summary.companyName.takeIf { it.isNotBlank() },
                                 summary.designation.takeIf { it.isNotBlank() }
                             ).joinToString(" • ")
-                            if (subInfo.isNotBlank()) {
-                                Text(
-                                    text = subInfo,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            } else {
-                                Text(
-                                    text = stringResource(R.string.set_info_from_profile),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                            AutoFitSingleLineText(
+                                text = subInfo.ifBlank { stringResource(R.string.set_info_from_profile) },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxFontSize = 11.sp,
+                                minFontSize = 8.sp
+                            )
                         }
 
                         // Language Picker Chip
                         AssistChip(
                             onClick = onOpenLanguagePicker,
                             label = {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = chipLabel,
                                     fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    softWrap = false
+                                    maxFontSize = 11.sp,
+                                    minFontSize = 8.5.sp
                                 )
                             },
                             leadingIcon = {
-                                Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(spacing.iconSm))
                             },
-                            modifier = Modifier.testTag("language_toggle_chip")
+                            modifier = Modifier
+                                .heightIn(min = spacing.compactButtonHeight)
+                                .testTag("language_toggle_chip")
                         )
                     }
                 }
@@ -193,21 +191,27 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 2.dp),
+                        .padding(horizontal = spacing.rowGapSm),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
                         onClick = onPreviousMonth,
-                        modifier = Modifier.testTag("prev_month_button")
+                        modifier = Modifier
+                            .size(spacing.compactButtonHeight)
+                            .testTag("prev_month_button")
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = stringResource(R.string.cd_previous_month)
+                            contentDescription = stringResource(R.string.cd_previous_month),
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
 
                     Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = spacing.rowGapSm),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
@@ -215,24 +219,29 @@ fun HomeScreen(
                             Icons.Default.CalendarMonth,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(spacing.iconMd)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                        AutoFitSingleLineText(
                             text = LanguageManager.formatYearMonth(selectedMonth, effectiveLang),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
+                            maxFontSize = if (isCompactScreen) 14.sp else 15.sp,
+                            minFontSize = 11.sp
                         )
                     }
 
                     IconButton(
                         onClick = onNextMonth,
-                        modifier = Modifier.testTag("next_month_button")
+                        modifier = Modifier
+                            .size(spacing.compactButtonHeight)
+                            .testTag("next_month_button")
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = stringResource(R.string.cd_next_month)
+                            contentDescription = stringResource(R.string.cd_next_month),
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
                 }
@@ -255,9 +264,9 @@ fun HomeScreen(
             // Hero Card: Total Income & Overtime Highlights
             item {
                 Card(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(spacing.heroRadius),
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -278,23 +287,29 @@ fun HomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.estimated_income),
                                     style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 9.sp,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = spacing.rowGapSm)
                                 )
                                 Surface(
-                                    shape = RoundedCornerShape(20.dp),
+                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = if (summary.isCustomSalary) {
                                             stringResource(R.string.rule_custom)
                                         } else {
                                             stringResource(R.string.rule_labor_law_2006)
                                         },
                                         color = MaterialTheme.colorScheme.onPrimary,
-                                        fontSize = 11.sp,
+                                        maxFontSize = 10.sp,
+                                        minFontSize = 7.5.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                     )
@@ -302,11 +317,14 @@ fun HomeScreen(
                             }
 
                             // Big Total Salary
-                            Text(
+                            AutoFitSingleLineText(
                                 text = LaborLawCalculator.formatCurrency(summary.totalEstimatedEarnings, isBnDigits),
-                                style = MaterialTheme.typography.headlineLarge,
+                                style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxFontSize = if (isCompactScreen) 23.sp else 26.sp,
+                                minFontSize = 16.sp,
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f))
@@ -314,73 +332,61 @@ fun HomeScreen(
                             // 3 Key Stats
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                             ) {
                                 // OT Hours
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.total_ot_hours),
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontSize = if (isCompactScreen) 10.sp else 12.sp,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
+                                        maxFontSize = if (isCompactScreen) 10.sp else 11.sp,
+                                        minFontSize = 7.5.sp,
                                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                     )
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = "${LaborLawCalculator.formatNumber(summary.totalOtHours, isBnDigits)} ${stringResource(R.string.hours_unit)}",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontSize = if (isCompactScreen) 13.sp else 16.sp,
+                                        maxFontSize = if (isCompactScreen) 13.sp else 15.sp,
+                                        minFontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
                                         color = MaterialTheme.colorScheme.onPrimary
                                     )
                                 }
 
                                 // OT Amount
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.total_ot_amount),
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontSize = if (isCompactScreen) 10.sp else 12.sp,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
+                                        maxFontSize = if (isCompactScreen) 10.sp else 11.sp,
+                                        minFontSize = 7.5.sp,
                                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                     )
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = LaborLawCalculator.formatCurrency(summary.totalOtAmount, isBnDigits),
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontSize = if (isCompactScreen) 13.sp else 16.sp,
+                                        maxFontSize = if (isCompactScreen) 13.sp else 15.sp,
+                                        minFontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
                                         color = MaterialTheme.colorScheme.onPrimary
                                     )
                                 }
 
                                 // Hourly Rate
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.hourly_rate),
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontSize = if (isCompactScreen) 10.sp else 12.sp,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
+                                        maxFontSize = if (isCompactScreen) 10.sp else 11.sp,
+                                        minFontSize = 7.5.sp,
                                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                     )
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = LaborLawCalculator.formatCurrency(summary.hourlyOtRate, isBnDigits),
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontSize = if (isCompactScreen) 13.sp else 16.sp,
+                                        maxFontSize = if (isCompactScreen) 13.sp else 15.sp,
+                                        minFontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
                                         color = MaterialTheme.colorScheme.onPrimary
                                     )
                                 }
@@ -394,7 +400,7 @@ fun HomeScreen(
             item {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -410,18 +416,25 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = spacing.rowGapSm)
+                            ) {
                                 Icon(
                                     Icons.Default.Flag,
                                     contentDescription = null,
                                     tint = WarningOrange,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(spacing.iconMd)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.ot_target),
                                     style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxFontSize = 13.5.sp,
+                                    minFontSize = 10.sp
                                 )
                             }
 
@@ -430,14 +443,18 @@ fun HomeScreen(
                                     onClick = onEditTargetClick,
                                     contentPadding = spacing.compactButtonContentPadding,
                                     modifier = Modifier
-                                        .heightIn(min = 36.dp)
+                                        .heightIn(min = spacing.compactButtonHeight)
                                         .testTag("edit_target_button")
                                 ) {
-                                    Text(stringResource(R.string.change_target), fontSize = 12.sp)
+                                    AutoFitSingleLineText(
+                                        text = stringResource(R.string.change_target),
+                                        maxFontSize = 11.5.sp,
+                                        minFontSize = 9.sp
+                                    )
                                 }
                             } else {
                                 Surface(
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                     color = MaterialTheme.colorScheme.surfaceVariant
                                 ) {
                                     Row(
@@ -448,12 +465,13 @@ fun HomeScreen(
                                             Icons.Default.Lock,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(12.dp)
+                                            modifier = Modifier.size(spacing.iconSm)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
+                                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.locked),
-                                            fontSize = 11.sp,
+                                            maxFontSize = 10.sp,
+                                            minFontSize = 8.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -465,24 +483,26 @@ fun HomeScreen(
                         if (summary.targetHours <= 0) {
                             // Empty State when no target is set
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(spacing.subCardRadius),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
                                     modifier = Modifier.padding(spacing.subCardPadding),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                                 ) {
                                     Icon(
                                         Icons.Default.Info,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(spacing.iconMd)
                                     )
                                     Text(
                                         text = stringResource(R.string.no_target_hint),
                                         style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 11.sp,
+                                        lineHeight = 15.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -499,13 +519,19 @@ fun HomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
-                                    Text(
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = spacing.rowGapSm)
+                                ) {
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.target_ot_earnings),
                                         style = MaterialTheme.typography.labelSmall,
+                                        maxFontSize = 10.5.sp,
+                                        minFontSize = 8.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = if (summary.hourlyOtRate > 0) {
                                             LaborLawCalculator.formatCurrency(targetOtEarnings, isBnDigits)
                                         } else {
@@ -514,33 +540,37 @@ fun HomeScreen(
                                                 LaborLawCalculator.formatNumber(summary.targetHours, isBnDigits, 0)
                                             )
                                         },
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
+                                        maxFontSize = 18.sp,
+                                        minFontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 Surface(
-                                    shape = RoundedCornerShape(20.dp),
+                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                     ) {
                                         Icon(
                                             Icons.Default.Timeline,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(14.dp)
+                                            modifier = Modifier.size(spacing.iconSm)
                                         )
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(
                                                 R.string.target_hours_chip_fmt,
                                                 LaborLawCalculator.formatNumber(summary.targetHours, isBnDigits, 0)
                                             ),
                                             style = MaterialTheme.typography.labelMedium,
+                                            maxFontSize = 11.sp,
+                                            minFontSize = 8.5.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
@@ -549,13 +579,13 @@ fun HomeScreen(
                             }
 
                             // Progress Bar & Percentage/Rate Indicators
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)) {
                                 LinearProgressIndicator(
                                     progress = { summary.targetProgress.coerceIn(0f, 1f) },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(10.dp)
-                                        .clip(RoundedCornerShape(5.dp)),
+                                        .height(spacing.progressHeight)
+                                        .clip(RoundedCornerShape(spacing.progressHeight / 2)),
                                     color = if (isTargetCompleted) SuccessGreen else MaterialTheme.colorScheme.primary,
                                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                                 )
@@ -565,22 +595,26 @@ fun HomeScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(
                                             R.string.progress_percent_fmt,
                                             (summary.targetProgress * 100).toInt()
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
+                                        maxFontSize = 10.5.sp,
+                                        minFontSize = 8.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isTargetCompleted) SuccessGreen else MaterialTheme.colorScheme.primary
                                     )
                                     if (summary.hourlyOtRate > 0) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(
                                                 R.string.rate_per_hour_fmt,
                                                 LaborLawCalculator.formatCurrency(summary.hourlyOtRate, isBnDigits)
                                             ),
                                             style = MaterialTheme.typography.labelSmall,
+                                            maxFontSize = 10.5.sp,
+                                            minFontSize = 8.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
@@ -600,75 +634,71 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(spacing.subCardRadius),
                                         color = SuccessGreen.copy(alpha = 0.10f),
                                         border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.35f))
                                     ) {
                                         Column(
                                             modifier = Modifier.padding(spacing.subCardPadding),
-                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                         ) {
                                             Surface(
-                                                shape = RoundedCornerShape(8.dp),
+                                                shape = RoundedCornerShape(spacing.badgeRadius),
                                                 color = SuccessGreen.copy(alpha = 0.16f),
                                                 modifier = Modifier.testTag("target_met_badge")
                                             ) {
                                                 Row(
                                                     modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
                                                     verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                                 ) {
                                                     Icon(
                                                         Icons.Default.CheckCircle,
                                                         contentDescription = null,
                                                         tint = SuccessGreen,
-                                                        modifier = Modifier.size(12.dp)
+                                                        modifier = Modifier.size(spacing.iconSm)
                                                     )
-                                                    Text(
+                                                    AutoFitSingleLineText(
                                                         text = stringResource(R.string.target_met),
-                                                        fontSize = if (isCompactScreen) 10.sp else 11.sp,
+                                                        maxFontSize = if (isCompactScreen) 9.5.sp else 10.5.sp,
+                                                        minFontSize = 7.5.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = SuccessGreen,
-                                                        maxLines = 1,
-                                                        softWrap = false,
-                                                        overflow = TextOverflow.Ellipsis
+                                                        color = SuccessGreen
                                                     )
                                                 }
                                             }
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = stringResource(R.string.target_ot_label),
                                                 style = MaterialTheme.typography.labelSmall,
+                                                maxFontSize = 10.sp,
+                                                minFontSize = 7.5.sp,
                                                 fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = if (summary.hourlyOtRate > 0) {
                                                     LaborLawCalculator.formatCurrency(summary.targetAchievedAmount, isBnDigits)
                                                 } else {
                                                     "${LaborLawCalculator.formatNumber(summary.targetAchievedHours, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                 },
                                                 style = MaterialTheme.typography.titleMedium,
-                                                fontSize = if (isCompactScreen) 15.sp else 17.sp,
+                                                maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                minFontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = SuccessGreen,
-                                                maxLines = 1,
-                                                softWrap = false,
-                                                overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.testTag("target_achieved_capped_value")
                                             )
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = stringResource(
                                                     R.string.target_hrs_met_fmt,
                                                     LaborLawCalculator.formatNumber(summary.targetAchievedHours, isBnDigits, 2),
                                                     LaborLawCalculator.formatNumber(summary.targetHours, isBnDigits, 0)
                                                 ),
                                                 style = MaterialTheme.typography.labelSmall,
+                                                maxFontSize = 10.sp,
+                                                minFontSize = 7.5.sp,
                                                 color = SuccessGreen,
-                                                fontWeight = FontWeight.Medium,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
+                                                fontWeight = FontWeight.Medium
                                             )
                                         }
                                     }
@@ -677,55 +707,53 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(spacing.subCardRadius),
                                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     ) {
                                         Column(
                                             modifier = Modifier.padding(spacing.subCardPadding),
-                                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                                            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(7.dp)
+                                                        .size(6.dp)
                                                         .clip(CircleShape)
                                                         .background(MaterialTheme.colorScheme.primary)
                                                 )
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = stringResource(R.string.achieved_label),
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
+                                                    maxFontSize = 10.sp,
+                                                    minFontSize = 7.5.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = if (summary.hourlyOtRate > 0) {
                                                     LaborLawCalculator.formatCurrency(summary.totalOtAmount, isBnDigits)
                                                 } else {
                                                     "${LaborLawCalculator.formatNumber(summary.totalOtHours, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                 },
                                                 style = MaterialTheme.typography.titleMedium,
-                                                fontSize = if (isCompactScreen) 15.sp else 17.sp,
+                                                maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                minFontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                softWrap = false,
-                                                overflow = TextOverflow.Ellipsis
+                                                color = MaterialTheme.colorScheme.onSurface
                                             )
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = stringResource(
                                                     R.string.hrs_earned_fmt,
                                                     LaborLawCalculator.formatNumber(summary.totalOtHours, isBnDigits, 2)
                                                 ),
                                                 style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
+                                                maxFontSize = 10.sp,
+                                                minFontSize = 7.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -737,7 +765,7 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(spacing.subCardRadius),
                                         color = SuccessGreen.copy(alpha = 0.12f),
                                         border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.35f))
                                     ) {
@@ -750,27 +778,25 @@ fun HomeScreen(
                                             ) {
                                                 Column(
                                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                                                    verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm, Alignment.CenterVertically),
                                                     modifier = Modifier.testTag("target_congrats_badge")
                                                 ) {
                                                     Icon(
                                                         Icons.Default.EmojiEvents,
                                                         contentDescription = null,
                                                         tint = SuccessGreen,
-                                                        modifier = Modifier.size(22.dp)
+                                                        modifier = Modifier.size(spacing.iconLg)
                                                     )
                                                     Surface(
-                                                        shape = RoundedCornerShape(8.dp),
+                                                        shape = RoundedCornerShape(spacing.badgeRadius),
                                                         color = SuccessGreen.copy(alpha = 0.18f)
                                                     ) {
-                                                        Text(
+                                                        AutoFitSingleLineText(
                                                             text = stringResource(R.string.congrats),
-                                                            fontSize = if (isCompactScreen) 12.sp else 13.sp,
+                                                            maxFontSize = if (isCompactScreen) 11.sp else 12.sp,
+                                                            minFontSize = 8.5.sp,
                                                             fontWeight = FontWeight.Bold,
                                                             color = SuccessGreen,
-                                                            maxLines = 1,
-                                                            softWrap = false,
-                                                            overflow = TextOverflow.Ellipsis,
                                                             modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                         )
                                                     }
@@ -781,52 +807,50 @@ fun HomeScreen(
                                                 modifier = Modifier
                                                     .fillMaxSize()
                                                     .padding(spacing.subCardPadding),
-                                                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
+                                                verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm, Alignment.CenterVertically)
                                             ) {
                                                 Row(
                                                     verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                                 ) {
                                                     Box(
                                                         modifier = Modifier
-                                                            .size(7.dp)
+                                                            .size(6.dp)
                                                             .clip(CircleShape)
                                                             .background(SuccessGreen)
                                                     )
-                                                    Text(
+                                                    AutoFitSingleLineText(
                                                         text = stringResource(R.string.extra_ot),
                                                         style = MaterialTheme.typography.labelSmall,
+                                                        maxFontSize = 10.sp,
+                                                        minFontSize = 7.5.sp,
                                                         fontWeight = FontWeight.SemiBold,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                                     )
                                                 }
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = if (summary.hourlyOtRate > 0) {
                                                         "+${LaborLawCalculator.formatCurrency(summary.extraOtAmountBeyondTarget, isBnDigits)}"
                                                     } else {
                                                         "+${LaborLawCalculator.formatNumber(summary.extraOtHoursBeyondTarget, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                     },
                                                     style = MaterialTheme.typography.titleMedium,
-                                                    fontSize = if (isCompactScreen) 15.sp else 17.sp,
+                                                    maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                    minFontSize = 10.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = SuccessGreen,
-                                                    maxLines = 1,
-                                                    softWrap = false,
-                                                    overflow = TextOverflow.Ellipsis,
                                                     modifier = Modifier.testTag("extra_ot_amount_value")
                                                 )
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = stringResource(
                                                         R.string.hrs_extra_ot_fmt,
                                                         LaborLawCalculator.formatNumber(summary.extraOtHoursBeyondTarget, isBnDigits, 2)
                                                     ),
                                                     style = MaterialTheme.typography.labelSmall,
+                                                    maxFontSize = 10.sp,
+                                                    minFontSize = 7.5.sp,
                                                     color = SuccessGreen,
                                                     fontWeight = FontWeight.Medium,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
                                                     modifier = Modifier.testTag("extra_ot_hours_value")
                                                 )
                                             }
@@ -837,55 +861,53 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(spacing.subCardRadius),
                                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                     ) {
                                         Column(
                                             modifier = Modifier.padding(spacing.subCardPadding),
-                                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                                            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(7.dp)
+                                                        .size(6.dp)
                                                         .clip(CircleShape)
                                                         .background(WarningOrange)
                                                 )
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = stringResource(R.string.remaining_label),
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
+                                                    maxFontSize = 10.sp,
+                                                    minFontSize = 7.5.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = if (summary.hourlyOtRate > 0) {
                                                     LaborLawCalculator.formatCurrency(remainingOtEarnings, isBnDigits)
                                                 } else {
                                                     "${LaborLawCalculator.formatNumber(summary.remainingTargetHours, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                 },
                                                 style = MaterialTheme.typography.titleMedium,
-                                                fontSize = if (isCompactScreen) 15.sp else 17.sp,
+                                                maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                minFontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = WarningOrange,
-                                                maxLines = 1,
-                                                softWrap = false,
-                                                overflow = TextOverflow.Ellipsis
+                                                color = WarningOrange
                                             )
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = stringResource(
                                                     R.string.hrs_needed_fmt,
                                                     LaborLawCalculator.formatNumber(summary.remainingTargetHours, isBnDigits, 2)
                                                 ),
                                                 style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
+                                                maxFontSize = 10.sp,
+                                                minFontSize = 7.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -924,13 +946,13 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("projected_total_at_target_card"),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(spacing.subCardRadius),
                                 color = projectedBgColor,
                                 border = BorderStroke(1.dp, projectedBorderColor)
                             ) {
                                 Column(
                                     modifier = Modifier.padding(spacing.subCardPadding),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -941,36 +963,35 @@ fun HomeScreen(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
                                                 .weight(1f)
-                                                .padding(end = 8.dp)
+                                                .padding(end = spacing.rowGapSm)
                                         ) {
                                             Icon(
                                                 Icons.Default.AccountBalanceWallet,
                                                 contentDescription = null,
                                                 tint = projectedAccentColor,
-                                                modifier = Modifier.size(18.dp)
+                                                modifier = Modifier.size(spacing.iconMd)
                                             )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
+                                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                            AutoFitSingleLineText(
                                                 text = if (isPastMonthTarget) {
                                                     stringResource(R.string.target_based_total)
                                                 } else {
                                                     stringResource(R.string.est_total_pay_at_target)
                                                 },
                                                 style = MaterialTheme.typography.labelMedium,
+                                                maxFontSize = 11.5.sp,
+                                                minFontSize = 8.5.sp,
                                                 fontWeight = FontWeight.SemiBold,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
+                                                color = MaterialTheme.colorScheme.onSurface
                                             )
                                         }
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = formattedProjectedTotal,
                                             style = MaterialTheme.typography.titleMedium,
-                                            fontSize = if (isCompactScreen) 15.sp else 17.sp,
+                                            maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                            minFontSize = 10.sp,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = projectedAccentColor,
-                                            maxLines = 1,
-                                            softWrap = false,
                                             modifier = Modifier.testTag("projected_total_at_target_value")
                                         )
                                     }
@@ -983,6 +1004,8 @@ fun HomeScreen(
                                             else -> stringResource(R.string.formula_standard)
                                         },
                                         style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 10.sp,
+                                        lineHeight = 13.sp,
                                         color = if (isNegativeProjected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -991,36 +1014,34 @@ fun HomeScreen(
                                     if (totalDeductions > 0.0 || isBonusCancelled) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(spacing.gridGap),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             if (totalDeductions > 0.0) {
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = stringResource(
                                                         R.string.deductions_summary_fmt,
                                                         LaborLawCalculator.formatCurrency(totalDeductions, isBnDigits)
                                                     ),
                                                     style = MaterialTheme.typography.labelSmall,
+                                                    maxFontSize = 10.sp,
+                                                    minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     color = MaterialTheme.colorScheme.error,
-                                                    maxLines = 1,
-                                                    softWrap = false,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    modifier = Modifier.weight(1f, fill = false)
+                                                    modifier = Modifier.weight(1f)
                                                 )
                                             }
                                             if (isBonusCancelled) {
                                                 Surface(
-                                                    shape = RoundedCornerShape(6.dp),
+                                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                                     color = WarningOrange.copy(alpha = 0.14f)
                                                 ) {
-                                                    Text(
+                                                    AutoFitSingleLineText(
                                                         text = stringResource(R.string.bonus_lost_badge),
-                                                        fontSize = 10.sp,
+                                                        maxFontSize = 9.5.sp,
+                                                        minFontSize = 7.5.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = WarningOrange,
-                                                        maxLines = 1,
-                                                        softWrap = false,
                                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                                     )
                                                 }
@@ -1043,7 +1064,7 @@ fun HomeScreen(
                     // Button 1: Today's OT
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(spacing.cardRadius),
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget)
@@ -1056,39 +1077,41 @@ fun HomeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                .padding(vertical = spacing.compactActionPadV, horizontal = spacing.gridGap),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(spacing.actionCircleSize)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.AddAlarm,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(spacing.actionIconSize)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.action_todays_ot),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                maxFontSize = 11.5.sp,
+                                minFontSize = 8.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.action_add_ot),
-                                fontSize = 10.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+                                maxFontSize = 9.5.sp,
+                                minFontSize = 7.5.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
@@ -1096,7 +1119,7 @@ fun HomeScreen(
                     // Button 2: Advance Deduction
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(spacing.cardRadius),
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget)
@@ -1109,39 +1132,41 @@ fun HomeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                .padding(vertical = spacing.compactActionPadV, horizontal = spacing.gridGap),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(spacing.actionCircleSize)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.Payments,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onError,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(spacing.actionIconSize)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.action_advance),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                                maxFontSize = 11.5.sp,
+                                minFontSize = 8.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.action_withdraw),
-                                fontSize = 10.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.75f)
+                                maxFontSize = 9.5.sp,
+                                minFontSize = 7.5.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.75f),
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
@@ -1149,7 +1174,7 @@ fun HomeScreen(
                     // Button 3: Apon Bazar
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(spacing.cardRadius),
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget)
@@ -1162,39 +1187,41 @@ fun HomeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                .padding(vertical = spacing.compactActionPadV, horizontal = spacing.gridGap),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(spacing.actionCircleSize)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.ShoppingCart,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onSecondary,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier.size(spacing.actionIconSize)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.action_apon_bazar),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                maxFontSize = 11.5.sp,
+                                minFontSize = 8.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.action_grocery),
-                                fontSize = 10.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                                maxFontSize = 9.5.sp,
+                                minFontSize = 7.5.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
@@ -1213,7 +1240,7 @@ fun HomeScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(spacing.subCardRadius)
                         ) {
                             Column(modifier = Modifier.padding(pillCardPadding)) {
                                 val isBonusEarned = summary.attendanceBonus > 0
@@ -1223,36 +1250,33 @@ fun HomeScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.attendance_bonus),
-                                        fontSize = pillTitleSize,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f, fill = false),
+                                        maxFontSize = pillTitleSize,
+                                        minFontSize = 7.5.sp,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = spacing.rowGapSm),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = when {
                                             isBonusEarned -> stringResource(R.string.bonus_earned_short)
                                             isBonusLost -> stringResource(R.string.bonus_lost_short)
                                             else -> LaborLawCalculator.formatNumber(0.0, isBnDigits, 0)
                                         },
-                                        fontSize = 10.sp,
+                                        maxFontSize = 9.5.sp,
+                                        minFontSize = 7.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        softWrap = false,
                                         color = if (isBonusEarned) SuccessGreen else if (isBonusLost) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = LaborLawCalculator.formatCurrency(summary.attendanceBonus, isBnDigits),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = pillValueSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillValueSize,
+                                    minFontSize = 9.sp,
                                     color = if (isBonusEarned) SuccessGreen else if (isBonusLost) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1262,28 +1286,24 @@ fun HomeScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(spacing.subCardRadius)
                         ) {
                             Column(modifier = Modifier.padding(pillCardPadding)) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(
                                         R.string.night_bill_count_fmt,
                                         LaborLawCalculator.formatNumber(summary.nightBillCount.toDouble(), isBnDigits, 0)
                                     ),
-                                    fontSize = pillTitleSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillTitleSize,
+                                    minFontSize = 7.5.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = LaborLawCalculator.formatCurrency(summary.nightBillTotal, isBnDigits),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = pillValueSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillValueSize,
+                                    minFontSize = 9.sp,
                                     color = NightBlue
                                 )
                             }
@@ -1299,28 +1319,24 @@ fun HomeScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(spacing.subCardRadius)
                         ) {
                             Column(modifier = Modifier.padding(pillCardPadding)) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(
                                         R.string.tiffin_bill_count_fmt,
                                         LaborLawCalculator.formatNumber(summary.tiffinBillCount.toDouble(), isBnDigits, 0)
                                     ),
-                                    fontSize = pillTitleSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillTitleSize,
+                                    minFontSize = 7.5.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = LaborLawCalculator.formatCurrency(summary.tiffinBillTotal, isBnDigits),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = pillValueSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillValueSize,
+                                    minFontSize = 9.sp,
                                     color = WarningOrange
                                 )
                             }
@@ -1330,25 +1346,21 @@ fun HomeScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(spacing.subCardRadius)
                         ) {
                             Column(modifier = Modifier.padding(pillCardPadding)) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.piece_rate_earnings),
-                                    fontSize = pillTitleSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillTitleSize,
+                                    minFontSize = 7.5.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = LaborLawCalculator.formatCurrency(summary.totalPieceAmount, isBnDigits),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = pillValueSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillValueSize,
+                                    minFontSize = 9.sp,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -1367,7 +1379,7 @@ fun HomeScreen(
                                 .heightIn(min = spacing.minTouchTarget)
                                 .clickable { selectedDeductionListType = "ADVANCE" },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(spacing.subCardRadius)
                         ) {
                             Column(modifier = Modifier.padding(pillCardPadding)) {
                                 val advanceCount = deductions.count { it.type == "ADVANCE" }
@@ -1376,41 +1388,38 @@ fun HomeScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.advance_deduction),
-                                        fontSize = pillTitleSize,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f, fill = false),
+                                        maxFontSize = pillTitleSize,
+                                        minFontSize = 7.5.sp,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = spacing.rowGapSm),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     if (advanceCount > 0) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(
                                                 R.string.count_times_fmt,
                                                 LaborLawCalculator.formatNumber(advanceCount.toDouble(), isBnDigits, 0)
                                             ),
-                                            fontSize = 10.sp,
+                                            maxFontSize = 9.5.sp,
+                                            minFontSize = 7.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            softWrap = false,
                                             color = MaterialTheme.colorScheme.error
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = if (summary.advanceDeduction > 0) {
                                         "- " + LaborLawCalculator.formatCurrency(summary.advanceDeduction, isBnDigits)
                                     } else {
                                         LaborLawCalculator.formatCurrency(0.0, isBnDigits)
                                     },
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = pillValueSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillValueSize,
+                                    minFontSize = 9.sp,
                                     color = if (summary.advanceDeduction > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1423,7 +1432,7 @@ fun HomeScreen(
                                 .heightIn(min = spacing.minTouchTarget)
                                 .clickable { selectedDeductionListType = "APON_BAZAR" },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(spacing.subCardRadius)
                         ) {
                             Column(modifier = Modifier.padding(pillCardPadding)) {
                                 val aponCount = deductions.count { it.type == "APON_BAZAR" }
@@ -1432,41 +1441,38 @@ fun HomeScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.apon_bazar),
-                                        fontSize = pillTitleSize,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f, fill = false),
+                                        maxFontSize = pillTitleSize,
+                                        minFontSize = 7.5.sp,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = spacing.rowGapSm),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     if (aponCount > 0) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(
                                                 R.string.count_times_fmt,
                                                 LaborLawCalculator.formatNumber(aponCount.toDouble(), isBnDigits, 0)
                                             ),
-                                            fontSize = 10.sp,
+                                            maxFontSize = 9.5.sp,
+                                            minFontSize = 7.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            softWrap = false,
                                             color = MaterialTheme.colorScheme.error
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = if (summary.aponBazarDeduction > 0) {
                                         "- " + LaborLawCalculator.formatCurrency(summary.aponBazarDeduction, isBnDigits)
                                     } else {
                                         LaborLawCalculator.formatCurrency(0.0, isBnDigits)
                                     },
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = pillValueSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis,
+                                    maxFontSize = pillValueSize,
+                                    minFontSize = 9.sp,
                                     color = if (summary.aponBazarDeduction > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1482,17 +1488,26 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(R.string.recent_ot_entries),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxFontSize = 14.sp,
+                        minFontSize = 10.sp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = spacing.rowGapSm)
                     )
                     TextButton(
                         onClick = onViewAllClick,
                         contentPadding = spacing.compactButtonContentPadding,
-                        modifier = Modifier.heightIn(min = 36.dp)
+                        modifier = Modifier.heightIn(min = spacing.compactButtonHeight)
                     ) {
-                        Text(stringResource(R.string.view_all))
+                        AutoFitSingleLineText(
+                            text = stringResource(R.string.view_all),
+                            maxFontSize = 12.sp,
+                            minFontSize = 9.sp
+                        )
                     }
                 }
             }
@@ -1502,7 +1517,7 @@ fun HomeScreen(
                 item {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(spacing.subCardRadius),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Box(
@@ -1515,13 +1530,15 @@ fun HomeScreen(
                                 Icon(
                                     Icons.AutoMirrored.Filled.EventNote,
                                     contentDescription = null,
-                                    modifier = Modifier.size(36.dp),
+                                    modifier = Modifier.size(spacing.iconLg),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                                 )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.no_ot_this_month),
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 9.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1531,7 +1548,7 @@ fun HomeScreen(
             } else {
                 items(recentRecords.take(4), key = { it.id }) { record ->
                     Card(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(spacing.subCardRadius),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         modifier = Modifier
@@ -1548,7 +1565,12 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = spacing.rowGapSm)
+                            ) {
                                 val isAbsent = record.shiftType == "ABSENT"
                                 val isLeave = record.shiftType == "LEAVE"
                                 val isWeeklyOff = record.shiftType == "WEEKLY_OFF"
@@ -1575,59 +1597,69 @@ fun HomeScreen(
                                 Surface(
                                     shape = CircleShape,
                                     color = circleBg,
-                                    modifier = Modifier.size(42.dp)
+                                    modifier = Modifier.size(spacing.listCircleSize)
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text(
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.padding(horizontal = 2.dp)
+                                    ) {
+                                        AutoFitSingleLineText(
                                             text = circleText,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = if (isAbsent || isLeave || isWeeklyOff) 11.sp else 13.sp,
+                                            maxFontSize = if (isAbsent || isLeave || isWeeklyOff) 9.5.sp else 11.sp,
+                                            minFontSize = 7.sp,
+                                            textAlign = TextAlign.Center,
                                             color = circleTextColor
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    AutoFitSingleLineText(
                                         text = record.date,
                                         fontWeight = FontWeight.SemiBold,
-                                        style = MaterialTheme.typography.bodyMedium
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxFontSize = 12.5.sp,
+                                        minFontSize = 9.5.sp
                                     )
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)) {
                                         val shiftType = ShiftType.fromCode(record.shiftType)
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = shiftType.getLabel(),
-                                            fontSize = 10.sp,
+                                            maxFontSize = 9.5.sp,
+                                            minFontSize = 7.5.sp,
                                             color = shiftType.color,
                                             fontWeight = FontWeight.Bold
                                         )
                                         if (record.hasNightBill) {
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = stringResource(R.string.badge_night_dot),
-                                                fontSize = 10.sp,
+                                                maxFontSize = 9.5.sp,
+                                                minFontSize = 7.5.sp,
                                                 color = NightBlue,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         }
                                         if (record.hasTiffinBill) {
-                                            Text(
+                                            AutoFitSingleLineText(
                                                 text = stringResource(R.string.badge_tiffin_dot),
-                                                fontSize = 10.sp,
+                                                maxFontSize = 9.5.sp,
+                                                minFontSize = 7.5.sp,
                                                 color = WarningOrange,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         }
                                     }
                                     if (record.note.isNotBlank()) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = if (record.shiftType == "LEAVE") {
                                                 stringResource(R.string.leave_reason_fmt, record.note)
                                             } else {
                                                 record.note
                                             },
-                                            fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1
+                                            maxFontSize = 10.sp,
+                                            minFontSize = 8.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -1639,20 +1671,24 @@ fun HomeScreen(
                                 } else {
                                     stringResource(R.string.short_deduction_prefix)
                                 }
-                                Text(
+                                AutoFitSingleLineText(
                                     text = deductionText,
                                     fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    maxFontSize = 14.sp,
+                                    minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.error
                                 )
                             } else {
                                 val currentCalendarYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
                                 val isRunningMonth = record.yearMonth >= currentCalendarYm
                                 val itemRate = if (isRunningMonth) summary.hourlyOtRate else (if (record.hourlyRateSnapshot > 0.0) record.hourlyRateSnapshot else summary.hourlyOtRate)
-                                Text(
+                                AutoFitSingleLineText(
                                     text = LaborLawCalculator.formatCurrency(record.otHours * itemRate, isBnDigits),
                                     fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    maxFontSize = 14.sp,
+                                    minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -1719,13 +1755,15 @@ fun HomeScreen(
                                     imageVector = Icons.Default.Payments,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.add_advance_deduction_title),
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxFontSize = 15.sp,
+                                    minFontSize = 11.sp
                                 )
                             }
                             IconButton(onClick = {
@@ -1889,13 +1927,15 @@ fun HomeScreen(
                                     imageVector = Icons.Default.ShoppingCart,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.add_apon_bazar_title),
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxFontSize = 15.sp,
+                                    minFontSize = 11.sp
                                 )
                             }
                             IconButton(onClick = {
@@ -2043,17 +2083,19 @@ fun HomeScreen(
                                     if (isAdv) Icons.Default.Payments else Icons.Default.ShoppingCart,
                                     contentDescription = null,
                                     tint = if (isAdv) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                AutoFitSingleLineText(
                                     text = if (isAdv) {
                                         stringResource(R.string.advance_details_title_fmt, selectedMonth)
                                     } else {
                                         stringResource(R.string.apon_bazar_details_title_fmt, selectedMonth)
                                     },
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxFontSize = 15.sp,
+                                    minFontSize = 11.sp
                                 )
                             }
                             IconButton(onClick = { selectedDeductionListType = null }) {
@@ -2086,13 +2128,13 @@ fun HomeScreen(
                             }
                         } else {
                             LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(spacing.gridGap),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 items(filteredList, key = { it.id }) { item ->
                                     Card(
                                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = RoundedCornerShape(spacing.subCardRadius),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
@@ -2105,20 +2147,21 @@ fun HomeScreen(
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = item.date,
-                                                    fontSize = 11.sp,
+                                                    fontSize = 10.5.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                                 if (item.description.isNotBlank()) {
                                                     Text(
                                                         text = item.description,
-                                                        fontSize = 13.sp,
+                                                        fontSize = 12.sp,
                                                         fontWeight = FontWeight.Medium
                                                     )
                                                 }
-                                                Text(
+                                                AutoFitSingleLineText(
                                                     text = "- " + LaborLawCalculator.formatCurrency(item.amount, isBnDigits),
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 14.sp,
+                                                    maxFontSize = 13.sp,
+                                                    minFontSize = 10.sp,
                                                     color = MaterialTheme.colorScheme.error
                                                 )
                                             }
@@ -2128,7 +2171,7 @@ fun HomeScreen(
                                                         Icons.Default.DeleteOutline,
                                                         contentDescription = stringResource(R.string.cd_delete),
                                                         tint = MaterialTheme.colorScheme.error,
-                                                        modifier = Modifier.size(20.dp)
+                                                        modifier = Modifier.size(spacing.iconMd)
                                                     )
                                                 }
                                             }
@@ -2137,20 +2180,27 @@ fun HomeScreen(
                                 }
                             }
 
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = spacing.rowGapSm))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.total_deduction_label),
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxFontSize = 13.sp,
+                                    minFontSize = 10.sp,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = spacing.rowGapSm)
                                 )
-                                Text(
+                                AutoFitSingleLineText(
                                     text = "- " + LaborLawCalculator.formatCurrency(totalAmt, isBnDigits),
                                     fontWeight = FontWeight.ExtraBold,
+                                    maxFontSize = 14.sp,
+                                    minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -2171,9 +2221,13 @@ fun HomeScreen(
                                 onClick = { selectedDeductionListType = null },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(min = 48.dp)
+                                    .heightIn(min = spacing.minTouchTarget)
                             ) {
-                                Text(stringResource(R.string.close))
+                                AutoFitSingleLineText(
+                                    text = stringResource(R.string.close),
+                                    maxFontSize = 13.sp,
+                                    minFontSize = 10.sp
+                                )
                             }
                         }
                     }

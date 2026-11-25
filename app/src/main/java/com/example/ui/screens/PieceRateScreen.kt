@@ -39,6 +39,7 @@ import com.example.BuildConfig
 import com.example.R
 import com.example.data.model.PieceRateRecord
 import com.example.data.model.UserProfile
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.viewmodel.MonthlySummaryState
 import com.example.util.GeneralInterstitialAdManager
@@ -127,15 +128,29 @@ fun PieceRateScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text(stringResource(R.string.tab_piece_rate_ledger), fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.Inventory2, contentDescription = null) },
+                    text = {
+                        AutoFitSingleLineText(
+                            text = stringResource(R.string.tab_piece_rate_ledger),
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = 13.sp,
+                            minFontSize = 8.5.sp
+                        )
+                    },
+                    icon = { Icon(Icons.Default.Inventory2, contentDescription = null, modifier = Modifier.size(spacing.iconLg)) },
                     modifier = Modifier.testTag("piece_tab_button")
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text(stringResource(R.string.tab_pay_slip), fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null) },
+                    text = {
+                        AutoFitSingleLineText(
+                            text = stringResource(R.string.tab_pay_slip),
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = 13.sp,
+                            minFontSize = 8.5.sp
+                        )
+                    },
+                    icon = { Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(spacing.iconLg)) },
                     modifier = Modifier.testTag("slip_tab_button")
                 )
             }
@@ -159,57 +174,53 @@ fun PieceRateScreen(
 
                     item {
                         Card(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(spacing.heroRadius),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Column(modifier = Modifier.padding(spacing.cardPadding)) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.piece_rate_summary_fmt, selectedMonth),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium,
+                                    maxFontSize = 15.sp,
+                                    minFontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.total_produced_pieces),
-                                            fontSize = 11.sp,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis,
+                                            maxFontSize = 11.sp,
+                                            minFontSize = 8.sp,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                         )
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = "${LaborLawCalculator.formatNumber(totalPieces.toDouble(), isBnDigits, 0)} ${stringResource(R.string.pieces_unit)}",
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 17.sp,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis,
+                                            maxFontSize = 16.sp,
+                                            minFontSize = 10.sp,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                     }
                                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.total_piece_income),
-                                            fontSize = 11.sp,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis,
+                                            maxFontSize = 11.sp,
+                                            minFontSize = 8.sp,
+                                            textAlign = TextAlign.End,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                         )
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = LaborLawCalculator.formatCurrency(totalPieceAmount, isBnDigits),
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 17.sp,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis,
+                                            maxFontSize = 16.sp,
+                                            minFontSize = 10.sp,
+                                            textAlign = TextAlign.End,
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     }
@@ -230,20 +241,22 @@ fun PieceRateScreen(
                                     Icon(
                                         Icons.Default.Layers,
                                         contentDescription = null,
-                                        modifier = Modifier.size(48.dp),
+                                        modifier = Modifier.size(spacing.avatarSize),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(spacing.rowGapMd))
                                     Text(
                                         text = stringResource(R.string.no_piece_records_title),
                                         style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center
                                     )
-                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Spacer(modifier = Modifier.height(spacing.rowGapSm))
                                     Text(
                                         text = stringResource(R.string.no_piece_records_subtitle),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                        textAlign = TextAlign.Center
                                     )
                                 }
                             }
@@ -251,7 +264,7 @@ fun PieceRateScreen(
                     } else {
                         items(pieceRecords, key = { it.id }) { item ->
                             Card(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(spacing.cardRadius),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                                 modifier = Modifier.fillMaxWidth()
@@ -263,11 +276,13 @@ fun PieceRateScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
+                                    Column(modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)) {
+                                        AutoFitSingleLineText(
                                             text = item.itemName,
                                             fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.bodyLarge
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            maxFontSize = 14.5.sp,
+                                            minFontSize = 10.sp
                                         )
                                         Text(
                                             text = stringResource(
@@ -289,10 +304,12 @@ fun PieceRateScreen(
                                     }
 
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = LaborLawCalculator.formatCurrency(item.totalAmount, isBnDigits),
                                             fontWeight = FontWeight.Bold,
                                             style = MaterialTheme.typography.titleMedium,
+                                            maxFontSize = 14.5.sp,
+                                            minFontSize = 10.sp,
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                         if (!summary.isLocked) {
@@ -301,13 +318,13 @@ fun PieceRateScreen(
                                                     Icons.Default.DeleteOutline,
                                                     contentDescription = stringResource(R.string.cd_delete),
                                                     tint = MaterialTheme.colorScheme.error,
-                                                    modifier = Modifier.size(20.dp)
+                                                    modifier = Modifier.size(spacing.iconLg)
                                                 )
                                             }
                                         } else {
-                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
                                             Surface(
-                                                shape = RoundedCornerShape(6.dp),
+                                                shape = RoundedCornerShape(spacing.badgeRadius),
                                                 color = MaterialTheme.colorScheme.surfaceVariant
                                             ) {
                                                 Row(
@@ -318,12 +335,13 @@ fun PieceRateScreen(
                                                         Icons.Default.Lock,
                                                         contentDescription = null,
                                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(12.dp)
+                                                        modifier = Modifier.size(spacing.iconSm)
                                                     )
                                                     Spacer(modifier = Modifier.width(2.dp))
-                                                    Text(
+                                                    AutoFitSingleLineText(
                                                         text = stringResource(R.string.locked),
-                                                        fontSize = 10.sp,
+                                                        maxFontSize = 10.sp,
+                                                        minFontSize = 7.5.sp,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                         fontWeight = FontWeight.Medium
                                                     )
@@ -366,7 +384,7 @@ fun PieceRateScreen(
 
                     item {
                         Card(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(spacing.heroRadius),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                             modifier = Modifier
@@ -374,7 +392,7 @@ fun PieceRateScreen(
                                 .border(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                    shape = RoundedCornerShape(16.dp)
+                                    shape = RoundedCornerShape(spacing.heroRadius)
                                 )
                         ) {
                             Column(
@@ -389,20 +407,24 @@ fun PieceRateScreen(
                                         painter = painterResource(id = R.drawable.ic_app_logo),
                                         contentDescription = stringResource(R.string.cd_app_logo),
                                         modifier = Modifier
-                                            .size(48.dp)
+                                            .size(spacing.avatarSize)
                                             .clip(CircleShape)
                                     )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
+                                    Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                    AutoFitSingleLineText(
                                         text = displayCompany,
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
+                                        maxFontSize = 18.sp,
+                                        minFontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.primary,
                                         textAlign = TextAlign.Center
                                     )
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.pay_slip_subtitle_fmt, selectedMonth),
                                         style = MaterialTheme.typography.bodyMedium,
+                                        maxFontSize = 13.sp,
+                                        minFontSize = 9.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.Center
                                     )
@@ -421,19 +443,23 @@ fun PieceRateScreen(
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.worker_name_colon_fmt, displayUserName),
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        modifier = Modifier.weight(1f)
+                                        maxFontSize = 13.sp,
+                                        minFontSize = 9.sp,
+                                        modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = designationLine,
-                                        fontSize = 13.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        maxFontSize = 13.sp,
+                                        minFontSize = 8.5.sp,
+                                        textAlign = TextAlign.End,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
                                 }
                                 if (displayWorkerId.isNotBlank()) {
@@ -441,16 +467,17 @@ fun PieceRateScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.card_id_colon_fmt, displayWorkerId),
-                                            fontSize = 13.sp,
+                                            maxFontSize = 12.5.sp,
+                                            minFontSize = 9.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
 
                                 Surface(
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(spacing.subCardRadius),
                                     color = SuccessGreen.copy(alpha = 0.14f),
                                     border = BorderStroke(1.5.dp, SuccessGreen),
                                     modifier = Modifier.fillMaxWidth()
@@ -458,20 +485,24 @@ fun PieceRateScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = spacing.cardPadding, vertical = 9.dp),
+                                            .padding(horizontal = spacing.cardPadding, vertical = spacing.listItemPadding),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.net_payable_salary),
                                             fontWeight = FontWeight.Bold,
                                             color = SuccessGreen,
-                                            style = MaterialTheme.typography.titleMedium
+                                            style = MaterialTheme.typography.titleMedium,
+                                            maxFontSize = 14.5.sp,
+                                            minFontSize = 10.sp,
+                                            modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                                         )
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = LaborLawCalculator.formatCurrency(summary.totalEstimatedEarnings, isBnDigits),
                                             fontWeight = FontWeight.ExtraBold,
-                                            fontSize = 18.sp,
+                                            maxFontSize = 17.sp,
+                                            minFontSize = 11.sp,
                                             color = SuccessGreen
                                         )
                                     }
@@ -517,6 +548,8 @@ fun PieceRateScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             ),
+                            shape = RoundedCornerShape(spacing.cardRadius),
+                            contentPadding = spacing.compactButtonContentPadding,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = spacing.minTouchTarget)
@@ -524,21 +557,23 @@ fun PieceRateScreen(
                         ) {
                             if (isGeneratingPdf) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
+                                    modifier = Modifier.size(spacing.iconMd),
                                     strokeWidth = 2.dp,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                             } else {
-                                Icon(Icons.Default.Download, contentDescription = null)
+                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
+                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.download_pdf),
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxFontSize = 14.sp,
+                                minFontSize = 10.sp
                             )
                         }
                         if (BuildConfig.DEBUG && debugAdDiagnostic != null) {
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(spacing.rowGapSm))
                             Text(
                                 text = debugAdDiagnostic ?: "",
                                 style = MaterialTheme.typography.labelSmall,
@@ -552,7 +587,7 @@ fun PieceRateScreen(
 
                     item {
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(spacing.subCardRadius),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -564,14 +599,14 @@ fun PieceRateScreen(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(spacing.iconMd)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                 Text(
                                     text = stringResource(R.string.pdf_info_note),
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 16.sp
+                                    lineHeight = 15.sp
                                 )
                             }
                         }
@@ -681,14 +716,20 @@ fun PieceRateScreen(
                                 )
                                 context.startActivity(shareIntent)
                             },
+                            shape = RoundedCornerShape(spacing.cardRadius),
+                            contentPadding = spacing.compactButtonContentPadding,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = spacing.minTouchTarget)
                                 .testTag("share_slip_button")
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.share_pay_slip))
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
+                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                            AutoFitSingleLineText(
+                                text = stringResource(R.string.share_pay_slip),
+                                maxFontSize = 14.sp,
+                                minFontSize = 10.sp
+                            )
                         }
                     }
                 }
@@ -715,7 +756,7 @@ fun PieceRateScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(spacing.heroRadius),
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 6.dp,
                     shadowElevation = 8.dp,
@@ -724,19 +765,21 @@ fun PieceRateScreen(
                         .widthIn(max = 360.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 22.dp),
+                        modifier = Modifier.padding(spacing.dialogCardPadding),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(spacing.dialogInnerGap)
                     ) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(36.dp),
+                            modifier = Modifier.size(spacing.avatarSize),
                             strokeWidth = 3.dp,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        Text(
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.pdf_preparing_ad_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            maxFontSize = 16.sp,
+                            minFontSize = 11.sp,
                             textAlign = TextAlign.Center
                         )
                         Text(

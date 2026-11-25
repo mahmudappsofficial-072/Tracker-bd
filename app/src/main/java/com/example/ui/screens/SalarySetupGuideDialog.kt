@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Close
@@ -43,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.util.ResponsiveUtils
 
 @Composable
@@ -73,32 +76,33 @@ fun SalarySetupGuideDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 480.dp)
-                .clip(RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(spacing.heroRadius))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {}
                 )
                 .testTag("missing_salary_guide_dialog"),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(spacing.heroRadius),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(spacing.dialogCardPadding),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(spacing.dialogInnerGap)
             ) {
                 // Header Row: Wallet Badge + "Setup Needed" Pill + Title + Close (×) Button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(46.dp)
+                            .size(spacing.avatarSize)
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
@@ -114,28 +118,30 @@ fun SalarySetupGuideDialog(
                             imageVector = Icons.Default.AccountBalanceWallet,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(23.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(spacing.badgeRadius),
                             color = MaterialTheme.colorScheme.tertiaryContainer
                         ) {
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.badge_setup_pending),
-                                fontSize = 11.sp,
+                                maxFontSize = 10.5.sp,
+                                minFontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
+                        Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.salary_popup_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            minFontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -143,7 +149,7 @@ fun SalarySetupGuideDialog(
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(spacing.minTouchTarget)
                             .testTag("missing_salary_close_btn")
                     ) {
                         Icon(
@@ -157,41 +163,45 @@ fun SalarySetupGuideDialog(
                 // Primary & Secondary Action Buttons (min 48dp touch targets)
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                 ) {
                     Button(
                         onClick = onStartSetup,
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                             .testTag("missing_salary_setup_btn"),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Tune,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(spacing.iconMd)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.start_salary_setup_btn),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            maxFontSize = 14.sp,
+                            minFontSize = 9.5.sp
                         )
                     }
 
                     OutlinedButton(
                         onClick = onDismiss,
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                             .testTag("missing_salary_later_btn"),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        Text(
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.salary_popup_later_btn),
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
+                            maxFontSize = 14.sp,
+                            minFontSize = 9.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

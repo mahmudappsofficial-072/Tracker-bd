@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
@@ -89,6 +90,7 @@ import com.example.data.model.OvertimeRecord
 import com.example.receiver.MyFirebaseMessagingService
 import com.example.receiver.ReminderScheduler
 import com.example.ui.components.AdmobBanner
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.ui.screens.AddPieceRateDialog
 import com.example.ui.screens.ForceUpdateDialog
 import com.example.ui.screens.HomeScreen
@@ -110,6 +112,7 @@ import com.example.util.LanguageManager
 import com.example.util.MonthLockPolicy
 import com.example.util.ResponsiveUtils
 import com.example.util.SalaryOnboardingPolicy
+import com.example.util.ScreenDensityTier
 import com.example.util.StartupPopupAction
 import com.example.util.StartupPopupGateState
 import kotlinx.coroutines.delay
@@ -481,8 +484,17 @@ fun OvertimeApp(
                                     canLoadAd = isAppReady
                                 )
                             }
-                            val isCompactNav = ResponsiveUtils.isCompactScreen()
-                            val navLabelSize = if (isCompactNav) 10.sp else 12.sp
+                            val spacing = ResponsiveUtils.rememberAppSpacing()
+                            val navBarHeight = when (spacing.tier) {
+                                ScreenDensityTier.MICRO_COMPACT -> 56.dp
+                                ScreenDensityTier.EXTRA_COMPACT -> 60.dp
+                                ScreenDensityTier.STANDARD_COMPACT -> 64.dp
+                            }
+                            val navLabelMaxSp = when (spacing.tier) {
+                                ScreenDensityTier.MICRO_COMPACT -> 9.5.sp
+                                ScreenDensityTier.EXTRA_COMPACT -> 10.sp
+                                ScreenDensityTier.STANDARD_COMPACT -> 11.sp
+                            }
 
                             AnimatedVisibility(
                                 visible = !isImeVisible,
@@ -490,7 +502,9 @@ fun OvertimeApp(
                                 exit = fadeOut(tween(120)) + shrinkVertically(tween(150))
                             ) {
                                 NavigationBar(
-                                    modifier = Modifier.testTag("bottom_navigation_bar"),
+                                    modifier = Modifier
+                                        .height(navBarHeight)
+                                        .testTag("bottom_navigation_bar"),
                                     containerColor = MaterialTheme.colorScheme.surface,
                                     tonalElevation = 0.dp,
                                     windowInsets = WindowInsets(0, 0, 0, 0)
@@ -512,17 +526,16 @@ fun OvertimeApp(
                             icon = {
                                 Icon(
                                     if (currentTab == 0) Icons.Filled.Home else Icons.Outlined.Home,
-                                    contentDescription = tabHomeLabel
+                                    contentDescription = tabHomeLabel,
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
                             },
                             label = {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = tabHomeLabel,
                                     fontWeight = if (currentTab == 0) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = navLabelSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
+                                    maxFontSize = navLabelMaxSp,
+                                    minFontSize = 7.5.sp
                                 )
                             },
                             modifier = Modifier.testTag("tab_home_item")
@@ -545,17 +558,16 @@ fun OvertimeApp(
                             icon = {
                                 Icon(
                                     if (currentTab == 1) Icons.Filled.AccessTimeFilled else Icons.Outlined.AccessTime,
-                                    contentDescription = tabOtLabel
+                                    contentDescription = tabOtLabel,
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
                             },
                             label = {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = tabOtLabel,
                                     fontWeight = if (currentTab == 1) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = navLabelSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
+                                    maxFontSize = navLabelMaxSp,
+                                    minFontSize = 7.5.sp
                                 )
                             },
                             modifier = Modifier.testTag("tab_ot_list_item")
@@ -578,17 +590,16 @@ fun OvertimeApp(
                             icon = {
                                 Icon(
                                     if (currentTab == 2) Icons.AutoMirrored.Filled.ReceiptLong else Icons.AutoMirrored.Outlined.ReceiptLong,
-                                    contentDescription = tabPieceLabel
+                                    contentDescription = tabPieceLabel,
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
                             },
                             label = {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = tabPieceLabel,
                                     fontWeight = if (currentTab == 2) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = navLabelSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
+                                    maxFontSize = navLabelMaxSp,
+                                    minFontSize = 7.5.sp
                                 )
                             },
                             modifier = Modifier.testTag("tab_piece_item")
@@ -611,17 +622,16 @@ fun OvertimeApp(
                             icon = {
                                 Icon(
                                     if (currentTab == 3) Icons.Filled.Person else Icons.Outlined.Person,
-                                    contentDescription = tabProfileLabel
+                                    contentDescription = tabProfileLabel,
+                                    modifier = Modifier.size(spacing.iconLg)
                                 )
                             },
                             label = {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = tabProfileLabel,
                                     fontWeight = if (currentTab == 3) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = navLabelSize,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
+                                    maxFontSize = navLabelMaxSp,
+                                    minFontSize = 7.5.sp
                                 )
                             },
                                 modifier = Modifier.testTag("tab_profile_item")

@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.UserProfile
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.ResponsiveUtils
@@ -183,13 +184,15 @@ fun EditIdentitySheet(
                             imageVector = Icons.Default.Badge,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.edit_identity_title),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = 16.sp,
+                            minFontSize = 11.sp
                         )
                     }
                     IconButton(onClick = {
@@ -300,20 +303,21 @@ fun EditIdentitySheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                 ) {
                     OutlinedButton(
                         onClick = {
                             hideKeyboard()
                             onDismiss()
                         },
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget)
                             .testTag("cancel_edit_button"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                        AutoFitSingleLineText(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold, maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                     Button(
                         onClick = {
@@ -328,15 +332,16 @@ fun EditIdentitySheet(
                                 )
                             )
                         },
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1.4f)
                             .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_identity_button"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.save_identity_btn), fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
+                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                        AutoFitSingleLineText(stringResource(R.string.save_identity_btn), fontWeight = FontWeight.Bold, maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                 }
             }
@@ -543,13 +548,15 @@ fun SalaryStructureSheet(
                             imageVector = Icons.Default.Payments,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(spacing.iconLg)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.salary_structure_title),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = 16.sp,
+                            minFontSize = 11.sp
                         )
                     }
                     IconButton(onClick = {
@@ -601,13 +608,13 @@ fun SalaryStructureSheet(
                         .fillMaxWidth()
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            RoundedCornerShape(12.dp)
+                            RoundedCornerShape(spacing.cardRadius)
                         )
-                        .padding(3.dp),
+                        .padding(spacing.rowGapSm),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(spacing.subCardRadius),
                         color = if (!isCustomSalary) MaterialTheme.colorScheme.primary else Color.Transparent,
                         modifier = Modifier
                             .weight(1f)
@@ -619,22 +626,22 @@ fun SalaryStructureSheet(
                             .testTag("mode_auto_tab")
                     ) {
                         Box(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = spacing.subCardPadding, vertical = spacing.compactActionPadV),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.mode_auto_tab),
-                                fontSize = 12.sp,
+                                maxFontSize = 11.5.sp,
+                                minFontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                maxLines = 2,
                                 color = if (!isCustomSalary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(spacing.subCardRadius),
                         color = if (isCustomSalary) MaterialTheme.colorScheme.primary else Color.Transparent,
                         modifier = Modifier
                             .weight(1f)
@@ -648,15 +655,15 @@ fun SalaryStructureSheet(
                             .testTag("mode_custom_tab")
                     ) {
                         Box(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = spacing.subCardPadding, vertical = spacing.compactActionPadV),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.mode_custom_tab),
-                                fontSize = 12.sp,
+                                maxFontSize = 11.5.sp,
+                                minFontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                maxLines = 2,
                                 color = if (isCustomSalary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -664,14 +671,14 @@ fun SalaryStructureSheet(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(spacing.subCardRadius),
                     color = if (!isCustomSalary) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                     else MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
                 ) {
                     Text(
                         text = stringResource(if (!isCustomSalary) R.string.mode_auto_note else R.string.mode_custom_note),
                         fontSize = 12.sp,
-                        lineHeight = 17.sp,
+                        lineHeight = 16.sp,
                         color = if (!isCustomSalary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onTertiaryContainer,
                         modifier = Modifier.padding(spacing.subCardPadding)
                     )
@@ -798,7 +805,7 @@ fun SalaryStructureSheet(
                 // Live Calculated Rate Preview (Placed right after salary input for instant clarity)
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -808,28 +815,32 @@ fun SalaryStructureSheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
+                        Column(modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)) {
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.effective_ot_rate_label),
-                                fontSize = 12.sp,
+                                maxFontSize = 11.5.sp,
+                                minFontSize = 8.5.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            Text(
+                            AutoFitSingleLineText(
                                 text = if (effectiveHourlyOtRate != null && effectiveHourlyOtRate > 0.0) {
                                     LaborLawCalculator.formatCurrency(effectiveHourlyOtRate, isBnDigits) +
                                         stringResource(R.string.currency_per_hour_suffix)
                                 } else {
                                     "—"
                                 },
-                                fontSize = 18.sp,
+                                maxFontSize = 17.sp,
+                                minFontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
+                        Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.total_regular_salary_label),
-                                fontSize = 12.sp,
+                                maxFontSize = 11.5.sp,
+                                minFontSize = 8.5.sp,
+                                textAlign = TextAlign.End,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             val calculatedGross = if (isCustomSalary) {
@@ -837,9 +848,11 @@ fun SalaryStructureSheet(
                             } else {
                                 autoResult.grossSalary
                             }
-                            Text(
+                            AutoFitSingleLineText(
                                 text = LaborLawCalculator.formatCurrency(calculatedGross, isBnDigits),
-                                fontSize = 16.sp,
+                                maxFontSize = 15.5.sp,
+                                minFontSize = 10.5.sp,
+                                textAlign = TextAlign.End,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -952,14 +965,14 @@ fun SalaryStructureSheet(
                 )
 
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(spacing.subCardRadius),
                     color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = stringResource(R.string.sheet_step_3_hint),
                         fontSize = 12.sp,
-                        lineHeight = 17.sp,
+                        lineHeight = 16.sp,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(spacing.subCardPadding)
                     )
@@ -1194,19 +1207,20 @@ fun SalaryStructureSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                 ) {
                     OutlinedButton(
                         onClick = {
                             hideKeyboard()
                             onDismiss()
                         },
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        Text(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
+                        AutoFitSingleLineText(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold, maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                     Button(
                         onClick = {
@@ -1232,15 +1246,16 @@ fun SalaryStructureSheet(
                             )
                             onSave(updated)
                         },
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
                             .weight(1.4f)
                             .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_profile_button"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.save_salary_btn), fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
+                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                        AutoFitSingleLineText(stringResource(R.string.save_salary_btn), fontWeight = FontWeight.Bold, maxFontSize = 14.sp, minFontSize = 10.sp)
                     }
                 }
             }
@@ -1367,14 +1382,14 @@ private fun SalaryFieldHelpDialog(
             modifier = cardModifier
                 .fillMaxWidth()
                 .widthIn(max = 460.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(spacing.heroRadius))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {}
                 )
                 .testTag("salary_field_help_dialog"),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(spacing.heroRadius),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
             shadowElevation = 8.dp
@@ -1382,31 +1397,33 @@ private fun SalaryFieldHelpDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(spacing.dialogCardPadding),
+                verticalArrangement = Arrangement.spacedBy(spacing.dialogInnerGap)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                 ) {
                     Surface(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(spacing.avatarSize)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = topic.icon,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(spacing.iconLg)
                             )
                         }
                     }
-                    Text(
+                    AutoFitSingleLineText(
                         text = stringResource(topic.titleRes),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        maxFontSize = 15.5.sp,
+                        minFontSize = 11.sp,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -1416,33 +1433,35 @@ private fun SalaryFieldHelpDialog(
                         .fillMaxWidth()
                         .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(spacing.cardInnerGap)
                 ) {
                     Text(
                         text = stringResource(topic.descRes),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 21.sp
+                        lineHeight = 19.sp
                     )
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(spacing.cardRadius),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                            modifier = Modifier.padding(spacing.subCardPadding),
+                            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
                         ) {
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape(spacing.badgeRadius),
                                 color = MaterialTheme.colorScheme.primary
                             ) {
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.salary_help_example_badge),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
+                                    maxFontSize = 10.5.sp,
+                                    minFontSize = 8.sp,
                                     color = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                 )
                             }
                             Text(
@@ -1450,7 +1469,7 @@ private fun SalaryFieldHelpDialog(
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 20.sp
+                                lineHeight = 19.sp
                             )
                         }
                     }
@@ -1462,14 +1481,17 @@ private fun SalaryFieldHelpDialog(
                 ) {
                     Button(
                         onClick = onDismiss,
+                        contentPadding = spacing.compactButtonContentPadding,
                         modifier = Modifier
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                             .testTag("salary_field_help_close_btn"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        Text(
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.salary_help_got_it),
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxFontSize = 14.sp,
+                            minFontSize = 10.sp
                         )
                     }
                 }
@@ -1485,31 +1507,34 @@ private fun SheetStepHeader(
     isRequired: Boolean,
     helpContent: (@Composable () -> Unit)? = null
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
+        AutoFitSingleLineText(
             text = title,
-            fontSize = 14.sp,
+            maxFontSize = 14.sp,
+            minFontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f).padding(end = 6.dp)
+            modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
         )
         if (helpContent != null) {
             helpContent()
         }
         Surface(
-            shape = RoundedCornerShape(6.dp),
+            shape = RoundedCornerShape(spacing.badgeRadius),
             color = if (isRequired) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
         ) {
-            Text(
+            AutoFitSingleLineText(
                 text = badgeText,
-                fontSize = 11.sp,
+                maxFontSize = 10.5.sp,
+                minFontSize = 8.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isRequired) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
             )
         }
     }

@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.model.UserProfile
+import com.example.ui.components.AutoFitSingleLineText
 import com.example.ui.theme.SuccessGreen
 import com.example.util.LanguageManager
 import com.example.util.ResponsiveUtils
@@ -98,14 +99,15 @@ fun SettingsSheet(
                             painter = painterResource(id = R.drawable.ic_app_logo),
                             contentDescription = stringResource(R.string.cd_app_logo),
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(spacing.avatarSize)
                                 .clip(CircleShape)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
+                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                        AutoFitSingleLineText(
                             text = stringResource(R.string.cd_settings),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            minFontSize = 11.sp
                         )
                     }
                     IconButton(onClick = onDismiss) {
@@ -130,7 +132,7 @@ fun SettingsSheet(
                 // 1. General Section
                 SettingsSectionHeader(title = stringResource(R.string.settings_general_section))
                 Card(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -152,24 +154,26 @@ fun SettingsSheet(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f).padding(end = 8.dp)
+                            modifier = Modifier.weight(1f).padding(end = spacing.rowGapMd)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Language,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(spacing.iconMd)
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
+                            Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                            Column(modifier = Modifier.weight(1f)) {
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.app_language_label),
                                     fontWeight = FontWeight.SemiBold,
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    minFontSize = 10.sp
                                 )
-                                Text(
+                                AutoFitSingleLineText(
                                     text = stringResource(R.string.current_language_fmt, currentLangDisplay),
-                                    fontSize = 12.sp,
+                                    maxFontSize = 12.sp,
+                                    minFontSize = 9.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -177,7 +181,8 @@ fun SettingsSheet(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(spacing.iconLg)
                         )
                     }
                 }
@@ -185,14 +190,14 @@ fun SettingsSheet(
                 // 2. Account & Cloud Backup Section
                 SettingsSectionHeader(title = stringResource(R.string.settings_account_backup_section))
                 Card(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier.padding(spacing.listItemPadding),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
                     ) {
                         if (currentUser == null) {
                             Row(
@@ -203,53 +208,63 @@ fun SettingsSheet(
                                     imageVector = Icons.Default.AccountCircle,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(spacing.avatarSize)
                                 )
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.google_account_title),
                                         fontWeight = FontWeight.SemiBold,
-                                        style = MaterialTheme.typography.bodyMedium
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        minFontSize = 10.sp
                                     )
                                     Text(
                                         text = stringResource(R.string.sign_in_sync_subtitle),
-                                        fontSize = 12.sp,
+                                        fontSize = 11.5.sp,
+                                        lineHeight = 15.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                             Surface(
-                                shape = RoundedCornerShape(24.dp),
+                                shape = RoundedCornerShape(spacing.heroRadius),
                                 color = MaterialTheme.colorScheme.surface,
                                 border = BorderStroke(1.dp, Color(0xFFDADCE0)),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(48.dp)
+                                    .heightIn(min = spacing.minTouchTarget)
                                     .clickable(enabled = !isAuthLoading) { onSignInWithGoogle() }
                             ) {
                                 Row(
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = spacing.cardPadding, vertical = spacing.rowGapSm),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
                                     if (isAuthLoading) {
-                                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(stringResource(R.string.signing_in_label), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                        CircularProgressIndicator(modifier = Modifier.size(spacing.iconMd), strokeWidth = 2.dp)
+                                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                        AutoFitSingleLineText(
+                                            text = stringResource(R.string.signing_in_label),
+                                            maxFontSize = 13.sp,
+                                            minFontSize = 10.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
                                     } else {
                                         Box(
                                             modifier = Modifier
-                                                .size(20.dp)
+                                                .size(spacing.iconLg)
                                                 .background(Color(0xFF4285F4), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text("G", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                            Text("G", color = Color.White, fontWeight = FontWeight.Black, fontSize = 11.sp)
                                         }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
+                                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                        AutoFitSingleLineText(
                                             text = stringResource(R.string.sign_in_with_google),
-                                            fontSize = 13.sp,
+                                            maxFontSize = 13.sp,
+                                            minFontSize = 10.sp,
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
@@ -263,20 +278,22 @@ fun SettingsSheet(
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = spacing.rowGapSm)
                                 ) {
                                     if (!currentUser.photoUrl?.toString().isNullOrBlank()) {
                                         AsyncImage(
                                             model = currentUser.photoUrl,
                                             contentDescription = stringResource(R.string.cd_profile_photo),
                                             contentScale = ContentScale.Crop,
-                                            modifier = Modifier.size(40.dp).clip(CircleShape)
+                                            modifier = Modifier.size(spacing.avatarSize).clip(CircleShape)
                                         )
                                     } else {
                                         Surface(
                                             shape = CircleShape,
                                             color = MaterialTheme.colorScheme.primaryContainer,
-                                            modifier = Modifier.size(40.dp)
+                                            modifier = Modifier.size(spacing.avatarSize)
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
                                                 Text(
@@ -287,21 +304,19 @@ fun SettingsSheet(
                                             }
                                         }
                                     }
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
-                                        Text(
+                                    Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        AutoFitSingleLineText(
                                             text = currentUser.displayName ?: stringResource(R.string.google_user_fallback),
                                             fontWeight = FontWeight.Bold,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            minFontSize = 10.sp
                                         )
-                                        Text(
+                                        AutoFitSingleLineText(
                                             text = currentUser.email ?: "",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            minFontSize = 9.sp
                                         )
                                     }
                                 }
@@ -309,22 +324,25 @@ fun SettingsSheet(
                                     onClick = { if (!isSigningOut) onRequestSignOut() },
                                     enabled = !isSigningOut,
                                     contentPadding = spacing.compactButtonContentPadding,
-                                    modifier = Modifier.testTag("sign_out_button")
+                                    modifier = Modifier
+                                        .heightIn(min = spacing.compactButtonHeight)
+                                        .testTag("sign_out_button")
                                 ) {
                                     if (!isOnline) {
                                         Icon(
                                             imageVector = Icons.Default.WifiOff,
                                             contentDescription = stringResource(R.string.cd_offline),
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                            modifier = Modifier.size(15.dp)
+                                            modifier = Modifier.size(spacing.iconSm)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
                                     }
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.sign_out_btn),
                                         color = if (isOnline) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 13.sp
+                                        maxFontSize = 13.sp,
+                                        minFontSize = 9.5.sp
                                     )
                                 }
                             }
@@ -343,27 +361,30 @@ fun SettingsSheet(
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f, fill = false)
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = spacing.rowGapSm)
                                 ) {
-                                    Icon(Icons.Default.CloudDone, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
+                                    Icon(Icons.Default.CloudDone, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(spacing.iconMd))
+                                    Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                    AutoFitSingleLineText(
                                         text = stringResource(R.string.auto_cloud_sync_title),
                                         fontWeight = FontWeight.Medium,
-                                        style = MaterialTheme.typography.bodySmall
+                                        style = MaterialTheme.typography.bodySmall,
+                                        minFontSize = 9.sp
                                     )
                                 }
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
+                                    shape = RoundedCornerShape(spacing.badgeRadius),
                                     color = if (profile.lastCloudSyncTime > 0L) SuccessGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
                                 ) {
-                                    Text(
+                                    AutoFitSingleLineText(
                                         text = syncDateStr,
-                                        fontSize = 11.sp,
+                                        maxFontSize = 11.sp,
+                                        minFontSize = 8.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (profile.lastCloudSyncTime > 0L) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
-                                        maxLines = 1
+                                        modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                                     )
                                 }
                             }
@@ -374,7 +395,7 @@ fun SettingsSheet(
                 // 3. Data, Support & Legal Section
                 SettingsSectionHeader(title = stringResource(R.string.settings_data_support_section))
                 Card(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -435,7 +456,7 @@ fun SettingsSheet(
                     color = MaterialTheme.colorScheme.error
                 )
                 Card(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(spacing.cardRadius),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
                     modifier = Modifier.fillMaxWidth()
@@ -449,20 +470,22 @@ fun SettingsSheet(
                                 .testTag("delete_all_data_button"),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.55f)),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(spacing.cardRadius),
+                            contentPadding = spacing.compactButtonContentPadding
                         ) {
                             Icon(
                                 imageVector = Icons.Default.DeleteForever,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(spacing.iconMd)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
+                            Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                            AutoFitSingleLineText(
                                 text = stringResource(R.string.delete_all_data_btn),
                                 color = MaterialTheme.colorScheme.error,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
+                                maxFontSize = 13.sp,
+                                minFontSize = 9.5.sp
                             )
                         }
                     }
@@ -479,11 +502,16 @@ fun SettingsSheet(
                 ) {
                     Button(
                         onClick = onDismiss,
+                        shape = RoundedCornerShape(spacing.cardRadius),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        Text(stringResource(R.string.done))
+                        AutoFitSingleLineText(
+                            text = stringResource(R.string.done),
+                            fontWeight = FontWeight.SemiBold,
+                            minFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -496,12 +524,14 @@ private fun SettingsSectionHeader(
     title: String,
     color: Color = MaterialTheme.colorScheme.primary
 ) {
-    Text(
+    val spacing = ResponsiveUtils.rememberAppSpacing()
+    AutoFitSingleLineText(
         text = title,
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
         color = color,
-        modifier = Modifier.padding(horizontal = 4.dp)
+        minFontSize = 9.5.sp,
+        modifier = Modifier.padding(horizontal = spacing.badgeH)
     )
 }
 
@@ -528,25 +558,29 @@ private fun SettingsActionRow(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f).padding(end = 8.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = spacing.rowGapMd)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(spacing.iconMd)
             )
-            Spacer(modifier = Modifier.width(10.dp))
-            Column {
-                Text(
+            Spacer(modifier = Modifier.width(spacing.rowGapMd))
+            Column(modifier = Modifier.weight(1f)) {
+                AutoFitSingleLineText(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    minFontSize = 10.sp
                 )
                 if (!subtitle.isNullOrBlank()) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
+                        lineHeight = 15.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -555,24 +589,25 @@ private fun SettingsActionRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (!badgeText.isNullOrBlank()) {
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(spacing.badgeRadius),
                     color = MaterialTheme.colorScheme.error
                 ) {
-                    Text(
+                    AutoFitSingleLineText(
                         text = badgeText,
                         color = MaterialTheme.colorScheme.onError,
-                        fontSize = 11.sp,
+                        maxFontSize = 11.sp,
+                        minFontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 1,
                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(spacing.rowGapSm))
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(spacing.iconLg)
             )
         }
     }
