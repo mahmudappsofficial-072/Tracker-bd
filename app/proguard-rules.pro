@@ -54,6 +54,18 @@
 -keepclassmembers class * extends com.google.android.gms.ads.AdListener {
     public *;
 }
+-keepclassmembers class * extends com.google.android.gms.ads.AdLoadCallback {
+    public *;
+}
+-keepclassmembers class * extends com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback {
+    public *;
+}
+-keepclassmembers class * extends com.google.android.gms.ads.FullScreenContentCallback {
+    public *;
+}
+-keepclassmembers class * implements com.google.android.gms.ads.initialization.OnInitializationCompleteListener {
+    public *;
+}
 
 # Jetpack Credential Manager & Google Identity Services (R8 Full Mode Safe)
 -keep class androidx.credentials.** { *; }

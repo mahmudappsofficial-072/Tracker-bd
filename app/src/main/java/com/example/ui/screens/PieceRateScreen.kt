@@ -35,17 +35,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.BuildConfig
 import com.example.R
 import com.example.data.model.PieceRateRecord
 import com.example.data.model.UserProfile
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.viewmodel.MonthlySummaryState
 import com.example.util.GeneralInterstitialAdManager
+import com.example.util.InterstitialAdGatePolicy
 import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.ResponsiveUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,6 +79,14 @@ fun PieceRateScreen(
     var isGeneratingPdf by remember { mutableStateOf(false) }
     var isPreparingPdfAd by remember { mutableStateOf(false) }
     var activePdfDownloadJob by remember { mutableStateOf<Job?>(null) }
+    var debugAdDiagnostic by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == 1) {
+            delay(InterstitialAdGatePolicy.PRELOAD_DEBOUNCE_MS)
+            GeneralInterstitialAdManager.preloadOnPaySlipIfEligible(context)
+        }
+    }
 
     DisposableEffect(Unit) {
         onDispose { activePdfDownloadJob?.cancel() }
@@ -479,8 +490,10 @@ fun PieceRateScreen(
                                                 context = context,
                                                 onPreparingChanged = { preparing -> isPreparingPdfAd = preparing }
                                             )
-                                            com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(outcome)?.let { diagMsg ->
-                                                Toast.makeText(context, diagMsg, Toast.LENGTH_LONG).show()
+                                            val diagMsg = InterstitialAdGatePolicy.formatDebugDiagnostic(outcome)
+                                            debugAdDiagnostic = diagMsg
+                                            diagMsg?.let {
+                                                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                                             }
                                             isGeneratingPdf = true
                                             com.example.util.PdfSlipGenerator.generateAndDownloadPdf(
@@ -522,6 +535,17 @@ fun PieceRateScreen(
                             Text(
                                 text = stringResource(R.string.download_pdf),
                                 fontWeight = FontWeight.Bold
+                            )
+                        }
+                        if (BuildConfig.DEBUG && debugAdDiagnostic != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = debugAdDiagnostic ?: "",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("debug_ad_diagnostic_text")
                             )
                         }
                     }

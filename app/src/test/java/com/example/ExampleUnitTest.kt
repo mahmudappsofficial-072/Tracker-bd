@@ -778,7 +778,7 @@ class ExampleUnitTest {
       "ca-app-pub-9027708775227838/5097750056",
       com.example.util.InterstitialAdGatePolicy.resolveAdUnitId(isDebug = false)
     )
-    assertEquals(8_000L, com.example.util.InterstitialAdGatePolicy.AD_LOAD_TIMEOUT_MS)
+    assertEquals(10_000L, com.example.util.InterstitialAdGatePolicy.AD_LOAD_TIMEOUT_MS)
 
     // Banner-parity internet capability check works even when VALIDATED flag is false
     assertTrue(com.example.util.NetworkMonitor.hasInternetCapability(true))
@@ -817,6 +817,76 @@ class ExampleUnitTest {
         hasInternet = true,
         nowMs = 1_060_000L,
         lastShownAtMs = 1_000_000L
+      )
+    )
+
+    // Session cache TTL: valid within 50 minutes, invalid at/after 50 minutes or 0ms
+    assertFalse(com.example.util.InterstitialAdGatePolicy.isCachedAdValid(0L, 1_000_000L))
+    assertTrue(com.example.util.InterstitialAdGatePolicy.isCachedAdValid(1_000_000L, 1_000_000L + 49L * 60_000L))
+    assertFalse(com.example.util.InterstitialAdGatePolicy.isCachedAdValid(1_000_000L, 1_000_000L + 50L * 60_000L))
+
+    // Intent-scoped Pay Slip preload guards protect AdMob Show Rate
+    assertTrue(
+      com.example.util.InterstitialAdGatePolicy.shouldPreloadOnPaySlip(
+        hasInternet = true,
+        hasValidCache = false,
+        isPreloadInFlight = false,
+        nowMs = 2_000_000L,
+        lastShownAtMs = 0L
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldPreloadOnPaySlip(
+        hasInternet = true,
+        hasValidCache = true,
+        isPreloadInFlight = false,
+        nowMs = 2_000_000L,
+        lastShownAtMs = 0L
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldPreloadOnPaySlip(
+        hasInternet = true,
+        hasValidCache = false,
+        isPreloadInFlight = true,
+        nowMs = 2_000_000L,
+        lastShownAtMs = 0L
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldPreloadOnPaySlip(
+        hasInternet = true,
+        hasValidCache = false,
+        isPreloadInFlight = false,
+        nowMs = 2_020_000L,
+        lastShownAtMs = 0L,
+        lastPreloadFailedAtMs = 2_000_000L
+      )
+    )
+
+    // Retry policy: 1 retry only for transient network/internal errors, never for NO_FILL or attempt > 0
+    assertTrue(
+      com.example.util.InterstitialAdGatePolicy.shouldRetryTransientLoadError(
+        com.google.android.gms.ads.AdRequest.ERROR_CODE_NETWORK_ERROR,
+        attemptIndex = 0
+      )
+    )
+    assertTrue(
+      com.example.util.InterstitialAdGatePolicy.shouldRetryTransientLoadError(
+        com.google.android.gms.ads.AdRequest.ERROR_CODE_INTERNAL_ERROR,
+        attemptIndex = 0
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldRetryTransientLoadError(
+        com.google.android.gms.ads.AdRequest.ERROR_CODE_NO_FILL,
+        attemptIndex = 0
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldRetryTransientLoadError(
+        com.google.android.gms.ads.AdRequest.ERROR_CODE_NETWORK_ERROR,
+        attemptIndex = 1
       )
     )
 
