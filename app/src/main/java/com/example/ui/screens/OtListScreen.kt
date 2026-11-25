@@ -115,7 +115,7 @@ fun OtListScreen(
                                 text = stringResource(R.string.ot_records_header_fmt, formattedMonth),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                maxFontSize = 15.sp,
+                                maxFontSize = spacing.adaptiveSp(17f, 15f, 13.5f),
                                 minFontSize = 11.sp,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.primary,
@@ -160,14 +160,14 @@ fun OtListScreen(
                             ) {
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.total_days_label),
-                                    maxFontSize = 10.sp,
+                                    maxFontSize = spacing.adaptiveSp(11.5f, 10.5f, 9.5f),
                                     minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 AutoFitSingleLineText(
                                     text = "${LaborLawCalculator.formatNumber(records.size.toDouble(), isBnDigits, 0)} $daysUnit",
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                     minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
@@ -179,14 +179,14 @@ fun OtListScreen(
                             ) {
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.total_ot_hours),
-                                    maxFontSize = 10.sp,
+                                    maxFontSize = spacing.adaptiveSp(11.5f, 10.5f, 9.5f),
                                     minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 AutoFitSingleLineText(
                                     text = "${LaborLawCalculator.formatNumber(totalHours, isBnDigits)} $hoursUnit",
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                     minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center,
@@ -199,14 +199,14 @@ fun OtListScreen(
                             ) {
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.ot_amount_label),
-                                    maxFontSize = 10.sp,
+                                    maxFontSize = spacing.adaptiveSp(11.5f, 10.5f, 9.5f),
                                     minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 AutoFitSingleLineText(
                                     text = LaborLawCalculator.formatCurrency(totalAmount, isBnDigits),
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                     minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center,
@@ -219,7 +219,7 @@ fun OtListScreen(
                             ) {
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.attendance_bonus),
-                                    maxFontSize = 10.sp,
+                                    maxFontSize = spacing.adaptiveSp(11.5f, 10.5f, 9.5f),
                                     minFontSize = 7.5.sp,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -232,7 +232,7 @@ fun OtListScreen(
                                         isBonusLost -> stringResource(R.string.bonus_deducted_cross)
                                         else -> "0"
                                     },
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                     minFontSize = 8.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center,
@@ -263,7 +263,7 @@ fun OtListScreen(
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.no_ot_records_title),
                                 style = MaterialTheme.typography.titleSmall,
-                                maxFontSize = 14.sp,
+                                maxFontSize = spacing.adaptiveSp(16f, 14f, 13f),
                                 minFontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -271,7 +271,7 @@ fun OtListScreen(
                             Text(
                                 text = stringResource(R.string.no_ot_records_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
-                                fontSize = 11.sp,
+                                fontSize = spacing.adaptiveSp(12.5f, 11f, 10.5f),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )
                         }
@@ -337,7 +337,7 @@ fun OtListScreen(
                                         AutoFitSingleLineText(
                                             text = badgeText,
                                             fontWeight = FontWeight.Bold,
-                                            maxFontSize = if (isAbsent || isLeave || isWeeklyOff) 11.sp else 12.5.sp,
+                                            maxFontSize = if (isAbsent || isLeave || isWeeklyOff) spacing.adaptiveSp(12.5f, 11f, 10f) else spacing.adaptiveSp(14f, 12.5f, 11.5f),
                                             minFontSize = 8.5.sp,
                                             color = badgeTextColor,
                                             modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
@@ -349,14 +349,14 @@ fun OtListScreen(
                                             text = record.date,
                                             fontWeight = FontWeight.Bold,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            maxFontSize = 13.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(15f, 13.5f, 12.5f),
                                             minFontSize = 10.sp
                                         )
                                         if (record.note.isNotBlank()) {
                                             Text(
                                                 text = if (record.shiftType == "LEAVE") stringResource(R.string.leave_reason_fmt, record.note) else record.note,
                                                 style = MaterialTheme.typography.bodySmall,
-                                                fontSize = 10.5.sp,
+                                                fontSize = spacing.adaptiveSp(12f, 10.5f, 10f),
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
@@ -375,7 +375,7 @@ fun OtListScreen(
                                         text = deductionText,
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.titleSmall,
-                                        maxFontSize = 14.sp,
+                                        maxFontSize = spacing.adaptiveSp(16f, 14f, 13f),
                                         minFontSize = 10.sp,
                                         color = MaterialTheme.colorScheme.error
                                     )
@@ -385,7 +385,7 @@ fun OtListScreen(
                                         text = LaborLawCalculator.formatCurrency(record.otHours * itemRate, isBnDigits),
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.titleSmall,
-                                        maxFontSize = 14.sp,
+                                        maxFontSize = spacing.adaptiveSp(16f, 14f, 13f),
                                         minFontSize = 10.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -412,7 +412,7 @@ fun OtListScreen(
                                         ) {
                                             AutoFitSingleLineText(
                                                 text = shiftType.getLabel(),
-                                                maxFontSize = 10.sp,
+                                                maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                 minFontSize = 8.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = shiftType.color,
@@ -427,7 +427,7 @@ fun OtListScreen(
                                             ) {
                                                 AutoFitSingleLineText(
                                                     text = stringResource(R.string.badge_night_bill),
-                                                    maxFontSize = 10.sp,
+                                                    maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                     minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     color = NightBlue,
@@ -442,7 +442,7 @@ fun OtListScreen(
                                             ) {
                                                 AutoFitSingleLineText(
                                                     text = stringResource(R.string.badge_tiffin_bill),
-                                                    maxFontSize = 10.sp,
+                                                    maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                     minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     color = WarningOrange,
@@ -457,7 +457,7 @@ fun OtListScreen(
                                             ) {
                                                 AutoFitSingleLineText(
                                                     text = stringResource(R.string.badge_holiday),
-                                                    maxFontSize = 10.sp,
+                                                    maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                     minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -531,7 +531,16 @@ fun OtListScreen(
     if (recordToDelete != null) {
         AlertDialog(
             onDismissRequest = { recordToDelete = null },
-            title = { Text(stringResource(R.string.delete_ot_title)) },
+            shape = RoundedCornerShape(spacing.heroRadius),
+            title = {
+                AutoFitSingleLineText(
+                    text = stringResource(R.string.delete_ot_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxFontSize = spacing.adaptiveSp(17f, 15.5f, 14f),
+                    minFontSize = 11.sp
+                )
+            },
             text = { Text(stringResource(R.string.delete_ot_message)) },
             confirmButton = {
                 Button(
@@ -539,14 +548,27 @@ fun OtListScreen(
                         recordToDelete?.let { onDeleteClick(it) }
                         recordToDelete = null
                     },
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(stringResource(R.string.delete))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.delete),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { recordToDelete = null }) {
-                    Text(stringResource(R.string.cancel))
+                TextButton(
+                    onClick = { recordToDelete = null },
+                    contentPadding = spacing.compactButtonContentPadding
+                ) {
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.cancel),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )

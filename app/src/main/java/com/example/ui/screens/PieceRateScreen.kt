@@ -132,7 +132,7 @@ fun PieceRateScreen(
                         AutoFitSingleLineText(
                             text = stringResource(R.string.tab_piece_rate_ledger),
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 13.sp,
+                            maxFontSize = spacing.adaptiveSp(14.5f, 13f, 11.5f),
                             minFontSize = 8.5.sp
                         )
                     },
@@ -146,7 +146,7 @@ fun PieceRateScreen(
                         AutoFitSingleLineText(
                             text = stringResource(R.string.tab_pay_slip),
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 13.sp,
+                            maxFontSize = spacing.adaptiveSp(14.5f, 13f, 11.5f),
                             minFontSize = 8.5.sp
                         )
                     },
@@ -183,7 +183,7 @@ fun PieceRateScreen(
                                     text = stringResource(R.string.piece_rate_summary_fmt, selectedMonth),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium,
-                                    maxFontSize = 15.sp,
+                                    maxFontSize = spacing.adaptiveSp(17f, 15f, 13.5f),
                                     minFontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -195,14 +195,14 @@ fun PieceRateScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         AutoFitSingleLineText(
                                             text = stringResource(R.string.total_produced_pieces),
-                                            maxFontSize = 11.sp,
+                                            maxFontSize = spacing.adaptiveSp(12.5f, 11f, 10f),
                                             minFontSize = 8.sp,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                                         )
                                         AutoFitSingleLineText(
                                             text = "${LaborLawCalculator.formatNumber(totalPieces.toDouble(), isBnDigits, 0)} ${stringResource(R.string.pieces_unit)}",
                                             fontWeight = FontWeight.Bold,
-                                            maxFontSize = 16.sp,
+                                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                                             minFontSize = 10.sp,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
@@ -210,7 +210,7 @@ fun PieceRateScreen(
                                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                                         AutoFitSingleLineText(
                                             text = stringResource(R.string.total_piece_income),
-                                            maxFontSize = 11.sp,
+                                            maxFontSize = spacing.adaptiveSp(12.5f, 11f, 10f),
                                             minFontSize = 8.sp,
                                             textAlign = TextAlign.End,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
@@ -218,7 +218,7 @@ fun PieceRateScreen(
                                         AutoFitSingleLineText(
                                             text = LaborLawCalculator.formatCurrency(totalPieceAmount, isBnDigits),
                                             fontWeight = FontWeight.Bold,
-                                            maxFontSize = 16.sp,
+                                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                                             minFontSize = 10.sp,
                                             textAlign = TextAlign.End,
                                             color = MaterialTheme.colorScheme.primary
@@ -281,7 +281,7 @@ fun PieceRateScreen(
                                             text = item.itemName,
                                             fontWeight = FontWeight.Bold,
                                             style = MaterialTheme.typography.bodyLarge,
-                                            maxFontSize = 14.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(16.5f, 14.5f, 13.5f),
                                             minFontSize = 10.sp
                                         )
                                         Text(
@@ -308,7 +308,7 @@ fun PieceRateScreen(
                                             text = LaborLawCalculator.formatCurrency(item.totalAmount, isBnDigits),
                                             fontWeight = FontWeight.Bold,
                                             style = MaterialTheme.typography.titleMedium,
-                                            maxFontSize = 14.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(16.5f, 14.5f, 13.5f),
                                             minFontSize = 10.sp,
                                             color = MaterialTheme.colorScheme.primary
                                         )
@@ -415,7 +415,7 @@ fun PieceRateScreen(
                                         text = displayCompany,
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        maxFontSize = 18.sp,
+                                        maxFontSize = spacing.adaptiveSp(20f, 18f, 16f),
                                         minFontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.primary,
                                         textAlign = TextAlign.Center
@@ -423,7 +423,7 @@ fun PieceRateScreen(
                                     AutoFitSingleLineText(
                                         text = stringResource(R.string.pay_slip_subtitle_fmt, selectedMonth),
                                         style = MaterialTheme.typography.bodyMedium,
-                                        maxFontSize = 13.sp,
+                                        maxFontSize = spacing.adaptiveSp(14.5f, 13f, 11.5f),
                                         minFontSize = 9.5.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.Center
@@ -494,14 +494,14 @@ fun PieceRateScreen(
                                             fontWeight = FontWeight.Bold,
                                             color = SuccessGreen,
                                             style = MaterialTheme.typography.titleMedium,
-                                            maxFontSize = 14.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(16f, 14.5f, 13.5f),
                                             minFontSize = 10.sp,
                                             modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                                         )
                                         AutoFitSingleLineText(
                                             text = LaborLawCalculator.formatCurrency(summary.totalEstimatedEarnings, isBnDigits),
                                             fontWeight = FontWeight.ExtraBold,
-                                            maxFontSize = 17.sp,
+                                            maxFontSize = spacing.adaptiveSp(19f, 17f, 15.5f),
                                             minFontSize = 11.sp,
                                             color = SuccessGreen
                                         )
@@ -568,7 +568,7 @@ fun PieceRateScreen(
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.download_pdf),
                                 fontWeight = FontWeight.Bold,
-                                maxFontSize = 14.sp,
+                                maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
                                 minFontSize = 10.sp
                             )
                         }
@@ -604,9 +604,9 @@ fun PieceRateScreen(
                                 Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                 Text(
                                     text = stringResource(R.string.pdf_info_note),
-                                    fontSize = 11.sp,
+                                    fontSize = spacing.adaptiveSp(12.5f, 11f, 10.5f),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 15.sp
+                                    lineHeight = spacing.adaptiveSp(17f, 15f, 14f)
                                 )
                             }
                         }
@@ -727,7 +727,7 @@ fun PieceRateScreen(
                             Spacer(modifier = Modifier.width(spacing.rowGapSm))
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.share_pay_slip),
-                                maxFontSize = 14.sp,
+                                maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
                                 minFontSize = 10.sp
                             )
                         }

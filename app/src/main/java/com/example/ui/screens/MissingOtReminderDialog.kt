@@ -20,8 +20,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -257,6 +259,7 @@ fun MissingOtReminderDialog(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
+                    maxFontSize = spacing.adaptiveSp(20f, 18f, 16f),
                     minFontSize = 11.sp
                 )
 
@@ -272,146 +275,173 @@ fun MissingOtReminderDialog(
                     stringResource(R.string.missing_ot_multi_msg_fmt, missingDates.size)
                 }
 
-                Text(
-                    text = subText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
-                )
-
-                Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
-
                 // Missing items list or single item banner
                 if (isSingleDate) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                        ),
-                        shape = RoundedCornerShape(spacing.cardRadius)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false)
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(spacing.subCardPadding),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Text(
+                            text = subText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                            ),
+                            shape = RoundedCornerShape(spacing.cardRadius)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CalendarMonth,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(spacing.iconMd)
-                                )
-                                Spacer(modifier = Modifier.width(spacing.rowGapMd))
-                                AutoFitSingleLineText(
-                                    text = MissingOtDetector.formatDisplayDate(context, primaryMissingDate, lang),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    minFontSize = 10.sp
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(spacing.rowGapMd))
-
-                            Button(
-                                onClick = { onAddOtForDate(primaryMissingDate) },
-                                contentPadding = spacing.compactButtonContentPadding,
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(min = spacing.minTouchTarget)
-                                    .testTag("add_missing_ot_btn"),
-                                shape = RoundedCornerShape(spacing.cardRadius),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                )
+                                    .padding(spacing.subCardPadding),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(spacing.iconMd)
-                                )
-                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
-                                AutoFitSingleLineText(
-                                    text = stringResource(R.string.add_overtime_btn),
-                                    fontWeight = FontWeight.Bold,
-                                    maxFontSize = 14.sp,
-                                    minFontSize = 10.sp
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarMonth,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(spacing.iconMd)
+                                    )
+                                    Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                    AutoFitSingleLineText(
+                                        text = MissingOtDetector.formatDisplayDate(context, primaryMissingDate, lang),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxFontSize = spacing.adaptiveSp(17f, 15.5f, 14f),
+                                        minFontSize = 10.sp
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(spacing.rowGapMd))
+
+                                Button(
+                                    onClick = { onAddOtForDate(primaryMissingDate) },
+                                    contentPadding = spacing.compactButtonContentPadding,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = spacing.minTouchTarget)
+                                        .testTag("add_missing_ot_btn"),
+                                    shape = RoundedCornerShape(spacing.cardRadius),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(spacing.iconMd)
+                                    )
+                                    Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                    AutoFitSingleLineText(
+                                        text = stringResource(R.string.add_overtime_btn),
+                                        fontWeight = FontWeight.Bold,
+                                        maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                                        minFontSize = 10.sp
+                                    )
+                                }
                             }
                         }
                     }
                 } else {
-                    // Multiple dates scrollable list
-                    LazyColumn(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f, fill = false)
-                            .heightIn(max = if (spacing.isShortScreen) 180.dp else 240.dp),
-                        verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
+                            .weight(1f, fill = false),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        items(missingDates, key = { it }) { dateStr ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                ),
-                                shape = RoundedCornerShape(spacing.cardRadius)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = spacing.minTouchTarget)
-                                        .padding(horizontal = spacing.listItemPadding, vertical = spacing.rowGapMd),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                        Text(
+                            text = subText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(spacing.dialogInnerGap))
+
+                        // Multiple dates scrollable list
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f, fill = false)
+                                .heightIn(max = if (spacing.isShortScreen) 180.dp else 240.dp),
+                            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
+                        ) {
+                            items(missingDates, key = { it }) { dateStr ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                    ),
+                                    shape = RoundedCornerShape(spacing.cardRadius)
                                 ) {
                                     Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = spacing.minTouchTarget)
+                                            .padding(horizontal = spacing.listItemPadding, vertical = spacing.rowGapMd),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(end = spacing.rowGapSm)
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CalendarMonth,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(spacing.iconMd)
-                                        )
-                                        Spacer(modifier = Modifier.width(spacing.rowGapMd))
-                                        AutoFitSingleLineText(
-                                            text = MissingOtDetector.formatDisplayDate(context, dateStr, lang),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            minFontSize = 9.5.sp
-                                        )
-                                    }
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(end = spacing.rowGapSm)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.CalendarMonth,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(spacing.iconMd)
+                                            )
+                                            Spacer(modifier = Modifier.width(spacing.rowGapMd))
+                                            AutoFitSingleLineText(
+                                                text = MissingOtDetector.formatDisplayDate(context, dateStr, lang),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                                                minFontSize = 9.5.sp
+                                            )
+                                        }
 
-                                    Button(
-                                        onClick = { onAddOtForDate(dateStr) },
-                                        contentPadding = spacing.compactButtonContentPadding,
-                                        shape = RoundedCornerShape(spacing.subCardRadius),
-                                        modifier = Modifier
-                                            .heightIn(min = spacing.compactButtonHeight)
-                                            .testTag("add_missing_date_${dateStr}")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Add,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(spacing.iconSm)
-                                        )
-                                        Spacer(modifier = Modifier.width(spacing.rowGapSm))
-                                        AutoFitSingleLineText(
-                                            text = stringResource(R.string.add),
-                                            maxFontSize = 13.sp,
-                                            minFontSize = 9.5.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        Button(
+                                            onClick = { onAddOtForDate(dateStr) },
+                                            contentPadding = spacing.compactButtonContentPadding,
+                                            shape = RoundedCornerShape(spacing.subCardRadius),
+                                            modifier = Modifier
+                                                .heightIn(min = spacing.compactButtonHeight)
+                                                .testTag("add_missing_date_${dateStr}")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Add,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(spacing.iconSm)
+                                            )
+                                            Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                            AutoFitSingleLineText(
+                                                text = stringResource(R.string.add),
+                                                maxFontSize = spacing.adaptiveSp(14f, 13f, 12f),
+                                                minFontSize = 9.5.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -435,6 +465,7 @@ fun MissingOtReminderDialog(
                         text = stringResource(R.string.later_dismiss_btn),
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
                         minFontSize = 9.5.sp
                     )
                 }

@@ -486,15 +486,15 @@ fun OvertimeApp(
                             }
                             val spacing = ResponsiveUtils.rememberAppSpacing()
                             val navBarHeight = when (spacing.tier) {
-                                ScreenDensityTier.MICRO_COMPACT -> 56.dp
-                                ScreenDensityTier.EXTRA_COMPACT -> 60.dp
-                                ScreenDensityTier.STANDARD_COMPACT -> 64.dp
+                                ScreenDensityTier.MICRO_COMPACT -> 58.dp
+                                ScreenDensityTier.EXTRA_COMPACT -> 64.dp
+                                ScreenDensityTier.STANDARD_COMPACT -> 72.dp
                             }
-                            val navLabelMaxSp = when (spacing.tier) {
-                                ScreenDensityTier.MICRO_COMPACT -> 9.5.sp
-                                ScreenDensityTier.EXTRA_COMPACT -> 10.sp
-                                ScreenDensityTier.STANDARD_COMPACT -> 11.sp
-                            }
+                            val navLabelMaxSp = spacing.adaptiveSp(
+                                standard = 12f,
+                                compact = 11f,
+                                micro = 10f
+                            )
 
                             AnimatedVisibility(
                                 visible = !isImeVisible,

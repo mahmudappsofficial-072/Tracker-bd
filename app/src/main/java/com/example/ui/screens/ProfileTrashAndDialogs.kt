@@ -82,6 +82,7 @@ fun TrashManagementDialog(
                             text = stringResource(R.string.trash_bin_title),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -95,7 +96,7 @@ fun TrashManagementDialog(
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.empty_all),
                                     color = MaterialTheme.colorScheme.error,
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                     minFontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -293,7 +294,7 @@ fun TrashManagementDialog(
                                             AutoFitSingleLineText(
                                                 text = stringResource(R.string.delete_permanently),
                                                 color = MaterialTheme.colorScheme.error,
-                                                maxFontSize = 12.sp,
+                                                maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                                 minFontSize = 9.sp
                                             )
                                         }
@@ -313,7 +314,7 @@ fun TrashManagementDialog(
                                             Spacer(modifier = Modifier.width(spacing.rowGapSm))
                                             AutoFitSingleLineText(
                                                 text = stringResource(R.string.restore),
-                                                maxFontSize = 12.sp,
+                                                maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                                 minFontSize = 9.sp
                                             )
                                         }
@@ -342,6 +343,7 @@ fun TrashManagementDialog(
                         AutoFitSingleLineText(
                             text = stringResource(R.string.close),
                             fontWeight = FontWeight.SemiBold,
+                            maxFontSize = spacing.adaptiveSp(15.5f, 14f, 13f),
                             minFontSize = 10.sp
                         )
                     }
@@ -359,6 +361,7 @@ fun TrashManagementDialog(
                     text = stringResource(R.string.trash_delete_perm_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                     minFontSize = 11.sp
                 )
             },
@@ -402,6 +405,7 @@ fun TrashManagementDialog(
                     text = stringResource(R.string.trash_empty_confirm_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                     minFontSize = 11.sp
                 )
             },
@@ -471,6 +475,7 @@ fun ProfileConfirmationDialogs(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error,
+                    maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                     minFontSize = 11.sp
                 )
             },
@@ -534,6 +539,7 @@ fun ProfileConfirmationDialogs(
                     text = stringResource(R.string.offline_signout_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                     minFontSize = 11.sp
                 )
             },
@@ -573,6 +579,7 @@ fun ProfileConfirmationDialogs(
                     text = stringResource(R.string.confirm_signout_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                     minFontSize = 11.sp
                 )
             },

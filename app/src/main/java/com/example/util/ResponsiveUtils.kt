@@ -11,9 +11,9 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Self-adaptive UI density tier classified from actual device width, height, and system font scale.
- * - [STANDARD_COMPACT]: 2/4 (50%) spacing/padding reduction baseline applied across all standard phones.
- * - [EXTRA_COMPACT]: tighter density for narrow (<365dp), short-height (<690dp), or large-font (>=1.15f) phones.
- * - [MICRO_COMPACT]: ultra-compact density for very small/short phones (<340dp width or <600dp height).
+ * - [STANDARD_COMPACT]: 2x roomy spacing/padding/height baseline applied across standard/large phones.
+ * - [EXTRA_COMPACT]: balanced compact density for narrow (<365dp), short-height (<690dp), or large-font (>=1.15f) phones.
+ * - [MICRO_COMPACT]: ultra-safe density floor for very small/short phones (<340dp width or <600dp height).
  */
 enum class ScreenDensityTier {
     MICRO_COMPACT,
@@ -77,6 +77,12 @@ data class AppSpacing(
 
     val screenContentWithFab: PaddingValues
         get() = PaddingValues(start = screenH, end = screenH, top = screenV, bottom = bottomWithFab)
+
+    fun adaptiveSp(standard: Float, compact: Float, micro: Float = compact): TextUnit = when (tier) {
+        ScreenDensityTier.MICRO_COMPACT -> androidx.compose.ui.unit.TextUnit(micro, androidx.compose.ui.unit.TextUnitType.Sp)
+        ScreenDensityTier.EXTRA_COMPACT -> androidx.compose.ui.unit.TextUnit(compact, androidx.compose.ui.unit.TextUnitType.Sp)
+        ScreenDensityTier.STANDARD_COMPACT -> androidx.compose.ui.unit.TextUnit(standard, androidx.compose.ui.unit.TextUnitType.Sp)
+    }
 }
 
 object ResponsiveUtils {
@@ -112,8 +118,8 @@ object ResponsiveUtils {
     }
 
     /**
-     * Pure spacing resolver implementing a 2/4 (50%) reduction from legacy defaults on [STANDARD_COMPACT]
-     * and progressively tighter geometry on [EXTRA_COMPACT] / [MICRO_COMPACT].
+     * Pure spacing resolver applying a 2x roomy layout scale on [STANDARD_COMPACT]
+     * while automatically stepping down on [EXTRA_COMPACT] and [MICRO_COMPACT] devices.
      */
     fun spacingFor(
         widthDp: Int,
@@ -129,108 +135,6 @@ object ResponsiveUtils {
                 tier = tier,
                 isCompact = isCompactWidthOrFont,
                 isShortScreen = isShort,
-                screenH = 4.dp,
-                screenV = 3.dp,
-                sectionGap = 3.dp,
-                heroCardPadding = 5.dp,
-                heroInnerGap = 3.dp,
-                cardPadding = 4.dp,
-                cardInnerGap = 3.dp,
-                listItemPadding = 3.dp,
-                pillCardPadding = 3.dp,
-                subCardPadding = 3.5.dp,
-                gridGap = 2.5.dp,
-                emptyStateVertical = 6.dp,
-                bottomNoFab = 5.dp,
-                bottomWithFab = 48.dp,
-                sheetHeaderH = 4.dp,
-                sheetHeaderV = 2.dp,
-                sheetBodyH = 4.dp,
-                sheetBodyV = 3.dp,
-                sheetBodyGap = 2.5.dp,
-                sheetFooterH = 4.dp,
-                sheetFooterV = 2.5.dp,
-                dialogOuterPadding = 4.dp,
-                dialogCardPadding = 5.dp,
-                dialogInnerGap = 3.dp,
-                badgeH = 3.dp,
-                badgeV = 1.dp,
-                compactButtonContentPadding = PaddingValues(horizontal = 4.dp, vertical = 1.dp),
-                minTouchTarget = 48.dp,
-                heroRadius = 8.dp,
-                cardRadius = 6.dp,
-                subCardRadius = 4.dp,
-                badgeRadius = 3.dp,
-                rowGapSm = 2.dp,
-                rowGapMd = 3.dp,
-                headerLogoSize = 22.dp,
-                avatarSize = 26.dp,
-                actionCircleSize = 18.dp,
-                actionIconSize = 11.dp,
-                listCircleSize = 24.dp,
-                iconSm = 10.dp,
-                iconMd = 13.dp,
-                iconLg = 16.dp,
-                progressHeight = 4.dp,
-                compactActionPadV = 2.5.dp,
-                compactButtonHeight = 36.dp
-            )
-
-            ScreenDensityTier.EXTRA_COMPACT -> AppSpacing(
-                tier = tier,
-                isCompact = isCompactWidthOrFont,
-                isShortScreen = isShort,
-                screenH = 5.dp,
-                screenV = 4.dp,
-                sectionGap = 4.dp,
-                heroCardPadding = 6.dp,
-                heroInnerGap = 4.dp,
-                cardPadding = 5.dp,
-                cardInnerGap = 4.dp,
-                listItemPadding = 4.dp,
-                pillCardPadding = 3.5.dp,
-                subCardPadding = 4.dp,
-                gridGap = 3.dp,
-                emptyStateVertical = 7.dp,
-                bottomNoFab = 6.dp,
-                bottomWithFab = 52.dp,
-                sheetHeaderH = 5.dp,
-                sheetHeaderV = 2.5.dp,
-                sheetBodyH = 5.dp,
-                sheetBodyV = 4.dp,
-                sheetBodyGap = 3.dp,
-                sheetFooterH = 5.dp,
-                sheetFooterV = 3.dp,
-                dialogOuterPadding = 5.dp,
-                dialogCardPadding = 6.dp,
-                dialogInnerGap = 4.dp,
-                badgeH = 3.5.dp,
-                badgeV = 1.dp,
-                compactButtonContentPadding = PaddingValues(horizontal = 5.dp, vertical = 1.dp),
-                minTouchTarget = 48.dp,
-                heroRadius = 9.dp,
-                cardRadius = 7.dp,
-                subCardRadius = 5.dp,
-                badgeRadius = 3.5.dp,
-                rowGapSm = 2.5.dp,
-                rowGapMd = 4.dp,
-                headerLogoSize = 24.dp,
-                avatarSize = 28.dp,
-                actionCircleSize = 20.dp,
-                actionIconSize = 12.dp,
-                listCircleSize = 26.dp,
-                iconSm = 11.dp,
-                iconMd = 14.dp,
-                iconLg = 18.dp,
-                progressHeight = 5.dp,
-                compactActionPadV = 3.dp,
-                compactButtonHeight = 38.dp
-            )
-
-            ScreenDensityTier.STANDARD_COMPACT -> AppSpacing(
-                tier = tier,
-                isCompact = isCompactWidthOrFont,
-                isShortScreen = isShort,
                 screenH = 6.dp,
                 screenV = 5.dp,
                 sectionGap = 5.dp,
@@ -240,11 +144,11 @@ object ResponsiveUtils {
                 cardInnerGap = 5.dp,
                 listItemPadding = 5.dp,
                 pillCardPadding = 4.dp,
-                subCardPadding = 5.dp,
+                subCardPadding = 5.5.dp,
                 gridGap = 4.dp,
                 emptyStateVertical = 9.dp,
                 bottomNoFab = 7.dp,
-                bottomWithFab = 56.dp,
+                bottomWithFab = 60.dp,
                 sheetHeaderH = 6.dp,
                 sheetHeaderV = 3.dp,
                 sheetBodyH = 6.dp,
@@ -259,23 +163,125 @@ object ResponsiveUtils {
                 badgeV = 1.5.dp,
                 compactButtonContentPadding = PaddingValues(horizontal = 6.dp, vertical = 1.5.dp),
                 minTouchTarget = 48.dp,
-                heroRadius = 10.dp,
-                cardRadius = 8.dp,
-                subCardRadius = 6.dp,
-                badgeRadius = 4.dp,
+                heroRadius = 11.dp,
+                cardRadius = 9.dp,
+                subCardRadius = 7.dp,
+                badgeRadius = 4.5.dp,
                 rowGapSm = 3.dp,
                 rowGapMd = 5.dp,
-                headerLogoSize = 26.dp,
-                avatarSize = 32.dp,
-                actionCircleSize = 22.dp,
-                actionIconSize = 13.dp,
-                listCircleSize = 28.dp,
+                headerLogoSize = 28.dp,
+                avatarSize = 34.dp,
+                actionCircleSize = 30.dp,
+                actionIconSize = 16.dp,
+                listCircleSize = 30.dp,
                 iconSm = 12.dp,
-                iconMd = 15.dp,
+                iconMd = 16.dp,
                 iconLg = 20.dp,
-                progressHeight = 6.dp,
+                progressHeight = 7.dp,
                 compactActionPadV = 4.dp,
-                compactButtonHeight = 40.dp
+                compactButtonHeight = 38.dp
+            )
+
+            ScreenDensityTier.EXTRA_COMPACT -> AppSpacing(
+                tier = tier,
+                isCompact = isCompactWidthOrFont,
+                isShortScreen = isShort,
+                screenH = 9.dp,
+                screenV = 7.dp,
+                sectionGap = 7.dp,
+                heroCardPadding = 10.dp,
+                heroInnerGap = 7.dp,
+                cardPadding = 9.dp,
+                cardInnerGap = 7.dp,
+                listItemPadding = 7.dp,
+                pillCardPadding = 6.dp,
+                subCardPadding = 7.5.dp,
+                gridGap = 6.dp,
+                emptyStateVertical = 13.dp,
+                bottomNoFab = 10.dp,
+                bottomWithFab = 72.dp,
+                sheetHeaderH = 9.dp,
+                sheetHeaderV = 4.5.dp,
+                sheetBodyH = 9.dp,
+                sheetBodyV = 7.dp,
+                sheetBodyGap = 6.dp,
+                sheetFooterH = 9.dp,
+                sheetFooterV = 6.dp,
+                dialogOuterPadding = 9.dp,
+                dialogCardPadding = 10.dp,
+                dialogInnerGap = 7.dp,
+                badgeH = 6.dp,
+                badgeV = 2.dp,
+                compactButtonContentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp),
+                minTouchTarget = 48.dp,
+                heroRadius = 15.dp,
+                cardRadius = 12.dp,
+                subCardRadius = 9.dp,
+                badgeRadius = 6.dp,
+                rowGapSm = 4.5.dp,
+                rowGapMd = 7.dp,
+                headerLogoSize = 34.dp,
+                avatarSize = 42.dp,
+                actionCircleSize = 36.dp,
+                actionIconSize = 19.dp,
+                listCircleSize = 36.dp,
+                iconSm = 14.dp,
+                iconMd = 19.dp,
+                iconLg = 23.dp,
+                progressHeight = 9.dp,
+                compactActionPadV = 6.dp,
+                compactButtonHeight = 42.dp
+            )
+
+            ScreenDensityTier.STANDARD_COMPACT -> AppSpacing(
+                tier = tier,
+                isCompact = isCompactWidthOrFont,
+                isShortScreen = isShort,
+                screenH = 12.dp,
+                screenV = 10.dp,
+                sectionGap = 10.dp,
+                heroCardPadding = 14.dp,
+                heroInnerGap = 10.dp,
+                cardPadding = 12.dp,
+                cardInnerGap = 10.dp,
+                listItemPadding = 10.dp,
+                pillCardPadding = 8.dp,
+                subCardPadding = 10.dp,
+                gridGap = 8.dp,
+                emptyStateVertical = 18.dp,
+                bottomNoFab = 14.dp,
+                bottomWithFab = 84.dp,
+                sheetHeaderH = 12.dp,
+                sheetHeaderV = 6.dp,
+                sheetBodyH = 12.dp,
+                sheetBodyV = 10.dp,
+                sheetBodyGap = 8.dp,
+                sheetFooterH = 12.dp,
+                sheetFooterV = 8.dp,
+                dialogOuterPadding = 12.dp,
+                dialogCardPadding = 14.dp,
+                dialogInnerGap = 10.dp,
+                badgeH = 8.dp,
+                badgeV = 3.dp,
+                compactButtonContentPadding = PaddingValues(horizontal = 12.dp, vertical = 3.dp),
+                minTouchTarget = 48.dp,
+                heroRadius = 20.dp,
+                cardRadius = 16.dp,
+                subCardRadius = 12.dp,
+                badgeRadius = 8.dp,
+                rowGapSm = 6.dp,
+                rowGapMd = 10.dp,
+                headerLogoSize = 44.dp,
+                avatarSize = 52.dp,
+                actionCircleSize = 44.dp,
+                actionIconSize = 24.dp,
+                listCircleSize = 44.dp,
+                iconSm = 16.dp,
+                iconMd = 22.dp,
+                iconLg = 26.dp,
+                progressHeight = 12.dp,
+                compactActionPadV = 8.dp,
+                compactButtonHeight = 48.dp
             )
         }
     }

@@ -191,7 +191,7 @@ fun EditIdentitySheet(
                             text = stringResource(R.string.edit_identity_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 16.sp,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -258,7 +258,7 @@ fun EditIdentitySheet(
                 } else {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                     ) {
                         OutlinedTextField(
                             value = companyName,
@@ -277,7 +277,7 @@ fun EditIdentitySheet(
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                     ) {
                         OutlinedTextField(
                             value = workerId,
@@ -317,7 +317,12 @@ fun EditIdentitySheet(
                             .testTag("cancel_edit_button"),
                         shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold, maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.cancel),
+                            fontWeight = FontWeight.SemiBold,
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                     Button(
                         onClick = {
@@ -341,7 +346,12 @@ fun EditIdentitySheet(
                     ) {
                         Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
                         Spacer(modifier = Modifier.width(spacing.rowGapSm))
-                        AutoFitSingleLineText(stringResource(R.string.save_identity_btn), fontWeight = FontWeight.Bold, maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.save_identity_btn),
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -555,7 +565,7 @@ fun SalaryStructureSheet(
                             text = stringResource(R.string.salary_structure_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 16.sp,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -596,7 +606,7 @@ fun SalaryStructureSheet(
                                 imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
                                 contentDescription = stringResource(R.string.cd_salary_mode_help),
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(spacing.iconMd)
                             )
                         }
                     }
@@ -631,7 +641,7 @@ fun SalaryStructureSheet(
                         ) {
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.mode_auto_tab),
-                                maxFontSize = 11.5.sp,
+                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                 minFontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
@@ -660,7 +670,7 @@ fun SalaryStructureSheet(
                         ) {
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.mode_custom_tab),
-                                maxFontSize = 11.5.sp,
+                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                 minFontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
@@ -818,7 +828,7 @@ fun SalaryStructureSheet(
                         Column(modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)) {
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.effective_ot_rate_label),
-                                maxFontSize = 11.5.sp,
+                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                 minFontSize = 8.5.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -829,7 +839,7 @@ fun SalaryStructureSheet(
                                 } else {
                                     "—"
                                 },
-                                maxFontSize = 17.sp,
+                                maxFontSize = spacing.adaptiveSp(19f, 17f, 15f),
                                 minFontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -838,7 +848,7 @@ fun SalaryStructureSheet(
                         Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.total_regular_salary_label),
-                                maxFontSize = 11.5.sp,
+                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                 minFontSize = 8.5.sp,
                                 textAlign = TextAlign.End,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -850,7 +860,7 @@ fun SalaryStructureSheet(
                             }
                             AutoFitSingleLineText(
                                 text = LaborLawCalculator.formatCurrency(calculatedGross, isBnDigits),
-                                maxFontSize = 15.5.sp,
+                                maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                                 minFontSize = 10.5.sp,
                                 textAlign = TextAlign.End,
                                 fontWeight = FontWeight.Bold,
@@ -916,7 +926,7 @@ fun SalaryStructureSheet(
                             singleLine = true
                         )
                     } else {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)) {
                             OutlinedTextField(
                                 value = autoResult.houseRent.roundToInt().toString(),
                                 onValueChange = {},
@@ -934,7 +944,7 @@ fun SalaryStructureSheet(
                                 singleLine = true
                             )
                         }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)) {
                             OutlinedTextField(
                                 value = autoResult.conveyanceAllowance.roundToInt().toString(),
                                 onValueChange = {},
@@ -1051,7 +1061,7 @@ fun SalaryStructureSheet(
                         )
                     )
                 } else {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)) {
                         OutlinedTextField(
                             value = nightBillRateText,
                             onValueChange = {
@@ -1185,7 +1195,7 @@ fun SalaryStructureSheet(
                                     onClick = { maxLeaveForBonusText = "" },
                                     modifier = Modifier.minimumInteractiveComponentSize()
                                 ) {
-                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear), modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear), modifier = Modifier.size(spacing.iconSm))
                                 }
                             }
                             FieldHelpIconButton(
@@ -1220,7 +1230,12 @@ fun SalaryStructureSheet(
                             .heightIn(min = spacing.minTouchTarget),
                         shape = RoundedCornerShape(spacing.cardRadius)
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold, maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.cancel),
+                            fontWeight = FontWeight.SemiBold,
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                     Button(
                         onClick = {
@@ -1255,7 +1270,12 @@ fun SalaryStructureSheet(
                     ) {
                         Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(spacing.iconMd))
                         Spacer(modifier = Modifier.width(spacing.rowGapSm))
-                        AutoFitSingleLineText(stringResource(R.string.save_salary_btn), fontWeight = FontWeight.Bold, maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.save_salary_btn),
+                            fontWeight = FontWeight.Bold,
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -1344,6 +1364,7 @@ private fun FieldHelpIconButton(
     fieldLabel: String,
     onClick: () -> Unit
 ) {
+    val spacing = ResponsiveUtils.rememberAppSpacing()
     IconButton(
         onClick = onClick,
         modifier = Modifier
@@ -1354,7 +1375,7 @@ private fun FieldHelpIconButton(
             imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
             contentDescription = stringResource(R.string.cd_field_help_fmt, fieldLabel),
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(spacing.iconMd)
         )
     }
 }
@@ -1422,7 +1443,7 @@ private fun SalaryFieldHelpDialog(
                         text = stringResource(topic.titleRes),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        maxFontSize = 15.5.sp,
+                        maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                         minFontSize = 11.sp,
                         modifier = Modifier.weight(1f)
                     )
@@ -1490,7 +1511,7 @@ private fun SalaryFieldHelpDialog(
                         AutoFitSingleLineText(
                             text = stringResource(R.string.salary_help_got_it),
                             fontWeight = FontWeight.SemiBold,
-                            maxFontSize = 14.sp,
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
                             minFontSize = 10.sp
                         )
                     }
@@ -1515,7 +1536,7 @@ private fun SheetStepHeader(
     ) {
         AutoFitSingleLineText(
             text = title,
-            maxFontSize = 14.sp,
+            maxFontSize = spacing.adaptiveSp(15.5f, 14f, 13f),
             minFontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,

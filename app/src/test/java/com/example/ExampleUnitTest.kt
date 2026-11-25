@@ -1223,13 +1223,16 @@ class ExampleUnitTest {
     val extra = com.example.util.ResponsiveUtils.spacingFor(360, 680, 1.0f)
     val micro = com.example.util.ResponsiveUtils.spacingFor(320, 568, 1.0f)
 
-    assertEquals(androidx.compose.ui.unit.Dp(6f), standard.screenH)
-    assertEquals(androidx.compose.ui.unit.Dp(5f), standard.screenV)
-    assertEquals(androidx.compose.ui.unit.Dp(7f), standard.heroCardPadding)
-    assertEquals(androidx.compose.ui.unit.Dp(6f), standard.cardPadding)
-    assertEquals(androidx.compose.ui.unit.Dp(4f), standard.pillCardPadding)
-    assertEquals(androidx.compose.ui.unit.Dp(10f), standard.heroRadius)
-    assertEquals(androidx.compose.ui.unit.Dp(8f), standard.cardRadius)
+    assertEquals(androidx.compose.ui.unit.Dp(12f), standard.screenH)
+    assertEquals(androidx.compose.ui.unit.Dp(10f), standard.screenV)
+    assertEquals(androidx.compose.ui.unit.Dp(14f), standard.heroCardPadding)
+    assertEquals(androidx.compose.ui.unit.Dp(12f), standard.cardPadding)
+    assertEquals(androidx.compose.ui.unit.Dp(8f), standard.pillCardPadding)
+    assertEquals(androidx.compose.ui.unit.Dp(20f), standard.heroRadius)
+    assertEquals(androidx.compose.ui.unit.Dp(16f), standard.cardRadius)
+    assertEquals(androidx.compose.ui.unit.Dp(12f), standard.progressHeight)
+    assertEquals(androidx.compose.ui.unit.Dp(44f), standard.actionCircleSize)
+    assertEquals(androidx.compose.ui.unit.Dp(48f), standard.compactButtonHeight)
     assertEquals(androidx.compose.ui.unit.Dp(48f), standard.minTouchTarget)
     assertFalse(standard.isCompact)
     assertFalse(standard.isShortScreen)
@@ -1237,6 +1240,13 @@ class ExampleUnitTest {
     assertTrue(micro.screenH <= extra.screenH && extra.screenH <= standard.screenH)
     assertTrue(micro.heroCardPadding <= extra.heroCardPadding && extra.heroCardPadding <= standard.heroCardPadding)
     assertTrue(micro.avatarSize <= extra.avatarSize && extra.avatarSize <= standard.avatarSize)
+    assertTrue(micro.progressHeight <= extra.progressHeight && extra.progressHeight <= standard.progressHeight)
+    assertTrue(micro.actionCircleSize <= extra.actionCircleSize && extra.actionCircleSize <= standard.actionCircleSize)
+    assertTrue(micro.compactButtonHeight <= extra.compactButtonHeight && extra.compactButtonHeight <= standard.compactButtonHeight)
+    assertTrue(
+      micro.adaptiveSp(22f, 18f, 15.5f).value <= extra.adaptiveSp(22f, 18f, 15.5f).value &&
+        extra.adaptiveSp(22f, 18f, 15.5f).value <= standard.adaptiveSp(22f, 18f, 15.5f).value
+    )
     assertTrue(com.example.util.ResponsiveUtils.spacingFor(411, 650, 1.0f).isShortScreen)
   }
 

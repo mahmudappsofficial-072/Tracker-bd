@@ -104,10 +104,9 @@ fun HomeScreen(
     }
 
     val spacing = ResponsiveUtils.rememberAppSpacing()
-    val isCompactScreen = spacing.isCompact
     val pillCardPadding = spacing.pillCardPadding
-    val pillTitleSize = if (isCompactScreen) 10.sp else 11.sp
-    val pillValueSize = if (isCompactScreen) 12.5.sp else 13.5.sp
+    val pillTitleSize = spacing.adaptiveSp(standard = 12.5f, compact = 11f, micro = 10f)
+    val pillValueSize = spacing.adaptiveSp(standard = 15.5f, compact = 13.5f, micro = 12.5f)
 
     val chipLabel = if (selectedSettingTag == LanguageManager.SYSTEM_TAG) {
         "${stringResource(R.string.lang_chip_system_short)} (${effectiveLang.uppercase(Locale.US)})"
@@ -154,7 +153,7 @@ fun HomeScreen(
                                 text = summary.userName.ifBlank { stringResource(R.string.app_display_name) },
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                maxFontSize = if (isCompactScreen) 14.sp else 15.sp,
+                                maxFontSize = spacing.adaptiveSp(17f, 15f, 14f),
                                 minFontSize = 10.sp
                             )
                             val subInfo = listOfNotNull(
@@ -165,7 +164,7 @@ fun HomeScreen(
                                 text = subInfo.ifBlank { stringResource(R.string.set_info_from_profile) },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxFontSize = 11.sp,
+                                maxFontSize = spacing.adaptiveSp(12.5f, 11f, 10f),
                                 minFontSize = 8.sp
                             )
                         }
@@ -177,7 +176,7 @@ fun HomeScreen(
                                 AutoFitSingleLineText(
                                     text = chipLabel,
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 11.sp,
+                                    maxFontSize = spacing.adaptiveSp(12.5f, 11f, 10f),
                                     minFontSize = 8.5.sp
                                 )
                             },
@@ -233,7 +232,7 @@ fun HomeScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
-                            maxFontSize = if (isCompactScreen) 14.sp else 15.sp,
+                            maxFontSize = spacing.adaptiveSp(17f, 15f, 13.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -297,7 +296,7 @@ fun HomeScreen(
                                     text = stringResource(R.string.estimated_income),
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(14f, 12f, 11f),
                                     minFontSize = 9.sp,
                                     modifier = Modifier
                                         .weight(1f)
@@ -314,7 +313,7 @@ fun HomeScreen(
                                             stringResource(R.string.rule_labor_law_2006)
                                         },
                                         color = MaterialTheme.colorScheme.onPrimary,
-                                        maxFontSize = 10.sp,
+                                        maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                         minFontSize = 7.5.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
@@ -328,8 +327,8 @@ fun HomeScreen(
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onPrimary,
-                                maxFontSize = if (isCompactScreen) 23.sp else 26.sp,
-                                minFontSize = 16.sp,
+                                maxFontSize = spacing.adaptiveSp(29f, 24.5f, 22f),
+                                minFontSize = 15.sp,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -345,14 +344,14 @@ fun HomeScreen(
                                     AutoFitSingleLineText(
                                         text = stringResource(R.string.total_ot_hours),
                                         style = MaterialTheme.typography.bodySmall,
-                                        maxFontSize = if (isCompactScreen) 10.sp else 11.sp,
+                                        maxFontSize = spacing.adaptiveSp(12.5f, 10.5f, 9.5f),
                                         minFontSize = 7.5.sp,
                                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                     )
                                     AutoFitSingleLineText(
                                         text = "${LaborLawCalculator.formatNumber(summary.totalOtHours, isBnDigits)} ${stringResource(R.string.hours_unit)}",
                                         style = MaterialTheme.typography.titleMedium,
-                                        maxFontSize = if (isCompactScreen) 13.sp else 15.sp,
+                                        maxFontSize = spacing.adaptiveSp(17f, 14f, 12.5f),
                                         minFontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimary
@@ -364,14 +363,14 @@ fun HomeScreen(
                                     AutoFitSingleLineText(
                                         text = stringResource(R.string.total_ot_amount),
                                         style = MaterialTheme.typography.bodySmall,
-                                        maxFontSize = if (isCompactScreen) 10.sp else 11.sp,
+                                        maxFontSize = spacing.adaptiveSp(12.5f, 10.5f, 9.5f),
                                         minFontSize = 7.5.sp,
                                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                     )
                                     AutoFitSingleLineText(
                                         text = LaborLawCalculator.formatCurrency(summary.totalOtAmount, isBnDigits),
                                         style = MaterialTheme.typography.titleMedium,
-                                        maxFontSize = if (isCompactScreen) 13.sp else 15.sp,
+                                        maxFontSize = spacing.adaptiveSp(17f, 14f, 12.5f),
                                         minFontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimary
@@ -383,14 +382,14 @@ fun HomeScreen(
                                     AutoFitSingleLineText(
                                         text = stringResource(R.string.hourly_rate),
                                         style = MaterialTheme.typography.bodySmall,
-                                        maxFontSize = if (isCompactScreen) 10.sp else 11.sp,
+                                        maxFontSize = spacing.adaptiveSp(12.5f, 10.5f, 9.5f),
                                         minFontSize = 7.5.sp,
                                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                     )
                                     AutoFitSingleLineText(
                                         text = LaborLawCalculator.formatCurrency(summary.hourlyOtRate, isBnDigits),
                                         style = MaterialTheme.typography.titleMedium,
-                                        maxFontSize = if (isCompactScreen) 13.sp else 15.sp,
+                                        maxFontSize = spacing.adaptiveSp(17f, 14f, 12.5f),
                                         minFontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimary
@@ -439,7 +438,7 @@ fun HomeScreen(
                                     text = stringResource(R.string.ot_target),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 13.5.sp,
+                                    maxFontSize = spacing.adaptiveSp(15.5f, 13.5f, 12.5f),
                                     minFontSize = 10.sp
                                 )
                             }
@@ -454,7 +453,7 @@ fun HomeScreen(
                                 ) {
                                     AutoFitSingleLineText(
                                         text = stringResource(R.string.change_target),
-                                        maxFontSize = 11.5.sp,
+                                        maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                         minFontSize = 9.sp
                                     )
                                 }
@@ -476,7 +475,7 @@ fun HomeScreen(
                                         Spacer(modifier = Modifier.width(spacing.rowGapSm))
                                         AutoFitSingleLineText(
                                             text = stringResource(R.string.locked),
-                                            maxFontSize = 10.sp,
+                                            maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                             minFontSize = 8.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontWeight = FontWeight.Medium
@@ -507,8 +506,8 @@ fun HomeScreen(
                                     Text(
                                         text = stringResource(R.string.no_target_hint),
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 11.sp,
-                                        lineHeight = 15.sp,
+                                        fontSize = spacing.adaptiveSp(12.5f, 11f, 10.5f),
+                                        lineHeight = spacing.adaptiveSp(17f, 15f, 14f),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -552,7 +551,7 @@ fun HomeScreen(
                                     AutoFitSingleLineText(
                                         text = stringResource(R.string.target_ot_earnings),
                                         style = MaterialTheme.typography.labelSmall,
-                                        maxFontSize = 10.5.sp,
+                                        maxFontSize = spacing.adaptiveSp(12f, 10.5f, 9.5f),
                                         minFontSize = 8.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -567,7 +566,7 @@ fun HomeScreen(
                                         },
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        maxFontSize = 18.sp,
+                                        maxFontSize = spacing.adaptiveSp(20f, 18f, 16f),
                                         minFontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -594,7 +593,7 @@ fun HomeScreen(
                                                 LaborLawCalculator.formatNumber(summary.targetHours, isBnDigits, 0)
                                             ),
                                             style = MaterialTheme.typography.labelMedium,
-                                            maxFontSize = 11.sp,
+                                            maxFontSize = spacing.adaptiveSp(12.5f, 11f, 10f),
                                             minFontSize = 8.5.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = animatedProgressColor
@@ -626,7 +625,7 @@ fun HomeScreen(
                                             (summary.targetProgress * 100).toInt()
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
-                                        maxFontSize = 10.5.sp,
+                                        maxFontSize = spacing.adaptiveSp(12f, 10.5f, 9.5f),
                                         minFontSize = 8.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = animatedProgressColor
@@ -638,7 +637,7 @@ fun HomeScreen(
                                                 LaborLawCalculator.formatCurrency(summary.hourlyOtRate, isBnDigits)
                                             ),
                                             style = MaterialTheme.typography.labelSmall,
-                                            maxFontSize = 10.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(12f, 10.5f, 9.5f),
                                             minFontSize = 8.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -685,7 +684,7 @@ fun HomeScreen(
                                                     )
                                                     AutoFitSingleLineText(
                                                         text = stringResource(R.string.target_met),
-                                                        maxFontSize = if (isCompactScreen) 9.5.sp else 10.5.sp,
+                                                        maxFontSize = spacing.adaptiveSp(12f, 10.5f, 9.5f),
                                                         minFontSize = 7.5.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = SuccessGreen
@@ -695,7 +694,7 @@ fun HomeScreen(
                                             AutoFitSingleLineText(
                                                 text = stringResource(R.string.target_ot_label),
                                                 style = MaterialTheme.typography.labelSmall,
-                                                maxFontSize = 10.sp,
+                                                maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                 minFontSize = 7.5.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -707,7 +706,7 @@ fun HomeScreen(
                                                     "${LaborLawCalculator.formatNumber(summary.targetAchievedHours, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                 },
                                                 style = MaterialTheme.typography.titleMedium,
-                                                maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                maxFontSize = spacing.adaptiveSp(18f, 15f, 13.5f),
                                                 minFontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = SuccessGreen,
@@ -720,7 +719,7 @@ fun HomeScreen(
                                                     LaborLawCalculator.formatNumber(summary.targetHours, isBnDigits, 0)
                                                 ),
                                                 style = MaterialTheme.typography.labelSmall,
-                                                maxFontSize = 10.sp,
+                                                maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                 minFontSize = 7.5.sp,
                                                 color = SuccessGreen,
                                                 fontWeight = FontWeight.Medium
@@ -746,14 +745,14 @@ fun HomeScreen(
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(6.dp)
+                                                        .size(if (spacing.isCompact) 6.dp else 8.dp)
                                                         .clip(CircleShape)
                                                         .background(animatedProgressColor)
                                                 )
                                                 AutoFitSingleLineText(
                                                     text = stringResource(R.string.achieved_label),
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    maxFontSize = 10.sp,
+                                                    maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                     minFontSize = 7.5.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
@@ -765,7 +764,7 @@ fun HomeScreen(
                                                     "${LaborLawCalculator.formatNumber(summary.totalOtHours, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                 },
                                                 style = MaterialTheme.typography.titleMedium,
-                                                maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                maxFontSize = spacing.adaptiveSp(18f, 15f, 13.5f),
                                                 minFontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onSurface
@@ -776,7 +775,7 @@ fun HomeScreen(
                                                     LaborLawCalculator.formatNumber(summary.totalOtHours, isBnDigits, 2)
                                                 ),
                                                 style = MaterialTheme.typography.labelSmall,
-                                                maxFontSize = 10.sp,
+                                                maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                 minFontSize = 7.5.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -818,7 +817,7 @@ fun HomeScreen(
                                                     ) {
                                                         AutoFitSingleLineText(
                                                             text = stringResource(R.string.congrats),
-                                                            maxFontSize = if (isCompactScreen) 11.sp else 12.sp,
+                                                            maxFontSize = spacing.adaptiveSp(13.5f, 11.5f, 10.5f),
                                                             minFontSize = 8.5.sp,
                                                             fontWeight = FontWeight.Bold,
                                                             color = SuccessGreen,
@@ -840,14 +839,14 @@ fun HomeScreen(
                                                 ) {
                                                     Box(
                                                         modifier = Modifier
-                                                            .size(6.dp)
+                                                            .size(if (spacing.isCompact) 6.dp else 8.dp)
                                                             .clip(CircleShape)
                                                             .background(SuccessGreen)
                                                     )
                                                     AutoFitSingleLineText(
                                                         text = stringResource(R.string.extra_ot),
                                                         style = MaterialTheme.typography.labelSmall,
-                                                        maxFontSize = 10.sp,
+                                                        maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                         minFontSize = 7.5.sp,
                                                         fontWeight = FontWeight.SemiBold,
                                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -860,7 +859,7 @@ fun HomeScreen(
                                                         "+${LaborLawCalculator.formatNumber(summary.extraOtHoursBeyondTarget, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                     },
                                                     style = MaterialTheme.typography.titleMedium,
-                                                    maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                    maxFontSize = spacing.adaptiveSp(18f, 15f, 13.5f),
                                                     minFontSize = 10.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = SuccessGreen,
@@ -872,7 +871,7 @@ fun HomeScreen(
                                                         LaborLawCalculator.formatNumber(summary.extraOtHoursBeyondTarget, isBnDigits, 2)
                                                     ),
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    maxFontSize = 10.sp,
+                                                    maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                     minFontSize = 7.5.sp,
                                                     color = SuccessGreen,
                                                     fontWeight = FontWeight.Medium,
@@ -900,14 +899,14 @@ fun HomeScreen(
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(6.dp)
+                                                        .size(if (spacing.isCompact) 6.dp else 8.dp)
                                                         .clip(CircleShape)
                                                         .background(WarningOrange)
                                                 )
                                                 AutoFitSingleLineText(
                                                     text = stringResource(R.string.remaining_label),
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    maxFontSize = 10.sp,
+                                                    maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                     minFontSize = 7.5.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
@@ -919,7 +918,7 @@ fun HomeScreen(
                                                     "${LaborLawCalculator.formatNumber(summary.remainingTargetHours, isBnDigits, 2)} ${stringResource(R.string.hours_unit)}"
                                                 },
                                                 style = MaterialTheme.typography.titleMedium,
-                                                maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                                maxFontSize = spacing.adaptiveSp(18f, 15f, 13.5f),
                                                 minFontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = WarningOrange
@@ -930,7 +929,7 @@ fun HomeScreen(
                                                     LaborLawCalculator.formatNumber(summary.remainingTargetHours, isBnDigits, 2)
                                                 ),
                                                 style = MaterialTheme.typography.labelSmall,
-                                                maxFontSize = 10.sp,
+                                                maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                                 minFontSize = 7.5.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -1004,7 +1003,7 @@ fun HomeScreen(
                                                     stringResource(R.string.est_total_pay_at_target)
                                                 },
                                                 style = MaterialTheme.typography.labelMedium,
-                                                maxFontSize = 11.5.sp,
+                                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                                 minFontSize = 8.5.sp,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = MaterialTheme.colorScheme.onSurface
@@ -1013,7 +1012,7 @@ fun HomeScreen(
                                         AutoFitSingleLineText(
                                             text = formattedProjectedTotal,
                                             style = MaterialTheme.typography.titleMedium,
-                                            maxFontSize = if (isCompactScreen) 14.sp else 16.sp,
+                                            maxFontSize = spacing.adaptiveSp(18f, 15f, 13.5f),
                                             minFontSize = 10.sp,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = projectedAccentColor,
@@ -1029,8 +1028,8 @@ fun HomeScreen(
                                             else -> stringResource(R.string.formula_standard)
                                         },
                                         style = MaterialTheme.typography.labelSmall,
-                                        fontSize = 10.sp,
-                                        lineHeight = 13.sp,
+                                        fontSize = spacing.adaptiveSp(11.5f, 10f, 9.5f),
+                                        lineHeight = spacing.adaptiveSp(15.5f, 13.5f, 12.5f),
                                         color = if (isNegativeProjected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -1049,7 +1048,7 @@ fun HomeScreen(
                                                         LaborLawCalculator.formatCurrency(totalDeductions, isBnDigits)
                                                     ),
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    maxFontSize = 10.sp,
+                                                    maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9.5f),
                                                     minFontSize = 8.sp,
                                                     fontWeight = FontWeight.SemiBold,
                                                     color = MaterialTheme.colorScheme.error,
@@ -1063,7 +1062,7 @@ fun HomeScreen(
                                                 ) {
                                                     AutoFitSingleLineText(
                                                         text = stringResource(R.string.bonus_lost_badge),
-                                                        maxFontSize = 9.5.sp,
+                                                        maxFontSize = spacing.adaptiveSp(11f, 9.5f, 9f),
                                                         minFontSize = 7.5.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = WarningOrange,
@@ -1124,7 +1123,7 @@ fun HomeScreen(
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.action_todays_ot),
                                 fontWeight = FontWeight.Bold,
-                                maxFontSize = 11.5.sp,
+                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                 minFontSize = 8.sp,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -1132,7 +1131,7 @@ fun HomeScreen(
                             )
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.action_add_ot),
-                                maxFontSize = 9.5.sp,
+                                maxFontSize = spacing.adaptiveSp(11f, 9.5f, 9f),
                                 minFontSize = 7.5.sp,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
@@ -1179,7 +1178,7 @@ fun HomeScreen(
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.action_advance),
                                 fontWeight = FontWeight.Bold,
-                                maxFontSize = 11.5.sp,
+                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                 minFontSize = 8.sp,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onErrorContainer,
@@ -1187,7 +1186,7 @@ fun HomeScreen(
                             )
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.action_withdraw),
-                                maxFontSize = 9.5.sp,
+                                maxFontSize = spacing.adaptiveSp(11f, 9.5f, 9f),
                                 minFontSize = 7.5.sp,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.75f),
@@ -1234,7 +1233,7 @@ fun HomeScreen(
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.action_apon_bazar),
                                 fontWeight = FontWeight.Bold,
-                                maxFontSize = 11.5.sp,
+                                maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                 minFontSize = 8.sp,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -1242,7 +1241,7 @@ fun HomeScreen(
                             )
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.action_grocery),
-                                maxFontSize = 9.5.sp,
+                                maxFontSize = spacing.adaptiveSp(11f, 9.5f, 9f),
                                 minFontSize = 7.5.sp,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
@@ -1290,7 +1289,7 @@ fun HomeScreen(
                                             isBonusLost -> stringResource(R.string.bonus_lost_short)
                                             else -> LaborLawCalculator.formatNumber(0.0, isBnDigits, 0)
                                         },
-                                        maxFontSize = 9.5.sp,
+                                        maxFontSize = spacing.adaptiveSp(11f, 9.5f, 9f),
                                         minFontSize = 7.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isBonusEarned) SuccessGreen else if (isBonusLost) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
@@ -1428,7 +1427,7 @@ fun HomeScreen(
                                                 R.string.count_times_fmt,
                                                 LaborLawCalculator.formatNumber(advanceCount.toDouble(), isBnDigits, 0)
                                             ),
-                                            maxFontSize = 9.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(11f, 9.5f, 9f),
                                             minFontSize = 7.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.error
@@ -1481,7 +1480,7 @@ fun HomeScreen(
                                                 R.string.count_times_fmt,
                                                 LaborLawCalculator.formatNumber(aponCount.toDouble(), isBnDigits, 0)
                                             ),
-                                            maxFontSize = 9.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(11f, 9.5f, 9f),
                                             minFontSize = 7.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.error
@@ -1517,7 +1516,7 @@ fun HomeScreen(
                         text = stringResource(R.string.recent_ot_entries),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        maxFontSize = 14.sp,
+                        maxFontSize = spacing.adaptiveSp(16f, 14f, 13f),
                         minFontSize = 10.sp,
                         modifier = Modifier
                             .weight(1f)
@@ -1530,7 +1529,7 @@ fun HomeScreen(
                     ) {
                         AutoFitSingleLineText(
                             text = stringResource(R.string.view_all),
-                            maxFontSize = 12.sp,
+                            maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                             minFontSize = 9.sp
                         )
                     }
@@ -1562,7 +1561,7 @@ fun HomeScreen(
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.no_ot_this_month),
                                     style = MaterialTheme.typography.bodySmall,
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                     minFontSize = 9.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1631,7 +1630,7 @@ fun HomeScreen(
                                         AutoFitSingleLineText(
                                             text = circleText,
                                             fontWeight = FontWeight.Bold,
-                                            maxFontSize = if (isAbsent || isLeave || isWeeklyOff) 9.5.sp else 11.sp,
+                                            maxFontSize = if (isAbsent || isLeave || isWeeklyOff) spacing.adaptiveSp(11f, 9.5f, 8.5f) else spacing.adaptiveSp(12.5f, 11f, 10f),
                                             minFontSize = 7.sp,
                                             textAlign = TextAlign.Center,
                                             color = circleTextColor
@@ -1644,14 +1643,14 @@ fun HomeScreen(
                                         text = record.date,
                                         fontWeight = FontWeight.SemiBold,
                                         style = MaterialTheme.typography.bodySmall,
-                                        maxFontSize = 12.5.sp,
+                                        maxFontSize = spacing.adaptiveSp(14f, 12.5f, 11.5f),
                                         minFontSize = 9.5.sp
                                     )
                                     Row(horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)) {
                                         val shiftType = ShiftType.fromCode(record.shiftType)
                                         AutoFitSingleLineText(
                                             text = shiftType.getLabel(),
-                                            maxFontSize = 9.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(11f, 9.5f, 8.5f),
                                             minFontSize = 7.5.sp,
                                             color = shiftType.color,
                                             fontWeight = FontWeight.Bold
@@ -1659,7 +1658,7 @@ fun HomeScreen(
                                         if (record.hasNightBill) {
                                             AutoFitSingleLineText(
                                                 text = stringResource(R.string.badge_night_dot),
-                                                maxFontSize = 9.5.sp,
+                                                maxFontSize = spacing.adaptiveSp(11f, 9.5f, 8.5f),
                                                 minFontSize = 7.5.sp,
                                                 color = NightBlue,
                                                 fontWeight = FontWeight.Bold
@@ -1668,7 +1667,7 @@ fun HomeScreen(
                                         if (record.hasTiffinBill) {
                                             AutoFitSingleLineText(
                                                 text = stringResource(R.string.badge_tiffin_dot),
-                                                maxFontSize = 9.5.sp,
+                                                maxFontSize = spacing.adaptiveSp(11f, 9.5f, 8.5f),
                                                 minFontSize = 7.5.sp,
                                                 color = WarningOrange,
                                                 fontWeight = FontWeight.Bold
@@ -1682,7 +1681,7 @@ fun HomeScreen(
                                             } else {
                                                 record.note
                                             },
-                                            maxFontSize = 10.sp,
+                                            maxFontSize = spacing.adaptiveSp(11.5f, 10f, 9f),
                                             minFontSize = 8.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -1700,7 +1699,7 @@ fun HomeScreen(
                                     text = deductionText,
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleSmall,
-                                    maxFontSize = 14.sp,
+                                    maxFontSize = spacing.adaptiveSp(16f, 14f, 13f),
                                     minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -1712,7 +1711,7 @@ fun HomeScreen(
                                     text = LaborLawCalculator.formatCurrency(record.otHours * itemRate, isBnDigits),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleSmall,
-                                    maxFontSize = 14.sp,
+                                    maxFontSize = spacing.adaptiveSp(16f, 14f, 13f),
                                     minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -1787,7 +1786,7 @@ fun HomeScreen(
                                     text = stringResource(R.string.add_advance_deduction_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 15.sp,
+                                    maxFontSize = spacing.adaptiveSp(17f, 15f, 14f),
                                     minFontSize = 11.sp
                                 )
                             }
@@ -1857,7 +1856,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             OutlinedButton(
@@ -1865,11 +1864,17 @@ fun HomeScreen(
                                     hideKeyboard()
                                     showAdvanceDialog = false
                                 },
+                                shape = RoundedCornerShape(spacing.cardRadius),
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = 48.dp)
+                                    .heightIn(min = spacing.minTouchTarget)
                             ) {
-                                Text(stringResource(R.string.cancel))
+                                AutoFitSingleLineText(
+                                    text = stringResource(R.string.cancel),
+                                    maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                                    minFontSize = 9.5.sp
+                                )
                             }
                             Button(
                                 onClick = {
@@ -1882,12 +1887,19 @@ fun HomeScreen(
                                         advError = true
                                     }
                                 },
+                                shape = RoundedCornerShape(spacing.cardRadius),
+                                contentPadding = spacing.compactButtonContentPadding,
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = 48.dp)
+                                    .heightIn(min = spacing.minTouchTarget)
                             ) {
-                                Text(stringResource(R.string.save))
+                                AutoFitSingleLineText(
+                                    text = stringResource(R.string.save),
+                                    maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                                    minFontSize = 9.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -1959,7 +1971,7 @@ fun HomeScreen(
                                     text = stringResource(R.string.add_apon_bazar_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 15.sp,
+                                    maxFontSize = spacing.adaptiveSp(17f, 15f, 14f),
                                     minFontSize = 11.sp
                                 )
                             }
@@ -2030,7 +2042,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = spacing.sheetFooterH, vertical = spacing.sheetFooterV),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             OutlinedButton(
@@ -2038,11 +2050,17 @@ fun HomeScreen(
                                     hideKeyboard()
                                     showAponBazarDialog = false
                                 },
+                                shape = RoundedCornerShape(spacing.cardRadius),
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = 48.dp)
+                                    .heightIn(min = spacing.minTouchTarget)
                             ) {
-                                Text(stringResource(R.string.cancel))
+                                AutoFitSingleLineText(
+                                    text = stringResource(R.string.cancel),
+                                    maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                                    minFontSize = 9.5.sp
+                                )
                             }
                             Button(
                                 onClick = {
@@ -2055,12 +2073,19 @@ fun HomeScreen(
                                         aponError = true
                                     }
                                 },
+                                shape = RoundedCornerShape(spacing.cardRadius),
+                                contentPadding = spacing.compactButtonContentPadding,
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .heightIn(min = 48.dp)
+                                    .heightIn(min = spacing.minTouchTarget)
                             ) {
-                                Text(stringResource(R.string.save))
+                                AutoFitSingleLineText(
+                                    text = stringResource(R.string.save),
+                                    maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                                    minFontSize = 9.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -2119,7 +2144,7 @@ fun HomeScreen(
                                     },
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 15.sp,
+                                    maxFontSize = spacing.adaptiveSp(17f, 15f, 14f),
                                     minFontSize = 11.sp
                                 )
                             }
@@ -2172,20 +2197,20 @@ fun HomeScreen(
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = item.date,
-                                                    fontSize = 10.5.sp,
+                                                    fontSize = spacing.adaptiveSp(12f, 10.5f, 10f),
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                                 if (item.description.isNotBlank()) {
                                                     Text(
                                                         text = item.description,
-                                                        fontSize = 12.sp,
+                                                        fontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                                         fontWeight = FontWeight.Medium
                                                     )
                                                 }
                                                 AutoFitSingleLineText(
                                                     text = "- " + LaborLawCalculator.formatCurrency(item.amount, isBnDigits),
                                                     fontWeight = FontWeight.Bold,
-                                                    maxFontSize = 13.sp,
+                                                    maxFontSize = spacing.adaptiveSp(15f, 13f, 12f),
                                                     minFontSize = 10.sp,
                                                     color = MaterialTheme.colorScheme.error
                                                 )
@@ -2215,7 +2240,7 @@ fun HomeScreen(
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.total_deduction_label),
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 13.sp,
+                                    maxFontSize = spacing.adaptiveSp(15f, 13f, 12f),
                                     minFontSize = 10.sp,
                                     modifier = Modifier
                                         .weight(1f)
@@ -2224,7 +2249,7 @@ fun HomeScreen(
                                 AutoFitSingleLineText(
                                     text = "- " + LaborLawCalculator.formatCurrency(totalAmt, isBnDigits),
                                     fontWeight = FontWeight.ExtraBold,
-                                    maxFontSize = 14.sp,
+                                    maxFontSize = spacing.adaptiveSp(16f, 14f, 13f),
                                     minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -2244,13 +2269,15 @@ fun HomeScreen(
                         ) {
                             Button(
                                 onClick = { selectedDeductionListType = null },
+                                shape = RoundedCornerShape(spacing.cardRadius),
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(min = spacing.minTouchTarget)
                             ) {
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.close),
-                                    maxFontSize = 13.sp,
+                                    maxFontSize = spacing.adaptiveSp(15f, 13.5f, 12.5f),
                                     minFontSize = 10.sp
                                 )
                             }

@@ -133,7 +133,7 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        maxFontSize = 20.sp,
+                        maxFontSize = spacing.adaptiveSp(22f, 20f, 18f),
                         minFontSize = 14.sp,
                         modifier = Modifier.weight(1f).padding(end = spacing.rowGapMd)
                     )
@@ -200,14 +200,14 @@ fun ProfileScreen(
                                         text = profile.userName.ifBlank { stringResource(R.string.your_name_placeholder) },
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        maxFontSize = 15.5.sp,
+                                        maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                                         minFontSize = 11.sp
                                     )
                                     AutoFitSingleLineText(
                                         text = "${profile.companyName.ifBlank { stringResource(R.string.company_placeholder) }} • ${profile.designation.ifBlank { stringResource(R.string.designation_placeholder) }}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxFontSize = 12.sp,
+                                        maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                         minFontSize = 8.5.sp
                                     )
                                     val displayGrade = LanguageManager.formatDisplayGrade(context, profile.grade, effectiveLang)
@@ -216,7 +216,7 @@ fun ProfileScreen(
                                         text = "${stringResource(R.string.id_short_label)}: ${profile.workerId.ifBlank { stringResource(R.string.not_applicable) }} • $displayGrade",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
-                                        maxFontSize = 11.sp,
+                                        maxFontSize = spacing.adaptiveSp(12.5f, 11f, 10f),
                                         minFontSize = 8.sp
                                     )
                                 }
@@ -300,7 +300,7 @@ fun ProfileScreen(
                                     text = stringResource(R.string.salary_setup_card_title),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium,
-                                    maxFontSize = 15.5.sp,
+                                    maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                                     minFontSize = 11.sp,
                                     modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                                 )
@@ -310,7 +310,7 @@ fun ProfileScreen(
                                 ) {
                                     AutoFitSingleLineText(
                                         text = stringResource(R.string.badge_setup_pending),
-                                        maxFontSize = 11.sp,
+                                        maxFontSize = spacing.adaptiveSp(12f, 11f, 10f),
                                         minFontSize = 8.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -374,7 +374,7 @@ fun ProfileScreen(
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.start_salary_setup_btn),
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 14.sp,
+                                    maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
                                     minFontSize = 10.sp
                                 )
                             }
@@ -388,7 +388,7 @@ fun ProfileScreen(
                                     text = stringResource(R.string.salary_allowances_view_title),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium,
-                                    maxFontSize = 15.5.sp,
+                                    maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                                     minFontSize = 11.sp,
                                     modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
                                 )
@@ -400,7 +400,7 @@ fun ProfileScreen(
                                         text = stringResource(
                                             if (!profile.isCustomSalary) R.string.badge_labor_law else R.string.badge_custom_rules
                                         ),
-                                        maxFontSize = 11.sp,
+                                        maxFontSize = spacing.adaptiveSp(12f, 11f, 10f),
                                         minFontSize = 8.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (!profile.isCustomSalary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onTertiaryContainer,
@@ -425,13 +425,13 @@ fun ProfileScreen(
                                     Column(modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)) {
                                         AutoFitSingleLineText(
                                             text = stringResource(R.string.total_regular_salary_label),
-                                            maxFontSize = 11.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                             minFontSize = 8.5.sp,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                         AutoFitSingleLineText(
                                             text = LaborLawCalculator.formatCurrency(displayGross, isBnDigits),
-                                            maxFontSize = 19.sp,
+                                            maxFontSize = spacing.adaptiveSp(21f, 19f, 16.5f),
                                             minFontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
@@ -440,7 +440,7 @@ fun ProfileScreen(
                                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                                         AutoFitSingleLineText(
                                             text = stringResource(R.string.effective_ot_rate_label),
-                                            maxFontSize = 11.5.sp,
+                                            maxFontSize = spacing.adaptiveSp(13f, 11.5f, 10.5f),
                                             minFontSize = 8.5.sp,
                                             textAlign = TextAlign.End,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -452,7 +452,7 @@ fun ProfileScreen(
                                             } else {
                                                 "—"
                                             },
-                                            maxFontSize = 17.sp,
+                                            maxFontSize = spacing.adaptiveSp(19f, 17f, 15f),
                                             minFontSize = 11.sp,
                                             textAlign = TextAlign.End,
                                             fontWeight = FontWeight.Bold,
@@ -542,7 +542,7 @@ fun ProfileScreen(
                                 AutoFitSingleLineText(
                                     text = stringResource(R.string.setup_edit_salary_btn),
                                     fontWeight = FontWeight.Bold,
-                                    maxFontSize = 14.sp,
+                                    maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
                                     minFontSize = 10.sp
                                 )
                             }
@@ -691,13 +691,13 @@ private fun InfoChipCard(
             Column(modifier = Modifier.weight(1f)) {
                 AutoFitSingleLineText(
                     text = label,
-                    maxFontSize = 10.5.sp,
+                    maxFontSize = spacing.adaptiveSp(12f, 10.5f, 9.5f),
                     minFontSize = 8.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 AutoFitSingleLineText(
                     text = value,
-                    maxFontSize = 12.5.sp,
+                    maxFontSize = spacing.adaptiveSp(14f, 12.5f, 11.5f),
                     minFontSize = 9.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -721,14 +721,14 @@ private fun SalaryBreakdownRow(
     ) {
         AutoFitSingleLineText(
             text = label,
-            maxFontSize = 12.sp,
+            maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
             minFontSize = 8.5.sp,
             modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         AutoFitSingleLineText(
             text = LaborLawCalculator.formatCurrency(amount, isBnDigits),
-            maxFontSize = 13.sp,
+            maxFontSize = spacing.adaptiveSp(14.5f, 13f, 12f),
             minFontSize = 9.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.End,
@@ -756,14 +756,14 @@ private fun BenefitChip(
         ) {
             AutoFitSingleLineText(
                 text = label,
-                maxFontSize = 11.sp,
+                maxFontSize = spacing.adaptiveSp(12.5f, 11f, 10f),
                 minFontSize = 8.sp,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.weight(1f).padding(end = spacing.rowGapSm)
             )
             AutoFitSingleLineText(
                 text = value,
-                maxFontSize = 12.sp,
+                maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                 minFontSize = 8.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -794,7 +794,7 @@ private fun OnboardingStepRow(
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     text = LaborLawCalculator.formatNumber(stepNumber.toDouble(), isBnDigits, 0),
-                    fontSize = 11.sp,
+                    fontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -803,15 +803,15 @@ private fun OnboardingStepRow(
         Column(modifier = Modifier.weight(1f)) {
             AutoFitSingleLineText(
                 text = title,
-                maxFontSize = 13.sp,
+                maxFontSize = spacing.adaptiveSp(14.5f, 13f, 12f),
                 minFontSize = 9.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
-                fontSize = 11.sp,
-                lineHeight = 15.sp,
+                fontSize = spacing.adaptiveSp(12.5f, 11f, 10.5f),
+                lineHeight = spacing.adaptiveSp(17f, 15f, 14f),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

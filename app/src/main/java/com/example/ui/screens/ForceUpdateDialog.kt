@@ -105,6 +105,7 @@ fun ForceUpdateDialog(
                         color = if (isForce) MaterialTheme.colorScheme.onErrorContainer
                         else MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.SemiBold,
+                        maxFontSize = spacing.adaptiveSp(12f, 11f, 10f),
                         minFontSize = 8.sp,
                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV)
                     )
@@ -158,6 +159,7 @@ fun ForceUpdateDialog(
                 AutoFitSingleLineText(
                     text = updateInfo.getEffectiveUpdateBtnText(context, lang),
                     fontWeight = FontWeight.Bold,
+                    maxFontSize = spacing.adaptiveSp(15.5f, 14f, 13f),
                     minFontSize = 9.5.sp
                 )
             }
@@ -180,6 +182,7 @@ fun ForceUpdateDialog(
                 AutoFitSingleLineText(
                     text = updateInfo.getEffectiveDismissBtnText(context, lang),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
                     minFontSize = 9.5.sp
                 )
             }

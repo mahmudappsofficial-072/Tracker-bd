@@ -107,6 +107,7 @@ fun SettingsSheet(
                             text = stringResource(R.string.cd_settings),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -247,7 +248,7 @@ fun SettingsSheet(
                                         Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                         AutoFitSingleLineText(
                                             text = stringResource(R.string.signing_in_label),
-                                            maxFontSize = 13.sp,
+                                            maxFontSize = spacing.adaptiveSp(14.5f, 13f, 12f),
                                             minFontSize = 10.sp,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -263,7 +264,7 @@ fun SettingsSheet(
                                         Spacer(modifier = Modifier.width(spacing.rowGapMd))
                                         AutoFitSingleLineText(
                                             text = stringResource(R.string.sign_in_with_google),
-                                            maxFontSize = 13.sp,
+                                            maxFontSize = spacing.adaptiveSp(14.5f, 13f, 12f),
                                             minFontSize = 10.sp,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -341,7 +342,7 @@ fun SettingsSheet(
                                         text = stringResource(R.string.sign_out_btn),
                                         color = if (isOnline) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                         fontWeight = FontWeight.SemiBold,
-                                        maxFontSize = 13.sp,
+                                        maxFontSize = spacing.adaptiveSp(14f, 13f, 12f),
                                         minFontSize = 9.5.sp
                                     )
                                 }
@@ -484,7 +485,7 @@ fun SettingsSheet(
                                 text = stringResource(R.string.delete_all_data_btn),
                                 color = MaterialTheme.colorScheme.error,
                                 fontWeight = FontWeight.Bold,
-                                maxFontSize = 13.sp,
+                                maxFontSize = spacing.adaptiveSp(14.5f, 13f, 12f),
                                 minFontSize = 9.5.sp
                             )
                         }
@@ -510,6 +511,7 @@ fun SettingsSheet(
                         AutoFitSingleLineText(
                             text = stringResource(R.string.done),
                             fontWeight = FontWeight.SemiBold,
+                            maxFontSize = spacing.adaptiveSp(15.5f, 14f, 13f),
                             minFontSize = 10.sp
                         )
                     }
@@ -530,6 +532,7 @@ private fun SettingsSectionHeader(
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
         color = color,
+        maxFontSize = spacing.adaptiveSp(15f, 13.5f, 12.5f),
         minFontSize = 9.5.sp,
         modifier = Modifier.padding(horizontal = spacing.badgeH)
     )
@@ -574,6 +577,7 @@ private fun SettingsActionRow(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
+                    maxFontSize = spacing.adaptiveSp(15.5f, 14f, 13f),
                     minFontSize = 10.sp
                 )
                 if (!subtitle.isNullOrBlank()) {

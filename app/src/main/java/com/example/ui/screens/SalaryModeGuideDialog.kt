@@ -127,6 +127,7 @@ fun SalaryModeGuideDialog(
                             text = stringResource(R.string.salary_mode_guide_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                             minFontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -262,7 +263,7 @@ private fun ModeSelectionOptionCard(
                     ) {
                         AutoFitSingleLineText(
                             text = badgeText,
-                            maxFontSize = 10.sp,
+                            maxFontSize = spacing.adaptiveSp(11f, 10f, 9f),
                             minFontSize = 7.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = onAccentContentColor,
@@ -273,6 +274,7 @@ private fun ModeSelectionOptionCard(
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
+                        maxFontSize = spacing.adaptiveSp(16f, 14.5f, 13.5f),
                         minFontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -314,7 +316,7 @@ private fun ModeSelectionOptionCard(
             ) {
                 AutoFitSingleLineText(
                     text = ctaText,
-                    maxFontSize = 13.sp,
+                    maxFontSize = spacing.adaptiveSp(14.5f, 13f, 12f),
                     minFontSize = 9.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = accentColor,

@@ -128,7 +128,7 @@ fun LanguagePickerBottomSheet(
                         text = stringResource(R.string.app_language_label),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        maxFontSize = 15.5.sp,
+                        maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                         minFontSize = 11.sp
                     )
                     Text(
@@ -180,14 +180,14 @@ fun LanguagePickerBottomSheet(
                                 text = stringResource(R.string.system_default_title),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyLarge,
-                                maxFontSize = 14.5.sp,
+                                maxFontSize = spacing.adaptiveSp(16f, 14.5f, 13.5f),
                                 minFontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.system_default_subtitle_fmt, systemResolvedLabel),
                                 style = MaterialTheme.typography.bodySmall,
-                                maxFontSize = 12.sp,
+                                maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                 minFontSize = 9.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -241,14 +241,14 @@ fun LanguagePickerBottomSheet(
                                     text = option.nativeLabel,
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    maxFontSize = 14.5.sp,
+                                    maxFontSize = spacing.adaptiveSp(16f, 14.5f, 13.5f),
                                     minFontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 AutoFitSingleLineText(
                                     text = option.englishLabel,
                                     style = MaterialTheme.typography.bodySmall,
-                                    maxFontSize = 12.sp,
+                                    maxFontSize = spacing.adaptiveSp(13.5f, 12f, 11f),
                                     minFontSize = 9.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -597,7 +597,7 @@ fun QuickOtEntryDialog(
                             ),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 16.sp,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -867,7 +867,7 @@ fun QuickOtEntryDialog(
                                     },
                                     modifier = Modifier.testTag("night_bill_checkbox")
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
                                 Text(stringResource(R.string.night_bill_check), style = MaterialTheme.typography.bodyMedium)
                             }
 
@@ -905,7 +905,7 @@ fun QuickOtEntryDialog(
                                     },
                                     modifier = Modifier.testTag("tiffin_bill_checkbox")
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
                                 Text(stringResource(R.string.tiffin_bill_check), style = MaterialTheme.typography.bodyMedium)
                             }
 
@@ -927,7 +927,7 @@ fun QuickOtEntryDialog(
                                     },
                                     modifier = Modifier.testTag("holiday_checkbox")
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
                                 Text(stringResource(R.string.holiday_ot_check), style = MaterialTheme.typography.bodyMedium)
                             }
                         }
@@ -968,7 +968,11 @@ fun QuickOtEntryDialog(
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.cancel),
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                     Button(
                         onClick = {
@@ -1004,7 +1008,11 @@ fun QuickOtEntryDialog(
                             .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_ot_button")
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.save), maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.save),
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -1015,15 +1023,16 @@ fun QuickOtEntryDialog(
         val warningType = missingFieldWarning
         AlertDialog(
             onDismissRequest = { missingFieldWarning = null },
+            shape = RoundedCornerShape(spacing.heroRadius),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(spacing.iconLg)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(spacing.rowGapMd))
                     Text(
                         text = stringResource(
                             when (warningType) {
@@ -1055,14 +1064,27 @@ fun QuickOtEntryDialog(
                         val target = warningType ?: "SALARY"
                         missingFieldWarning = null
                         onNavigateToProfile(target)
-                    }
+                    },
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding
                 ) {
-                    Text(stringResource(R.string.go_to_profile))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.go_to_profile),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { missingFieldWarning = null }) {
-                    Text(stringResource(R.string.cancel))
+                TextButton(
+                    onClick = { missingFieldWarning = null },
+                    contentPadding = spacing.compactButtonContentPadding
+                ) {
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.cancel),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )
@@ -1076,12 +1098,13 @@ fun QuickOtEntryDialog(
 
         AlertDialog(
             onDismissRequest = { pendingOverwriteRecord = null },
+            shape = RoundedCornerShape(spacing.heroRadius),
             icon = {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(spacing.avatarSize)
                 )
             },
             title = {
@@ -1092,25 +1115,28 @@ fun QuickOtEntryDialog(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(spacing.gridGap)) {
                     Text(
                         text = stringResource(R.string.overwrite_msg_fmt, date),
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(spacing.subCardRadius),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Column(
+                            modifier = Modifier.padding(spacing.subCardPadding),
+                            verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
+                        ) {
                             Text(
                                 text = stringResource(
                                     R.string.overwrite_current_fmt,
                                     LaborLawCalculator.formatNumber(oldRec.otHours, isBnDigits),
                                     oldShift
                                 ),
-                                fontSize = 12.sp,
+                                fontSize = spacing.adaptiveSp(13f, 12f, 11f),
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -1120,7 +1146,7 @@ fun QuickOtEntryDialog(
                                     LaborLawCalculator.formatNumber(finalHours, isBnDigits),
                                     newShift
                                 ),
-                                fontSize = 12.sp,
+                                fontSize = spacing.adaptiveSp(13f, 12f, 11f),
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -1129,7 +1155,7 @@ fun QuickOtEntryDialog(
 
                     Text(
                         text = stringResource(R.string.overwrite_confirm_prompt),
-                        fontSize = 12.sp,
+                        fontSize = spacing.adaptiveSp(13f, 12f, 11f),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -1140,14 +1166,27 @@ fun QuickOtEntryDialog(
                         pendingOverwriteRecord = null
                         onSave(date, finalHours, hasNightBill, hasTiffinBill, isHoliday, selectedShift, note)
                     },
+                    shape = RoundedCornerShape(spacing.subCardRadius),
+                    contentPadding = spacing.compactButtonContentPadding,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(stringResource(R.string.overwrite_confirm_btn))
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.overwrite_confirm_btn),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { pendingOverwriteRecord = null }) {
-                    Text(stringResource(R.string.overwrite_keep_btn))
+                TextButton(
+                    onClick = { pendingOverwriteRecord = null },
+                    contentPadding = spacing.compactButtonContentPadding
+                ) {
+                    AutoFitSingleLineText(
+                        text = stringResource(R.string.overwrite_keep_btn),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )
@@ -1241,7 +1280,7 @@ fun AddPieceRateDialog(
                             text = stringResource(R.string.add_piece_work_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 16.sp,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -1309,7 +1348,7 @@ fun AddPieceRateDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.gridGap)
                 ) {
                     OutlinedTextField(
                         value = countText,
@@ -1365,7 +1404,7 @@ fun AddPieceRateDialog(
                         ),
                         modifier = Modifier.padding(spacing.subCardPadding),
                         fontWeight = FontWeight.Bold,
-                        maxFontSize = 14.5.sp,
+                        maxFontSize = spacing.adaptiveSp(16f, 14.5f, 13.5f),
                         minFontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -1405,7 +1444,11 @@ fun AddPieceRateDialog(
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.cancel),
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                     Button(
                         onClick = {
@@ -1427,7 +1470,11 @@ fun AddPieceRateDialog(
                             .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_piece_button")
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.save), maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.save),
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -1509,7 +1556,7 @@ fun TargetGoalDialog(
                             text = stringResource(R.string.set_target_hours_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 16.sp,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp
                         )
                     }
@@ -1631,7 +1678,7 @@ fun TargetGoalDialog(
                             },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 16.sp,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 11.sp,
                             color = if (hourlyRate > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1687,7 +1734,7 @@ fun TargetGoalDialog(
                                 text = formattedProjected,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                maxFontSize = 16.sp,
+                                maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                                 minFontSize = 10.5.sp,
                                 color = if (isNegativeProjected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.testTag("dialog_projected_total_value")
@@ -1770,7 +1817,11 @@ fun TargetGoalDialog(
                             .weight(1f)
                             .heightIn(min = spacing.minTouchTarget)
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.cancel),
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                     Button(
                         onClick = {
@@ -1785,7 +1836,11 @@ fun TargetGoalDialog(
                             .heightIn(min = spacing.minTouchTarget)
                             .testTag("save_target_button")
                     ) {
-                        AutoFitSingleLineText(stringResource(R.string.save), maxFontSize = 14.sp, minFontSize = 10.sp)
+                        AutoFitSingleLineText(
+                            stringResource(R.string.save),
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
+                            minFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -1836,7 +1891,7 @@ fun InitialPrivacyConsentDialog(
                         text = titleText ?: stringResource(R.string.privacy_consent_title),
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
-                        maxFontSize = 15.5.sp,
+                        maxFontSize = spacing.adaptiveSp(17.5f, 15.5f, 14f),
                         minFontSize = 11.sp
                     )
                     AutoFitSingleLineText(
@@ -1901,7 +1956,7 @@ fun InitialPrivacyConsentDialog(
                 AutoFitSingleLineText(
                     text = confirmButtonText ?: stringResource(R.string.privacy_consent_confirm_default),
                     fontWeight = FontWeight.Bold,
-                    maxFontSize = 13.5.sp,
+                    maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
                     minFontSize = 9.sp
                 )
             }
@@ -1915,7 +1970,7 @@ fun InitialPrivacyConsentDialog(
             ) {
                 AutoFitSingleLineText(
                     text = dismissButtonText ?: stringResource(R.string.privacy_consent_decline_default),
-                    maxFontSize = 13.5.sp,
+                    maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
                     minFontSize = 9.sp
                 )
             }
@@ -2041,7 +2096,11 @@ fun MonthLockedInfoAndUnlockDialogs(
             text = { Text(stringResource(R.string.month_locked_dialog_msg)) },
             confirmButton = {
                 Button(onClick = onDismissLockedInfo, contentPadding = spacing.compactButtonContentPadding) {
-                    AutoFitSingleLineText(stringResource(R.string.ok), maxFontSize = 13.5.sp, minFontSize = 9.5.sp)
+                    AutoFitSingleLineText(
+                        stringResource(R.string.ok),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
@@ -2056,7 +2115,11 @@ fun MonthLockedInfoAndUnlockDialogs(
                         modifier = Modifier.size(spacing.iconMd)
                     )
                     Spacer(modifier = Modifier.width(spacing.rowGapSm))
-                    AutoFitSingleLineText(stringResource(R.string.unlock_temporarily_btn), maxFontSize = 13.sp, minFontSize = 9.sp)
+                    AutoFitSingleLineText(
+                        stringResource(R.string.unlock_temporarily_btn),
+                        maxFontSize = spacing.adaptiveSp(14f, 13f, 12f),
+                        minFontSize = 9.sp
+                    )
                 }
             }
         )
@@ -2075,12 +2138,20 @@ fun MonthLockedInfoAndUnlockDialogs(
                     contentPadding = spacing.compactButtonContentPadding,
                     modifier = Modifier.testTag("confirm_unlock_month_button")
                 ) {
-                    AutoFitSingleLineText(stringResource(R.string.unlock), maxFontSize = 13.5.sp, minFontSize = 9.5.sp)
+                    AutoFitSingleLineText(
+                        stringResource(R.string.unlock),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissUnlockConfirm, contentPadding = spacing.compactButtonContentPadding) {
-                    AutoFitSingleLineText(stringResource(R.string.cancel), maxFontSize = 13.5.sp, minFontSize = 9.5.sp)
+                    AutoFitSingleLineText(
+                        stringResource(R.string.cancel),
+                        maxFontSize = spacing.adaptiveSp(14.5f, 13.5f, 12.5f),
+                        minFontSize = 9.5.sp
+                    )
                 }
             }
         )

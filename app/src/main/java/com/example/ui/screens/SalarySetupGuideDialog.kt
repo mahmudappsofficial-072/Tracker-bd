@@ -129,7 +129,7 @@ fun SalarySetupGuideDialog(
                         ) {
                             AutoFitSingleLineText(
                                 text = stringResource(R.string.badge_setup_pending),
-                                maxFontSize = 10.5.sp,
+                                maxFontSize = spacing.adaptiveSp(11.5f, 10.5f, 9.5f),
                                 minFontSize = 8.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -141,6 +141,7 @@ fun SalarySetupGuideDialog(
                             text = stringResource(R.string.salary_popup_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            maxFontSize = spacing.adaptiveSp(18f, 16f, 14.5f),
                             minFontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -183,7 +184,7 @@ fun SalarySetupGuideDialog(
                         AutoFitSingleLineText(
                             text = stringResource(R.string.start_salary_setup_btn),
                             fontWeight = FontWeight.Bold,
-                            maxFontSize = 14.sp,
+                            maxFontSize = spacing.adaptiveSp(15.5f, 14f, 13f),
                             minFontSize = 9.5.sp
                         )
                     }
@@ -200,7 +201,7 @@ fun SalarySetupGuideDialog(
                         AutoFitSingleLineText(
                             text = stringResource(R.string.salary_popup_later_btn),
                             fontWeight = FontWeight.SemiBold,
-                            maxFontSize = 14.sp,
+                            maxFontSize = spacing.adaptiveSp(15f, 14f, 13f),
                             minFontSize = 9.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
