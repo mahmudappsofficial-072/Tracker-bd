@@ -1239,6 +1239,39 @@ class ExampleUnitTest {
     assertTrue(micro.avatarSize <= extra.avatarSize && extra.avatarSize <= standard.avatarSize)
     assertTrue(com.example.util.ResponsiveUtils.spacingFor(411, 650, 1.0f).isShortScreen)
   }
+
+  @Test
+  fun testTargetProgressColorInterpolationAndCompletion() {
+    val light0 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(0.0f, false, false)
+    val light22 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(0.22f, false, false)
+    val light48 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(0.48f, false, false)
+    val light75 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(0.75f, false, false)
+    val light95 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(0.95f, false, false)
+    val light100 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(1.0f, true, false)
+
+    assertEquals(com.example.util.TargetProgressColorHelper.LightRedStop, light0)
+    assertEquals(com.example.util.TargetProgressColorHelper.LightOrangeStop, light22)
+    assertEquals(com.example.util.TargetProgressColorHelper.LightAmberStop, light48)
+    assertEquals(com.example.util.TargetProgressColorHelper.LightBlueStop, light75)
+    assertEquals(com.example.util.TargetProgressColorHelper.LightGreenStop, light100)
+
+    // Distinct smooth intermediate transitions (never stuck on one color)
+    assertNotEquals(light0, light22)
+    assertNotEquals(light22, light48)
+    assertNotEquals(light48, light75)
+    assertNotEquals(light75, light95)
+    assertNotEquals(light95, light100)
+    assertTrue(light95.blue > light95.red) // Still distinctly blue just before completion
+    assertTrue(light100.green > light100.red && light100.green > light100.blue) // Green at completion
+
+    // Dark theme uses high-contrast dark stops
+    val dark0 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(0.0f, false, true)
+    val dark100 = com.example.util.TargetProgressColorHelper.resolveTargetProgressColor(1.0f, true, true)
+    assertEquals(com.example.util.TargetProgressColorHelper.DarkRedStop, dark0)
+    assertEquals(com.example.util.TargetProgressColorHelper.DarkGreenStop, dark100)
+    assertNotEquals(light0, dark0)
+    assertNotEquals(light100, dark100)
+  }
 }
 
 

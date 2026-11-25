@@ -1,6 +1,10 @@
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -51,6 +56,7 @@ import com.example.util.LaborLawCalculator
 import com.example.util.LanguageManager
 import com.example.util.MonthLockPolicy
 import com.example.util.ResponsiveUtils
+import com.example.util.TargetProgressColorHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -512,6 +518,25 @@ fun HomeScreen(
                             val hasExtraOt = isTargetCompleted && summary.extraOtHoursBeyondTarget > 0.0
                             val targetOtEarnings = summary.targetHours * summary.hourlyOtRate
                             val remainingOtEarnings = maxOf(0.0, summary.remainingTargetHours * summary.hourlyOtRate)
+                            val clampedProgress = summary.targetProgress.coerceIn(0f, 1f)
+                            val isDarkSurface = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+                            val rawProgressColor = remember(clampedProgress, isTargetCompleted, isDarkSurface) {
+                                TargetProgressColorHelper.resolveTargetProgressColor(
+                                    progress = clampedProgress,
+                                    isCompleted = isTargetCompleted,
+                                    isDarkTheme = isDarkSurface
+                                )
+                            }
+                            val animatedProgress by animateFloatAsState(
+                                targetValue = clampedProgress,
+                                animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                                label = "monthlyTargetProgress"
+                            )
+                            val animatedProgressColor by animateColorAsState(
+                                targetValue = rawProgressColor,
+                                animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                                label = "monthlyTargetColor"
+                            )
 
                             // Top Banner: Projected Target Earnings & Target Hours Chip
                             Row(
@@ -549,8 +574,8 @@ fun HomeScreen(
                                 }
                                 Surface(
                                     shape = RoundedCornerShape(spacing.badgeRadius),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                                    color = animatedProgressColor.copy(alpha = 0.14f),
+                                    border = BorderStroke(1.dp, animatedProgressColor.copy(alpha = 0.30f))
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = spacing.badgeH, vertical = spacing.badgeV),
@@ -560,7 +585,7 @@ fun HomeScreen(
                                         Icon(
                                             Icons.Default.Timeline,
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
+                                            tint = animatedProgressColor,
                                             modifier = Modifier.size(spacing.iconSm)
                                         )
                                         AutoFitSingleLineText(
@@ -572,7 +597,7 @@ fun HomeScreen(
                                             maxFontSize = 11.sp,
                                             minFontSize = 8.5.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            color = animatedProgressColor
                                         )
                                     }
                                 }
@@ -581,13 +606,13 @@ fun HomeScreen(
                             // Progress Bar & Percentage/Rate Indicators
                             Column(verticalArrangement = Arrangement.spacedBy(spacing.rowGapSm)) {
                                 LinearProgressIndicator(
-                                    progress = { summary.targetProgress.coerceIn(0f, 1f) },
+                                    progress = { animatedProgress },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(spacing.progressHeight)
                                         .clip(RoundedCornerShape(spacing.progressHeight / 2)),
-                                    color = if (isTargetCompleted) SuccessGreen else MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    color = animatedProgressColor,
+                                    trackColor = animatedProgressColor.copy(alpha = 0.16f)
                                 )
 
                                 Row(
@@ -604,7 +629,7 @@ fun HomeScreen(
                                         maxFontSize = 10.5.sp,
                                         minFontSize = 8.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isTargetCompleted) SuccessGreen else MaterialTheme.colorScheme.primary
+                                        color = animatedProgressColor
                                     )
                                     if (summary.hourlyOtRate > 0) {
                                         AutoFitSingleLineText(
@@ -723,7 +748,7 @@ fun HomeScreen(
                                                     modifier = Modifier
                                                         .size(6.dp)
                                                         .clip(CircleShape)
-                                                        .background(MaterialTheme.colorScheme.primary)
+                                                        .background(animatedProgressColor)
                                                 )
                                                 AutoFitSingleLineText(
                                                     text = stringResource(R.string.achieved_label),
