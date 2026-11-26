@@ -8,9 +8,16 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationManagerCompat
 import com.example.R
+import com.example.data.local.AppDatabase
 import com.example.util.LanguageManager
-import java.util.Calendar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 object ReminderScheduler {
 
@@ -18,6 +25,11 @@ object ReminderScheduler {
     const val CHANNEL_ID = "daily_ot_reminders"
     const val REQUEST_CODE_715 = 1001
     const val REQUEST_CODE_930 = 1002
+    const val EXTRA_REMINDER_TYPE = "REMINDER_TYPE"
+    const val EXTRA_SCHEDULED_FOR_DATE = "SCHEDULED_FOR_DATE"
+
+    private val schedulerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val syncMutex = Mutex()
 
     fun createNotificationChannel(context: Context, langTag: String? = null) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -35,17 +47,84 @@ object ReminderScheduler {
         }
     }
 
-    fun scheduleDailyReminders(context: Context, langTag: String? = null) {
-        createNotificationChannel(context, langTag)
-        scheduleSpecificReminder(context, 19, 15, REQUEST_CODE_715, 1)
-        scheduleSpecificReminder(context, 21, 30, REQUEST_CODE_930, 2)
+    suspend fun hasEntryForDate(context: Context, date: String): Boolean {
+        return try {
+            val db = AppDatabase.getDatabase(context.applicationContext)
+            db.overtimeDao().hasRecordForDate(date) || db.pieceRateDao().hasPieceRecordForDate(date)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed checking entry for date $date: ${e.message}")
+            false
+        }
     }
 
-    fun scheduleNextReminder(context: Context, type: Int) {
+    fun scheduleDailyReminders(context: Context, langTag: String? = null) {
+        val appContext = context.applicationContext
+        createNotificationChannel(appContext, langTag)
+        schedulerScope.launch {
+            syncSmartDailyRemindersSuspend(appContext, langTag)
+        }
+    }
+
+    suspend fun syncSmartDailyRemindersSuspend(context: Context, langTag: String? = null) {
+        val appContext = context.applicationContext
+        syncMutex.withLock {
+            createNotificationChannel(appContext, langTag)
+            val todayDate = ReminderSchedulePolicy.formatDate(System.currentTimeMillis())
+            val hasTodayEntry = hasEntryForDate(appContext, todayDate)
+
+            if (hasTodayEntry) {
+                cancelActiveReminderNotifications(appContext)
+            }
+
+            scheduleSpecificReminder(
+                context = appContext,
+                hour = ReminderSchedulePolicy.FIRST_REMINDER_HOUR,
+                minute = ReminderSchedulePolicy.FIRST_REMINDER_MINUTE,
+                requestCode = REQUEST_CODE_715,
+                type = 1,
+                forceTomorrow = hasTodayEntry
+            )
+            scheduleSpecificReminder(
+                context = appContext,
+                hour = ReminderSchedulePolicy.SECOND_REMINDER_HOUR,
+                minute = ReminderSchedulePolicy.SECOND_REMINDER_MINUTE,
+                requestCode = REQUEST_CODE_930,
+                type = 2,
+                forceTomorrow = hasTodayEntry
+            )
+        }
+    }
+
+    fun cancelActiveReminderNotifications(context: Context) {
+        try {
+            val manager = NotificationManagerCompat.from(context.applicationContext)
+            manager.cancel(REQUEST_CODE_715)
+            manager.cancel(REQUEST_CODE_930)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed cancelling active reminder notifications: ${e.message}")
+        }
+    }
+
+    fun scheduleNextReminder(context: Context, type: Int, forceTomorrow: Boolean = true) {
+        val appContext = context.applicationContext
         if (type == 1) {
-            scheduleSpecificReminder(context, 19, 15, REQUEST_CODE_715, 1, forceTomorrow = true)
+            scheduleSpecificReminder(
+                context = appContext,
+                hour = ReminderSchedulePolicy.FIRST_REMINDER_HOUR,
+                minute = ReminderSchedulePolicy.FIRST_REMINDER_MINUTE,
+                requestCode = REQUEST_CODE_715,
+                type = 1,
+                forceTomorrow = forceTomorrow
+            )
         } else if (type == 2) {
-            scheduleSpecificReminder(context, 21, 30, REQUEST_CODE_930, 2, forceTomorrow = true)
+            scheduleSpecificReminder(
+                context = appContext,
+                hour = ReminderSchedulePolicy.SECOND_REMINDER_HOUR,
+                minute = ReminderSchedulePolicy.SECOND_REMINDER_MINUTE,
+                requestCode = REQUEST_CODE_930,
+                type = 2,
+                forceTomorrow = forceTomorrow
+            )
         }
     }
 
@@ -58,34 +137,30 @@ object ReminderScheduler {
         forceTomorrow: Boolean = false
     ) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val plan = ReminderSchedulePolicy.computeTriggerPlan(
+            hour = hour,
+            minute = minute,
+            forceTomorrow = forceTomorrow
+        )
         val intent = Intent(context, NotificationReceiver::class.java).apply {
-            putExtra("REMINDER_TYPE", type)
+            putExtra(EXTRA_REMINDER_TYPE, type)
+            putExtra(EXTRA_SCHEDULED_FOR_DATE, plan.scheduledForDate)
         }
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+            (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
         val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, flags)
-
-        val now = Calendar.getInstance()
-        val triggerCalendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-            if (forceTomorrow || before(now)) {
-                add(Calendar.DAY_OF_YEAR, 1)
-            }
-        }
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
-                    triggerCalendar.timeInMillis,
+                    plan.triggerAtMillis,
                     pendingIntent
                 )
             } else {
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP,
-                    triggerCalendar.timeInMillis,
+                    plan.triggerAtMillis,
                     pendingIntent
                 )
             }
@@ -94,7 +169,7 @@ object ReminderScheduler {
             try {
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP,
-                    triggerCalendar.timeInMillis,
+                    plan.triggerAtMillis,
                     pendingIntent
                 )
             } catch (fallbackErr: Exception) {

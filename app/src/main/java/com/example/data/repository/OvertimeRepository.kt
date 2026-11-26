@@ -647,6 +647,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         removeFromTombstoneSet("deleted_ot_dates", recordToSave.date)
         val savedId = overtimeDao.insertRecord(recordToSave)
         addToTombstoneSet("pending_ot_sync_dates", recordToSave.date)
+        refreshSmartReminders()
         if (autoSync) {
             triggerPendingSync()
         }
@@ -666,6 +667,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         removeFromTombstoneSet("pending_ot_sync_dates", existing.date)
         addToTombstoneSet("deleted_ot_dates", existing.date)
         overtimeDao.deleteRecordById(id)
+        refreshSmartReminders()
         triggerPendingSync()
     }
 
@@ -683,6 +685,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         removeFromTombstoneSet("deleted_piece_ids", recordWithId.id.toString())
         val savedId = pieceRateDao.insertPieceRecord(recordWithId)
         addToTombstoneSet("pending_piece_sync_ids", savedId.toString())
+        refreshSmartReminders()
         if (autoSync) {
             triggerPendingSync()
         }
@@ -694,6 +697,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         removeFromTombstoneSet("pending_piece_sync_ids", idStr)
         addToTombstoneSet("deleted_piece_ids", idStr)
         pieceRateDao.deletePieceRecordById(id)
+        refreshSmartReminders()
         triggerPendingSync()
     }
 
@@ -715,6 +719,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             clearAllTombstones()
             clearAllSyncPrefs()
             scheduleTrashAutoDelete()
+            refreshSmartReminders()
 
             val current = userProfileDao.getUserProfileOnce()
             val cleanProfile = UserProfile(
@@ -1818,6 +1823,10 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 )
             }
 
+            if (anyRecordRestored) {
+                refreshSmartReminders()
+            }
+
             Pair(true, localizedString(R.string.sync_success_toast, "Auto cloud sync completed!"))
         } catch (e: Exception) {
             if (e is CancellationException && e !is TimeoutCancellationException) throw e
@@ -2175,6 +2184,16 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         }
     }
 
+    private fun refreshSmartReminders() {
+        try {
+            resolveContext()?.let {
+                com.example.receiver.ReminderScheduler.scheduleDailyReminders(it)
+            }
+        } catch (e: Exception) {
+            Log.w("OvertimeRepository", "Failed refreshing smart daily reminders: ${e.message}")
+        }
+    }
+
     suspend fun moveOvertimeToTrash(record: OvertimeRecord) = withContext(Dispatchers.IO) {
         var savedTrash: TrashItem? = null
         database.withTransaction {
@@ -2191,6 +2210,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             removeFromTombstoneSet("deleted_trash_ids", trIdStr)
             addToTombstoneSet("pending_trash_sync_ids", trIdStr)
         }
+        refreshSmartReminders()
         triggerPendingSync()
         scheduleTrashAutoDelete()
     }
@@ -2212,6 +2232,7 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
             removeFromTombstoneSet("deleted_trash_ids", trIdStr)
             addToTombstoneSet("pending_trash_sync_ids", trIdStr)
         }
+        refreshSmartReminders()
         triggerPendingSync()
         scheduleTrashAutoDelete()
     }

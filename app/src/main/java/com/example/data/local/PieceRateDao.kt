@@ -20,6 +20,9 @@ interface PieceRateDao {
     @Query("SELECT * FROM piece_rate_records WHERE id = :id LIMIT 1")
     suspend fun getPieceRecordById(id: Long): PieceRateRecord?
 
+    @Query("SELECT EXISTS(SELECT 1 FROM piece_rate_records WHERE date = :date LIMIT 1)")
+    suspend fun hasPieceRecordForDate(date: String): Boolean
+
     @Query("SELECT * FROM piece_rate_records ORDER BY date ASC")
     suspend fun getAllPieceRecordsList(): List<PieceRateRecord>
 

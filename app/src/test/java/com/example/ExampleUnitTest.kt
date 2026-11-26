@@ -1596,6 +1596,105 @@ class ExampleUnitTest {
     assertEquals(15600.0, resolvedDecDialogProfile.basicSalary, 0.001)
     assertEquals(95.0, com.example.ui.viewmodel.resolveEffectiveHourlyOtRate(updatedProfile, decCustomSnapshot), 0.001)
   }
+
+  @Test
+  fun testSmartDailyReminder_skipWhenEntryExistsAndRestoreOnDelete() {
+    val tz = java.util.TimeZone.getTimeZone("Asia/Dhaka")
+    val cal3Pm = java.util.Calendar.getInstance(tz).apply {
+      set(2026, java.util.Calendar.NOVEMBER, 26, 15, 0, 0)
+      set(java.util.Calendar.MILLISECOND, 0)
+    }
+
+    // 1. Entry added at 3:00 PM -> both 7:15 PM & 9:30 PM move to tomorrow (2026-11-27)
+    val plan1Tomorrow = com.example.receiver.ReminderSchedulePolicy.computeTriggerPlan(
+      hour = com.example.receiver.ReminderSchedulePolicy.FIRST_REMINDER_HOUR,
+      minute = com.example.receiver.ReminderSchedulePolicy.FIRST_REMINDER_MINUTE,
+      forceTomorrow = true,
+      nowMillis = cal3Pm.timeInMillis,
+      timeZone = tz
+    )
+    val plan2Tomorrow = com.example.receiver.ReminderSchedulePolicy.computeTriggerPlan(
+      hour = com.example.receiver.ReminderSchedulePolicy.SECOND_REMINDER_HOUR,
+      minute = com.example.receiver.ReminderSchedulePolicy.SECOND_REMINDER_MINUTE,
+      forceTomorrow = true,
+      nowMillis = cal3Pm.timeInMillis,
+      timeZone = tz
+    )
+    assertEquals("2026-11-27", plan1Tomorrow.scheduledForDate)
+    assertEquals("2026-11-27", plan2Tomorrow.scheduledForDate)
+
+    // 2. Entry deleted at 5:00 PM (before 7:15 PM) -> both re-enabled for today (2026-11-26)
+    val cal5Pm = java.util.Calendar.getInstance(tz).apply {
+      set(2026, java.util.Calendar.NOVEMBER, 26, 17, 0, 0)
+      set(java.util.Calendar.MILLISECOND, 0)
+    }
+    val plan1RestoredBefore715 = com.example.receiver.ReminderSchedulePolicy.computeTriggerPlan(
+      hour = com.example.receiver.ReminderSchedulePolicy.FIRST_REMINDER_HOUR,
+      minute = com.example.receiver.ReminderSchedulePolicy.FIRST_REMINDER_MINUTE,
+      forceTomorrow = false,
+      nowMillis = cal5Pm.timeInMillis,
+      timeZone = tz
+    )
+    val plan2RestoredBefore715 = com.example.receiver.ReminderSchedulePolicy.computeTriggerPlan(
+      hour = com.example.receiver.ReminderSchedulePolicy.SECOND_REMINDER_HOUR,
+      minute = com.example.receiver.ReminderSchedulePolicy.SECOND_REMINDER_MINUTE,
+      forceTomorrow = false,
+      nowMillis = cal5Pm.timeInMillis,
+      timeZone = tz
+    )
+    assertEquals("2026-11-26", plan1RestoredBefore715.scheduledForDate)
+    assertEquals("2026-11-26", plan2RestoredBefore715.scheduledForDate)
+
+    // 3. Entry deleted at 8:00 PM (after 7:15 PM, before 9:30 PM) -> 7:15 goes tomorrow, 9:30 re-enabled tonight
+    val cal8Pm = java.util.Calendar.getInstance(tz).apply {
+      set(2026, java.util.Calendar.NOVEMBER, 26, 20, 0, 0)
+      set(java.util.Calendar.MILLISECOND, 0)
+    }
+    val plan1After715 = com.example.receiver.ReminderSchedulePolicy.computeTriggerPlan(
+      hour = com.example.receiver.ReminderSchedulePolicy.FIRST_REMINDER_HOUR,
+      minute = com.example.receiver.ReminderSchedulePolicy.FIRST_REMINDER_MINUTE,
+      forceTomorrow = false,
+      nowMillis = cal8Pm.timeInMillis,
+      timeZone = tz
+    )
+    val plan2RestoredAfter715 = com.example.receiver.ReminderSchedulePolicy.computeTriggerPlan(
+      hour = com.example.receiver.ReminderSchedulePolicy.SECOND_REMINDER_HOUR,
+      minute = com.example.receiver.ReminderSchedulePolicy.SECOND_REMINDER_MINUTE,
+      forceTomorrow = false,
+      nowMillis = cal8Pm.timeInMillis,
+      timeZone = tz
+    )
+    assertEquals("2026-11-27", plan1After715.scheduledForDate)
+    assertEquals("2026-11-26", plan2RestoredAfter715.scheduledForDate)
+
+    // 4. Receiver real-time delivery guard decisions
+    val skipExisting = com.example.receiver.ReminderSchedulePolicy.evaluateDelivery(
+      hasTodayEntry = true,
+      scheduledForDate = "2026-11-26",
+      todayDate = "2026-11-26"
+    )
+    assertFalse(skipExisting.shouldShowNotification)
+    assertEquals(com.example.receiver.ReminderSchedulePolicy.SKIP_REASON_ENTRY_EXISTS_TODAY, skipExisting.skipReason)
+    assertTrue(skipExisting.rescheduleForceTomorrow)
+
+    val deliverNextDayMissing = com.example.receiver.ReminderSchedulePolicy.evaluateDelivery(
+      hasTodayEntry = false,
+      scheduledForDate = "2026-11-27",
+      todayDate = "2026-11-27"
+    )
+    assertTrue(deliverNextDayMissing.shouldShowNotification)
+    assertNull(deliverNextDayMissing.skipReason)
+    assertTrue(deliverNextDayMissing.rescheduleForceTomorrow)
+
+    val skipStaleDelay = com.example.receiver.ReminderSchedulePolicy.evaluateDelivery(
+      hasTodayEntry = false,
+      scheduledForDate = "2026-11-26",
+      todayDate = "2026-11-27"
+    )
+    assertFalse(skipStaleDelay.shouldShowNotification)
+    assertEquals(com.example.receiver.ReminderSchedulePolicy.SKIP_REASON_STALE_DATE, skipStaleDelay.skipReason)
+    assertFalse(skipStaleDelay.rescheduleForceTomorrow)
+  }
 }
 
 

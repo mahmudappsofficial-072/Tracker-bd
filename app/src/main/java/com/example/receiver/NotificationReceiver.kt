@@ -21,10 +21,36 @@ class NotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         val pendingResult = goAsync()
-        val reminderType = intent?.getIntExtra("REMINDER_TYPE", 1) ?: 1
+        val reminderType = intent?.getIntExtra(ReminderScheduler.EXTRA_REMINDER_TYPE, 1) ?: 1
+        val scheduledForDate = intent?.getStringExtra(ReminderScheduler.EXTRA_SCHEDULED_FOR_DATE)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val todayDate = ReminderSchedulePolicy.formatDate(System.currentTimeMillis())
+                val hasTodayEntry = ReminderScheduler.hasEntryForDate(context, todayDate)
+                val decision = ReminderSchedulePolicy.evaluateDelivery(
+                    hasTodayEntry = hasTodayEntry,
+                    scheduledForDate = scheduledForDate,
+                    todayDate = todayDate
+                )
+
+                if (!decision.shouldShowNotification) {
+                    Log.d(
+                        "NotificationReceiver",
+                        "Skipping reminder type=$reminderType (${decision.skipReason}) for date=$todayDate"
+                    )
+                    if (decision.skipReason == ReminderSchedulePolicy.SKIP_REASON_STALE_DATE) {
+                        ReminderScheduler.syncSmartDailyRemindersSuspend(context)
+                    } else {
+                        ReminderScheduler.scheduleNextReminder(
+                            context = context,
+                            type = reminderType,
+                            forceTomorrow = decision.rescheduleForceTomorrow
+                        )
+                    }
+                    return@launch
+                }
+
                 val profileLang = try {
                     val db = com.example.data.local.AppDatabase.getDatabase(context)
                     db.userProfileDao().getUserProfileOnce()?.language
@@ -43,14 +69,14 @@ class NotificationReceiver : BroadcastReceiver() {
                         localizedCtx.getString(R.string.notif_reminder_1_title),
                         localizedCtx.getString(R.string.notif_reminder_1_body),
                         localizedCtx.getString(R.string.notif_reminder_1_subtext),
-                        1001,
+                        ReminderScheduler.REQUEST_CODE_715,
                         true
                     )
                     else -> Tuple(
                         localizedCtx.getString(R.string.notif_reminder_2_title),
                         localizedCtx.getString(R.string.notif_reminder_2_body),
                         localizedCtx.getString(R.string.notif_reminder_2_subtext),
-                        1002,
+                        ReminderScheduler.REQUEST_CODE_930,
                         false
                     )
                 }
@@ -64,7 +90,8 @@ class NotificationReceiver : BroadcastReceiver() {
                     }
                 }
 
-                val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+                val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                    (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
                 val pendingIntent = PendingIntent.getActivity(context, reqCode, launchIntent, flags)
 
                 val builder = NotificationCompat.Builder(context, ReminderScheduler.CHANNEL_ID)
@@ -88,7 +115,7 @@ class NotificationReceiver : BroadcastReceiver() {
                 }
 
                 // Schedule next reminder for the same time tomorrow
-                ReminderScheduler.scheduleNextReminder(context, reminderType)
+                ReminderScheduler.scheduleNextReminder(context, reminderType, forceTomorrow = true)
             } finally {
                 pendingResult.finish()
             }

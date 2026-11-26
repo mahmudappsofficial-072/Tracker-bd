@@ -3,6 +3,9 @@ package com.example.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
 
@@ -10,8 +13,16 @@ class BootReceiver : BroadcastReceiver() {
         if (intent?.action == Intent.ACTION_BOOT_COMPLETED ||
             intent?.action == "android.intent.action.QUICKBOOT_POWERON"
         ) {
-            ReminderScheduler.scheduleDailyReminders(context)
-            TrashAutoDeleteScheduler.scheduleNextAutoDelete(context)
+            val pendingResult = goAsync()
+            val appContext = context.applicationContext
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    ReminderScheduler.syncSmartDailyRemindersSuspend(appContext)
+                    TrashAutoDeleteScheduler.scheduleNextAutoDelete(appContext)
+                } finally {
+                    pendingResult.finish()
+                }
+            }
         }
     }
 }

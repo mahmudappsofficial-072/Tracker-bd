@@ -23,6 +23,9 @@ interface OvertimeDao {
     @Query("SELECT * FROM overtime_records WHERE date = :date ORDER BY id DESC LIMIT 1")
     suspend fun getRecordByDate(date: String): OvertimeRecord?
 
+    @Query("SELECT EXISTS(SELECT 1 FROM overtime_records WHERE date = :date LIMIT 1)")
+    suspend fun hasRecordForDate(date: String): Boolean
+
     @Query("SELECT * FROM overtime_records WHERE id = :id LIMIT 1")
     suspend fun getRecordById(id: Long): OvertimeRecord?
 
