@@ -406,27 +406,35 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
     fun updateProfile(updated: UserProfile) {
         viewModelScope.launch {
             val currentCalendarYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
-            // Finalize any unlocked past months using the previous profile before overwriting it
+            val prevProfile = repository.getProfileOnce()
+            // Freeze past months (and immediate previous month) using previous baseline BEFORE updating UserProfile
             repository.autoFinalizePastMonthSnapshots(currentCalendarYm, autoSync = false)
+            val prevYm = com.example.util.MonthLockPolicy.getPreviousCalendarYearMonth()
+            if (prevYm < currentCalendarYm) {
+                val shouldLockPrev = com.example.util.MonthLockPolicy.resolveIsMonthLocked(prevYm, null)
+                repository.freezeMonthSnapshotIfMissing(
+                    ym = prevYm,
+                    profile = prevProfile,
+                    isLocked = shouldLockPrev,
+                    autoSync = false
+                )
+            }
+
             repository.saveProfile(updated, autoSync = false)
-            // Only update selected month if it is current or future; never overwrite past months
-            val ym = if (_selectedYearMonth.value >= currentCalendarYm) _selectedYearMonth.value else currentCalendarYm
-            val existingYm = repository.getMonthlySalarySettingsOnce(ym)
+
+            // Profile edits apply strictly to the running calendar month (and future default template),
+            // leaving all past months and already-customized future months untouched.
+            val existingRunningYm = repository.getMonthlySalarySettingsOnce(currentCalendarYm)
             val now = System.currentTimeMillis()
             val otRate = LaborLawCalculator.getHourlyOtRate(updated)
-            val snapshot = repository.buildSnapshotFromProfile(
-                ym = ym,
-                profile = updated,
-                isLocked = existingYm?.isLocked ?: (ym < currentCalendarYm),
-                lockedAt = existingYm?.lockedAt ?: (if (ym < currentCalendarYm) now else 0L),
-                updatedAt = now
+            val snapshot = buildRunningMonthProfileUpdatedSnapshot(
+                currentCalendarYm = currentCalendarYm,
+                updatedProfile = updated,
+                existingRunningSnapshot = existingRunningYm,
+                nowMillis = now
             )
             repository.saveMonthlySalarySettings(snapshot, autoSync = false)
-            // Synchronize running month records with the new rate and amount in Room and batch-sync once
             repository.updateRunningMonthOvertimeRates(currentCalendarYm, otRate, autoSync = false)
-            if (ym > currentCalendarYm) {
-                repository.updateRunningMonthOvertimeRates(ym, otRate, autoSync = false)
-            }
             repository.triggerPendingSync()
         }
     }
@@ -467,21 +475,13 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
                 }
             }
             val currentCalendarYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
-            val isRunningMonth = ym >= currentCalendarYm
             val profile = repository.getProfileOnce()
 
             // Ensure a snapshot for this month exists (including custom/zero-basic profiles)
             val existingMonthSettings = repository.ensureMonthSnapshotExists(ym, profile, currentCalendarYm)
 
-            // For running month, always use the current active profile rate.
-            // For past month, prioritize that past month's saved snapshot rate.
-            val effectiveRate = if (isRunningMonth) {
-                LaborLawCalculator.getHourlyOtRate(profile)
-            } else if (existingMonthSettings != null && (existingMonthSettings.hourlyOtRate > 0.0 || existingMonthSettings.isCustomSalary || existingMonthSettings.updatedAt > 0L)) {
-                existingMonthSettings.hourlyOtRate
-            } else {
-                LaborLawCalculator.getHourlyOtRate(profile)
-            }
+            // Snapshot-first: whenever the month has its own snapshot (past, running, or future), use its rate
+            val effectiveRate = resolveEffectiveHourlyOtRate(profile, existingMonthSettings)
 
             val record = OvertimeRecord(
                 id = id,
@@ -611,20 +611,33 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
 
     fun updateTargetHours(target: Double) {
         viewModelScope.launch {
+            val targetYm = _selectedYearMonth.value
+            if (isYearMonthLocked(targetYm)) {
+                _uiMessage.tryEmit(lockedMonthMessage())
+                return@launch
+            }
             val currentCalendarYm = SimpleDateFormat("yyyy-MM", Locale.US).format(Date())
+            val currentProfile = repository.getProfileOnce()
             repository.autoFinalizePastMonthSnapshots(currentCalendarYm, autoSync = false)
-            val updated = repository.getProfileOnce().copy(monthlyOtTargetHours = target)
-            repository.saveProfile(updated, autoSync = false)
-            val ym = if (_selectedYearMonth.value >= currentCalendarYm) _selectedYearMonth.value else currentCalendarYm
-            val existingYm = repository.getMonthlySalarySettingsOnce(ym)
+            if (targetYm != currentCalendarYm) {
+                repository.freezeMonthSnapshotIfMissing(
+                    ym = currentCalendarYm,
+                    profile = currentProfile,
+                    isLocked = false,
+                    autoSync = false
+                )
+            }
+            val existingYm = repository.getMonthlySalarySettingsOnce(targetYm)
             val now = System.currentTimeMillis()
-            val snapshot = repository.buildSnapshotFromProfile(
-                ym = ym,
-                profile = updated,
-                isLocked = existingYm?.isLocked ?: (ym < currentCalendarYm),
-                lockedAt = existingYm?.lockedAt ?: (if (ym < currentCalendarYm) now else 0L),
-                updatedAt = now
+            val snapshot = buildTargetUpdatedSnapshot(
+                targetYm = targetYm,
+                currentCalendarYm = currentCalendarYm,
+                newTargetHours = target,
+                existingSnapshot = existingYm,
+                baselineProfile = currentProfile,
+                nowMillis = now
             )
+            // Store strictly inside the target month's snapshot; never mutate global UserProfile
             repository.saveMonthlySalarySettings(snapshot, autoSync = false)
             repository.triggerPendingSync()
         }
@@ -773,6 +786,146 @@ class OvertimeViewModel(application: Application) : AndroidViewModel(application
     }
 }
 
+internal fun resolveEffectiveMonthProfile(
+    profile: UserProfile,
+    monthSnapshot: MonthlySalarySettings?
+): UserProfile {
+    if (monthSnapshot == null) return profile
+    val snapshotHasAnyIdentity = monthSnapshot.userName.isNotBlank() ||
+        monthSnapshot.companyName.isNotBlank() ||
+        monthSnapshot.designation.isNotBlank() ||
+        monthSnapshot.workerId.isNotBlank() ||
+        monthSnapshot.grade.isNotBlank()
+
+    return profile.copy(
+        userName = if (snapshotHasAnyIdentity) monthSnapshot.userName else profile.userName,
+        companyName = if (snapshotHasAnyIdentity) monthSnapshot.companyName else profile.companyName,
+        designation = if (snapshotHasAnyIdentity) monthSnapshot.designation else profile.designation,
+        workerId = if (snapshotHasAnyIdentity) monthSnapshot.workerId else profile.workerId,
+        grade = if (snapshotHasAnyIdentity) monthSnapshot.grade else profile.grade,
+        isCustomSalary = monthSnapshot.isCustomSalary,
+        basicSalary = if (monthSnapshot.basicSalary > 0.0 || monthSnapshot.updatedAt > 0L) monthSnapshot.basicSalary else profile.basicSalary,
+        houseRent = monthSnapshot.houseRent,
+        medicalAllowance = monthSnapshot.medicalAllowance,
+        conveyanceAllowance = monthSnapshot.conveyanceAllowance,
+        foodAllowance = monthSnapshot.foodAllowance,
+        attendanceBonus = monthSnapshot.attendanceBonus,
+        maxAbsentForBonus = monthSnapshot.maxAbsentForBonus,
+        maxLeaveForBonus = monthSnapshot.maxLeaveForBonus,
+        nightBillRate = monthSnapshot.nightBillRate,
+        tiffinBillRate = monthSnapshot.tiffinBillRate,
+        customOtRate = monthSnapshot.customOtRate,
+        monthlyOtTargetHours = monthSnapshot.monthlyOtTargetHours
+    )
+}
+
+internal fun resolveEffectiveHourlyOtRate(
+    profile: UserProfile,
+    monthSnapshot: MonthlySalarySettings?
+): Double {
+    return if (monthSnapshot != null && (monthSnapshot.hourlyOtRate > 0.0 || monthSnapshot.isCustomSalary || monthSnapshot.updatedAt > 0L)) {
+        monthSnapshot.hourlyOtRate
+    } else {
+        LaborLawCalculator.getHourlyOtRate(profile)
+    }
+}
+
+internal fun buildTargetUpdatedSnapshot(
+    targetYm: String,
+    currentCalendarYm: String,
+    newTargetHours: Double,
+    existingSnapshot: MonthlySalarySettings?,
+    baselineProfile: UserProfile,
+    nowMillis: Long = System.currentTimeMillis()
+): MonthlySalarySettings {
+    if (existingSnapshot != null) {
+        return existingSnapshot.copy(
+            monthlyOtTargetHours = newTargetHours,
+            updatedAt = nowMillis
+        )
+    }
+    val isLocked = com.example.util.MonthLockPolicy.resolveIsMonthLocked(targetYm, null) && targetYm < currentCalendarYm
+    val otRate = LaborLawCalculator.getHourlyOtRate(baselineProfile)
+    val autoResult = if (!baselineProfile.isCustomSalary && baselineProfile.basicSalary > 0.0) {
+        LaborLawCalculator.calculateAutoAllowances(baselineProfile.basicSalary)
+    } else null
+    val allowances = if (autoResult != null) {
+        autoResult.houseRent + autoResult.medicalAllowance + autoResult.conveyanceAllowance + autoResult.foodAllowance
+    } else 0.0
+    val gross = if (baselineProfile.basicSalary > 0.0) baselineProfile.basicSalary + allowances else 0.0
+
+    return MonthlySalarySettings(
+        yearMonth = targetYm,
+        basicSalary = baselineProfile.basicSalary,
+        houseRent = if (baselineProfile.isCustomSalary || baselineProfile.basicSalary <= 0.0) 0.0 else (autoResult?.houseRent ?: 0.0),
+        medicalAllowance = if (baselineProfile.isCustomSalary || baselineProfile.basicSalary <= 0.0) 0.0 else (autoResult?.medicalAllowance ?: 0.0),
+        conveyanceAllowance = if (baselineProfile.isCustomSalary || baselineProfile.basicSalary <= 0.0) 0.0 else (autoResult?.conveyanceAllowance ?: 0.0),
+        foodAllowance = if (baselineProfile.isCustomSalary || baselineProfile.basicSalary <= 0.0) 0.0 else (autoResult?.foodAllowance ?: 0.0),
+        grossSalary = gross,
+        hourlyOtRate = otRate,
+        customOtRate = baselineProfile.customOtRate,
+        monthlyOtTargetHours = newTargetHours,
+        attendanceBonus = baselineProfile.attendanceBonus,
+        maxAbsentForBonus = baselineProfile.maxAbsentForBonus,
+        maxLeaveForBonus = baselineProfile.maxLeaveForBonus,
+        nightBillRate = baselineProfile.nightBillRate,
+        tiffinBillRate = baselineProfile.tiffinBillRate,
+        isCustomSalary = baselineProfile.isCustomSalary,
+        userName = baselineProfile.userName,
+        companyName = baselineProfile.companyName,
+        designation = baselineProfile.designation,
+        workerId = baselineProfile.workerId,
+        grade = baselineProfile.grade,
+        isLocked = isLocked,
+        lockedAt = if (isLocked) nowMillis else 0L,
+        updatedAt = nowMillis
+    )
+}
+
+internal fun buildRunningMonthProfileUpdatedSnapshot(
+    currentCalendarYm: String,
+    updatedProfile: UserProfile,
+    existingRunningSnapshot: MonthlySalarySettings?,
+    nowMillis: Long = System.currentTimeMillis()
+): MonthlySalarySettings {
+    val preservedTargetHours = existingRunningSnapshot?.monthlyOtTargetHours ?: updatedProfile.monthlyOtTargetHours
+    val otRate = LaborLawCalculator.getHourlyOtRate(updatedProfile)
+    val autoResult = if (!updatedProfile.isCustomSalary && updatedProfile.basicSalary > 0.0) {
+        LaborLawCalculator.calculateAutoAllowances(updatedProfile.basicSalary)
+    } else null
+    val allowances = if (autoResult != null) {
+        autoResult.houseRent + autoResult.medicalAllowance + autoResult.conveyanceAllowance + autoResult.foodAllowance
+    } else 0.0
+    val gross = if (updatedProfile.basicSalary > 0.0) updatedProfile.basicSalary + allowances else 0.0
+
+    return MonthlySalarySettings(
+        yearMonth = currentCalendarYm,
+        basicSalary = updatedProfile.basicSalary,
+        houseRent = if (updatedProfile.isCustomSalary || updatedProfile.basicSalary <= 0.0) 0.0 else (autoResult?.houseRent ?: 0.0),
+        medicalAllowance = if (updatedProfile.isCustomSalary || updatedProfile.basicSalary <= 0.0) 0.0 else (autoResult?.medicalAllowance ?: 0.0),
+        conveyanceAllowance = if (updatedProfile.isCustomSalary || updatedProfile.basicSalary <= 0.0) 0.0 else (autoResult?.conveyanceAllowance ?: 0.0),
+        foodAllowance = if (updatedProfile.isCustomSalary || updatedProfile.basicSalary <= 0.0) 0.0 else (autoResult?.foodAllowance ?: 0.0),
+        grossSalary = gross,
+        hourlyOtRate = otRate,
+        customOtRate = updatedProfile.customOtRate,
+        monthlyOtTargetHours = preservedTargetHours,
+        attendanceBonus = updatedProfile.attendanceBonus,
+        maxAbsentForBonus = updatedProfile.maxAbsentForBonus,
+        maxLeaveForBonus = updatedProfile.maxLeaveForBonus,
+        nightBillRate = updatedProfile.nightBillRate,
+        tiffinBillRate = updatedProfile.tiffinBillRate,
+        isCustomSalary = updatedProfile.isCustomSalary,
+        userName = updatedProfile.userName,
+        companyName = updatedProfile.companyName,
+        designation = updatedProfile.designation,
+        workerId = updatedProfile.workerId,
+        grade = updatedProfile.grade,
+        isLocked = existingRunningSnapshot?.isLocked ?: false,
+        lockedAt = existingRunningSnapshot?.lockedAt ?: 0L,
+        updatedAt = nowMillis
+    )
+}
+
 internal fun computeMonthlySummary(
     selectedYearMonth: String,
     currentCalendarYm: String,
@@ -782,26 +935,19 @@ internal fun computeMonthlySummary(
     pieceList: List<PieceRateRecord>,
     deductionList: List<DeductionRecord>
 ): MonthlySummaryState {
-    val isRunningMonth = selectedYearMonth >= currentCalendarYm
-    val hasSnapshot = !isRunningMonth && monthSnapshot != null
+    val isRunningOrFutureMonth = selectedYearMonth >= currentCalendarYm
+    val hasSnapshot = monthSnapshot != null
 
-    // For the running month, prioritize active profile so edits are live immediately.
-    // For past months, prioritize saved monthSnapshot so historical months stay isolated (including explicit 0.0 values).
+    // Snapshot-first for ALL months (past, running, and future):
+    // once a month has its own snapshot, 100% of month-specific settings stay isolated to that month.
+    // Only untouched months without a snapshot fall back to the default UserProfile template.
     val isCustom = if (hasSnapshot) monthSnapshot!!.isCustomSalary else profile.isCustomSalary
     val baseBasic = if (hasSnapshot) {
         if (monthSnapshot!!.basicSalary > 0.0 || monthSnapshot.updatedAt > 0L) monthSnapshot.basicSalary else profile.basicSalary
     } else {
         profile.basicSalary
     }
-    val otRate = if (hasSnapshot) {
-        if (monthSnapshot!!.hourlyOtRate > 0.0 || monthSnapshot.isCustomSalary || monthSnapshot.updatedAt > 0L) {
-            monthSnapshot.hourlyOtRate
-        } else {
-            LaborLawCalculator.getHourlyOtRate(profile)
-        }
-    } else {
-        LaborLawCalculator.getHourlyOtRate(profile)
-    }
+    val otRate = resolveEffectiveHourlyOtRate(profile, monthSnapshot)
 
     var totalOtHours = 0.0
     var totalOtAmount = 0.0
@@ -810,7 +956,7 @@ internal fun computeMonthlySummary(
 
     for (rec in otList) {
         totalOtHours += rec.otHours
-        val itemRate = if (isRunningMonth) otRate else (if (rec.hourlyRateSnapshot > 0.0) rec.hourlyRateSnapshot else otRate)
+        val itemRate = if (isRunningOrFutureMonth) otRate else (if (rec.hourlyRateSnapshot > 0.0) rec.hourlyRateSnapshot else otRate)
         totalOtAmount += rec.otHours * itemRate
         if (rec.hasNightBill) nightBillCount++
         if (rec.hasTiffinBill) tiffinBillCount++

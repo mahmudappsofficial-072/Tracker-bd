@@ -186,6 +186,10 @@ fun OvertimeApp(
     val otRecords by viewModel.monthlyOtRecords.collectAsStateWithLifecycle()
     val allOtRecords by viewModel.allOvertimeRecords.collectAsStateWithLifecycle()
     val previousMonthSettings by viewModel.previousMonthSettings.collectAsStateWithLifecycle()
+    val currentMonthSettings by viewModel.currentMonthSettings.collectAsStateWithLifecycle()
+    val effectiveMonthProfile = remember(profile, currentMonthSettings) {
+        com.example.ui.viewmodel.resolveEffectiveMonthProfile(profile, currentMonthSettings)
+    }
     val pieceRecords by viewModel.monthlyPieceRecords.collectAsStateWithLifecycle()
     val summary by viewModel.monthlySummary.collectAsStateWithLifecycle()
     val deductions by viewModel.monthlyDeductions.collectAsStateWithLifecycle()
@@ -836,7 +840,7 @@ fun OvertimeApp(
                                 initialRecord = recordToEdit,
                                 existingRecords = allOtRecords.ifEmpty { otRecords },
                                 hourlyRate = summary.hourlyOtRate,
-                                profile = profile,
+                                profile = effectiveMonthProfile,
                                 lang = effectiveLangTag,
                                 onDismiss = {
                                     showQuickOtDialog = false

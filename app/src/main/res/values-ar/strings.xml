@@ -582,4 +582,5 @@
     <string name="salary_mode_custom_why_desc">أدخل الراتب الشهري وسعر ساعة الإضافي الخاص بشركتك مباشرة لمطابقة كشف راتبك.</string>
     <string name="salary_mode_custom_select_btn">اختر الوضع المخصص</string>
     <string name="cd_salary_mode_help">مقارنة بين الوضع التلقائي والوضع المخصص</string>
+    <string name="profile_running_month_scope_note">تُطبَّق التغييرات على الشهر الحالي والأشهر الجديدة فقط؛ وتبقى الأشهر السابقة أو المخصصة كما هي.</string>
 </resources>

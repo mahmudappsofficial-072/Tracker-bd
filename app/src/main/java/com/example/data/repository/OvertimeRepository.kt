@@ -491,6 +491,28 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
         }
     }
 
+    suspend fun freezeMonthSnapshotIfMissing(
+        ym: String,
+        profile: UserProfile,
+        isLocked: Boolean,
+        now: Long = System.currentTimeMillis(),
+        autoSync: Boolean = true
+    ): com.example.data.model.MonthlySalarySettings? {
+        val existing = monthlySalaryDao.getSettingsForMonthOnce(ym)
+        if (existing != null) return existing
+        if (!hasSnapshotWorthyProfile(profile)) return null
+
+        val snapshot = buildSnapshotFromProfile(
+            ym = ym,
+            profile = profile,
+            isLocked = isLocked,
+            lockedAt = if (isLocked) now else 0L,
+            updatedAt = now
+        )
+        saveMonthlySalarySettings(snapshot, autoSync = autoSync)
+        return snapshot
+    }
+
     suspend fun autoFinalizePastMonthSnapshots(currentCalendarYm: String, autoSync: Boolean = true) {
         withContext(Dispatchers.IO) {
             try {
@@ -498,11 +520,17 @@ class OvertimeRepository(private val database: AppDatabase, private val context:
                 val otMonths = overtimeDao.getAllYearMonths()
                 val pieceMonths = pieceRateDao.getAllYearMonths()
                 val deductionMonths = deductionDao.getAllYearMonths()
-                val allMonths = (otMonths + pieceMonths + deductionMonths)
+                val snapshotMonths = monthlySalaryDao.getAllSettings().map { it.yearMonth }
+                val prevYm = com.example.util.MonthLockPolicy.getPreviousCalendarYearMonth()
+                val baseMonths = otMonths + pieceMonths + deductionMonths + snapshotMonths
+                val allMonths = (if (prevYm < currentCalendarYm && hasSnapshotWorthyProfile(profile)) {
+                    baseMonths + prevYm
+                } else {
+                    baseMonths
+                })
                     .filter { it < currentCalendarYm }
                     .distinct()
 
-                val prevYm = com.example.util.MonthLockPolicy.getPreviousCalendarYearMonth()
                 val isPrevInGrace = com.example.util.MonthLockPolicy.isWithinPreviousMonthGracePeriod(prevYm)
                 var anyChanged = false
 

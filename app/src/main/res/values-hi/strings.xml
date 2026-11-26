@@ -582,4 +582,5 @@
     <string name="salary_mode_custom_why_desc">मासिक वेतन और अपनी कंपनी की सटीक प्रति घंटा ओटी दर सीधे दर्ज कर सकते हैं।</string>
     <string name="salary_mode_custom_select_btn">कस्टम मोड चुनें</string>
     <string name="cd_salary_mode_help">स्वचालित और कस्टम गणना मोड की तुलना देखें</string>
+    <string name="profile_running_month_scope_note">बदलाव चालू महीने और नए महीनों पर लागू होंगे; पिछले या अलग से सेट किए गए महीने अपरिवर्तित रहेंगे।</string>
 </resources>

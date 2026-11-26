@@ -582,4 +582,5 @@
     <string name="salary_mode_custom_why_desc">মাসিক বেতন এবং কোম্পানির নিজস্ব ঘণ্টাপ্রতি ওটি রেট সরাসরি বসিয়ে নিখুঁত হিসাব রাখতে পারবেন।</string>
     <string name="salary_mode_custom_select_btn">কাস্টম মোড বেছে নিন</string>
     <string name="cd_salary_mode_help">স্বয়ংক্রিয় ও কাস্টম হিসাব পদ্ধতির নির্দেশিকা দেখুন</string>
+    <string name="profile_running_month_scope_note">পরিবর্তনগুলো রানিং মাস ও নতুন মাসে প্রযোজ্য হবে; পূর্বের বা আলাদা সেট করা মাস অপরিবর্তিত থাকবে।</string>
 </resources>

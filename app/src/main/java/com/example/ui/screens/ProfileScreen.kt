@@ -546,6 +546,15 @@ fun ProfileScreen(
                                     minFontSize = 10.sp
                                 )
                             }
+                            Text(
+                                text = stringResource(R.string.profile_running_month_scope_note),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp)
+                            )
                         }
                     }
                 }

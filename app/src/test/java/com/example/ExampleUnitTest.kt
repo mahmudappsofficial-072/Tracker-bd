@@ -1308,6 +1308,295 @@ class ExampleUnitTest {
     assertNotEquals(light0, dark0)
     assertNotEquals(light100, dark100)
   }
+
+  @Test
+  fun testPerMonthTargetIsolation_futureRunningPastAndUntouchedMonths() {
+    val defaultProfile = com.example.data.model.UserProfile(
+      userName = "Worker One",
+      companyName = "Apex Garments",
+      basicSalary = 10400.0,
+      attendanceBonus = 1000.0,
+      maxAbsentForBonus = 1,
+      nightBillRate = 120.0,
+      tiffinBillRate = 60.0,
+      monthlyOtTargetHours = 70.0
+    )
+    val runningYm = "2026-11"
+    val octExisting = com.example.ui.viewmodel.buildTargetUpdatedSnapshot(
+      targetYm = "2026-10",
+      currentCalendarYm = runningYm,
+      newTargetHours = 60.0,
+      existingSnapshot = null,
+      baselineProfile = defaultProfile,
+      nowMillis = 1000L
+    )
+    val novFrozen = com.example.ui.viewmodel.buildTargetUpdatedSnapshot(
+      targetYm = "2026-11",
+      currentCalendarYm = runningYm,
+      newTargetHours = 80.0,
+      existingSnapshot = null,
+      baselineProfile = defaultProfile,
+      nowMillis = 2000L
+    )
+
+    // User navigates to future December (2026-12) and sets target to 120 hrs
+    val decSnapshot = com.example.ui.viewmodel.buildTargetUpdatedSnapshot(
+      targetYm = "2026-12",
+      currentCalendarYm = runningYm,
+      newTargetHours = 120.0,
+      existingSnapshot = null,
+      baselineProfile = defaultProfile,
+      nowMillis = 3000L
+    )
+
+    val decSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-12",
+      currentCalendarYm = runningYm,
+      profile = defaultProfile,
+      monthSnapshot = decSnapshot,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+    val novSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-11",
+      currentCalendarYm = runningYm,
+      profile = defaultProfile,
+      monthSnapshot = novFrozen,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+    val octSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-10",
+      currentCalendarYm = runningYm,
+      profile = defaultProfile,
+      monthSnapshot = octExisting,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+    // Untouched January (no snapshot yet) inherits default UserProfile target
+    val janSummaryUntouched = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2027-01",
+      currentCalendarYm = runningYm,
+      profile = defaultProfile,
+      monthSnapshot = null,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+
+    assertEquals(120.0, decSummary.targetHours, 0.001)
+    assertEquals(80.0, novSummary.targetHours, 0.001)
+    assertEquals(60.0, octSummary.targetHours, 0.001)
+    assertEquals(70.0, janSummaryUntouched.targetHours, 0.001)
+
+    // Setting explicit 0.0 target in November must stay 0.0 and NOT fall back to profile's 70.0
+    val novZeroSnapshot = com.example.ui.viewmodel.buildTargetUpdatedSnapshot(
+      targetYm = "2026-11",
+      currentCalendarYm = runningYm,
+      newTargetHours = 0.0,
+      existingSnapshot = novFrozen,
+      baselineProfile = defaultProfile,
+      nowMillis = 4000L
+    )
+    val novZeroSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-11",
+      currentCalendarYm = runningYm,
+      profile = defaultProfile,
+      monthSnapshot = novZeroSnapshot,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+    assertEquals(0.0, novZeroSummary.targetHours, 0.001)
+    assertEquals(120.0, decSummary.targetHours, 0.001)
+    assertEquals(60.0, octSummary.targetHours, 0.001)
+  }
+
+  @Test
+  fun testPerMonthSalaryRatesBonusBillsIsolation_profileUpdateOnlyAffectsRunningMonthAndUntouchedDefault() {
+    val runningYm = "2026-11"
+    val oldProfile = com.example.data.model.UserProfile(
+      userName = "Worker A",
+      companyName = "Old Factory",
+      basicSalary = 10400.0, // 100.0/hr
+      isCustomSalary = false,
+      attendanceBonus = 1000.0,
+      maxAbsentForBonus = 1,
+      nightBillRate = 100.0,
+      tiffinBillRate = 50.0,
+      monthlyOtTargetHours = 50.0
+    )
+
+    // Existing customized past month (2026-10) and customized future month (2026-12)
+    val octSnapshot = com.example.ui.viewmodel.buildTargetUpdatedSnapshot(
+      targetYm = "2026-10",
+      currentCalendarYm = runningYm,
+      newTargetHours = 45.0,
+      existingSnapshot = null,
+      baselineProfile = oldProfile,
+      nowMillis = 1000L
+    )
+    val decCustomSnapshot = com.example.data.model.MonthlySalarySettings(
+      yearMonth = "2026-12",
+      basicSalary = 15600.0,
+      hourlyOtRate = 95.0,
+      customOtRate = 95.0,
+      isCustomSalary = true,
+      monthlyOtTargetHours = 110.0,
+      attendanceBonus = 1500.0,
+      maxAbsentForBonus = 0,
+      nightBillRate = 150.0,
+      tiffinBillRate = 75.0,
+      userName = "Worker A",
+      companyName = "Dec Contract",
+      updatedAt = 2000L
+    )
+    val novExistingTargetSnapshot = com.example.ui.viewmodel.buildTargetUpdatedSnapshot(
+      targetYm = "2026-11",
+      currentCalendarYm = runningYm,
+      newTargetHours = 85.0,
+      existingSnapshot = null,
+      baselineProfile = oldProfile,
+      nowMillis = 2500L
+    )
+
+    // User updates Profile in Profile tab with raised salary, custom OT rate, higher bonus & bills
+    val updatedProfile = oldProfile.copy(
+      companyName = "New Raise Factory",
+      basicSalary = 13000.0,
+      isCustomSalary = true,
+      customOtRate = 140.0,
+      attendanceBonus = 2000.0,
+      maxAbsentForBonus = 2,
+      nightBillRate = 180.0,
+      tiffinBillRate = 90.0
+    )
+
+    val novUpdatedSnapshot = com.example.ui.viewmodel.buildRunningMonthProfileUpdatedSnapshot(
+      currentCalendarYm = runningYm,
+      updatedProfile = updatedProfile,
+      existingRunningSnapshot = novExistingTargetSnapshot,
+      nowMillis = 5000L
+    )
+
+    // Running November picks up updated salary/rates/bonuses/bills while keeping November's 85h target
+    assertEquals(85.0, novUpdatedSnapshot.monthlyOtTargetHours, 0.001)
+    assertEquals(140.0, novUpdatedSnapshot.hourlyOtRate, 0.001)
+    assertEquals(2000.0, novUpdatedSnapshot.attendanceBonus, 0.001)
+    assertEquals(180.0, novUpdatedSnapshot.nightBillRate, 0.001)
+    assertEquals(90.0, novUpdatedSnapshot.tiffinBillRate, 0.001)
+
+    val novOtList = listOf(
+      com.example.data.model.OvertimeRecord(
+        date = "2026-11-10",
+        yearMonth = "2026-11",
+        otHours = 3.0,
+        hasNightBill = true,
+        hasTiffinBill = true,
+        hourlyRateSnapshot = 140.0
+      )
+    )
+    val decOtList = listOf(
+      com.example.data.model.OvertimeRecord(
+        date = "2026-12-10",
+        yearMonth = "2026-12",
+        otHours = 3.0,
+        hasNightBill = true,
+        hasTiffinBill = true,
+        hourlyRateSnapshot = 95.0
+      )
+    )
+    val octOtList = listOf(
+      com.example.data.model.OvertimeRecord(
+        date = "2026-10-10",
+        yearMonth = "2026-10",
+        otHours = 3.0,
+        hasNightBill = true,
+        hasTiffinBill = true,
+        hourlyRateSnapshot = 100.0
+      )
+    )
+
+    val novSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-11",
+      currentCalendarYm = runningYm,
+      profile = updatedProfile,
+      monthSnapshot = novUpdatedSnapshot,
+      otList = novOtList,
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+    val decSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-12",
+      currentCalendarYm = runningYm,
+      profile = updatedProfile,
+      monthSnapshot = decCustomSnapshot,
+      otList = decOtList,
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+    val octSummary = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2026-10",
+      currentCalendarYm = runningYm,
+      profile = updatedProfile,
+      monthSnapshot = octSnapshot,
+      otList = octOtList,
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+    val janSummaryUntouched = com.example.ui.viewmodel.computeMonthlySummary(
+      selectedYearMonth = "2027-01",
+      currentCalendarYm = runningYm,
+      profile = updatedProfile,
+      monthSnapshot = null,
+      otList = emptyList(),
+      pieceList = emptyList(),
+      deductionList = emptyList()
+    )
+
+    // Running November reflects new rates
+    assertEquals(140.0, novSummary.hourlyOtRate, 0.001)
+    assertEquals(420.0, novSummary.totalOtAmount, 0.001)
+    assertEquals(180.0, novSummary.nightBillTotal, 0.001)
+    assertEquals(90.0, novSummary.tiffinBillTotal, 0.001)
+    assertEquals(2000.0, novSummary.attendanceBonus, 0.001)
+    assertEquals("New Raise Factory", novSummary.companyName)
+
+    // Customized future December stays completely isolated from updatedProfile
+    assertEquals(95.0, decSummary.hourlyOtRate, 0.001)
+    assertEquals(285.0, decSummary.totalOtAmount, 0.001)
+    assertEquals(150.0, decSummary.nightBillTotal, 0.001)
+    assertEquals(75.0, decSummary.tiffinBillTotal, 0.001)
+    assertEquals(1500.0, decSummary.attendanceBonus, 0.001)
+    assertEquals(110.0, decSummary.targetHours, 0.001)
+    assertEquals("Dec Contract", decSummary.companyName)
+
+    // Past October stays completely isolated from updatedProfile
+    assertEquals(100.0, octSummary.hourlyOtRate, 0.001)
+    assertEquals(300.0, octSummary.totalOtAmount, 0.001)
+    assertEquals(100.0, octSummary.nightBillTotal, 0.001)
+    assertEquals(50.0, octSummary.tiffinBillTotal, 0.001)
+    assertEquals(1000.0, octSummary.attendanceBonus, 0.001)
+    assertEquals(45.0, octSummary.targetHours, 0.001)
+    assertEquals("Old Factory", octSummary.companyName)
+
+    // Untouched future January inherits updatedProfile defaults
+    assertEquals(140.0, janSummaryUntouched.hourlyOtRate, 0.001)
+    assertEquals(180.0, janSummaryUntouched.effectiveNightRate, 0.001)
+    assertEquals(90.0, janSummaryUntouched.effectiveTiffinRate, 0.001)
+    assertEquals(2000.0, janSummaryUntouched.attendanceBonus, 0.001)
+
+    // QuickOtEntryDialog profile resolution uses snapshot rates for December instead of global profile
+    val resolvedDecDialogProfile = com.example.ui.viewmodel.resolveEffectiveMonthProfile(updatedProfile, decCustomSnapshot)
+    assertEquals(150.0, resolvedDecDialogProfile.nightBillRate, 0.001)
+    assertEquals(75.0, resolvedDecDialogProfile.tiffinBillRate, 0.001)
+    assertEquals(15600.0, resolvedDecDialogProfile.basicSalary, 0.001)
+    assertEquals(95.0, com.example.ui.viewmodel.resolveEffectiveHourlyOtRate(updatedProfile, decCustomSnapshot), 0.001)
+  }
 }
+
 
 

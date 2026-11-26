@@ -582,4 +582,5 @@
     <string name="salary_mode_custom_why_desc">மாத சம்பளம் மற்றும் நிறுவனத்தின் நிலையான மணிநேர OT விகிதத்தை நேரடியாக உள்ளிடலாம்.</string>
     <string name="salary_mode_custom_select_btn">தனிப்பயன் முறையைத் தேர்ந்தெடு</string>
     <string name="cd_salary_mode_help">தானியங்கி மற்றும் தனிப்பயன் கணக்கீட்டு முறைகளை ஒப்பிட்டுப் பார்க்கவும்</string>
+    <string name="profile_running_month_scope_note">மாற்றங்கள் நடப்பு மாதத்திற்கும் புதிய மாதங்களுக்கும் பொருந்தும்; கடந்த அல்லது தனித்தனியாக அமைத்த மாதங்கள் மாறாது.</string>
 </resources>
