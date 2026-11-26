@@ -18,8 +18,9 @@ local.properties
 debug.keystore
 /.aistudio
 /.build-outputs
-/AAB_DOWNLOAD
 *.aab
 *.apk
 *.jks
 *.keystore
+!/AAB_DOWNLOAD/
+!/AAB_DOWNLOAD/**
