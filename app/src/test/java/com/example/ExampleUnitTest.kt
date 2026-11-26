@@ -775,7 +775,7 @@ class ExampleUnitTest {
       com.example.util.InterstitialAdGatePolicy.resolveAdUnitId(isDebug = true)
     )
     assertEquals(
-      "ca-app-pub-9027708775227838/5097750056",
+      "ca-app-pub-9027708775227838/6430017173",
       com.example.util.InterstitialAdGatePolicy.resolveAdUnitId(isDebug = false)
     )
     assertEquals(10_000L, com.example.util.InterstitialAdGatePolicy.AD_LOAD_TIMEOUT_MS)

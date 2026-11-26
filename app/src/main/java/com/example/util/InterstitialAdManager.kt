@@ -43,7 +43,7 @@ sealed class InterstitialOutcome {
  */
 object InterstitialAdGatePolicy {
     const val DEBUG_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
-    const val RELEASE_GENERAL_AD_UNIT_ID = "ca-app-pub-9027708775227838/5097750056"
+    const val RELEASE_GENERAL_AD_UNIT_ID = "ca-app-pub-9027708775227838/6430017173"
     const val AD_LOAD_TIMEOUT_MS = 10_000L
     const val INTERSTITIAL_COOLDOWN_MS = 60_000L
     const val PRELOAD_DEBOUNCE_MS = 1_500L
