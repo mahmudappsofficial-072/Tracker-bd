@@ -22,17 +22,36 @@ class OvertimeApp : Application() {
         val isMobileAdsInitialized: StateFlow<Boolean> = _isMobileAdsInitialized.asStateFlow()
         private val isMobileAdsInitStarted = AtomicBoolean(false)
 
+        @Volatile
+        var lastAdsInitSummary: String = ""
+            private set
+
+        private fun handleMobileAdsInitialized(initStatus: com.google.android.gms.ads.initialization.InitializationStatus) {
+            val summary = try {
+                initStatus.adapterStatusMap.entries.joinToString(", ") { (cls, status) ->
+                    "${cls.substringAfterLast('.')}:${status.initializationState.name}"
+                }
+            } catch (_: Exception) {
+                ""
+            }
+            lastAdsInitSummary = summary
+            _isMobileAdsInitialized.value = true
+            if (BuildConfig.DEBUG) {
+                Log.d("OvertimeApp", "MobileAds initialized: $summary")
+            }
+        }
+
         /**
          * Ensures MobileAds SDK is initialized once and awaits completion up to [timeoutMs]
          * without firing conflicting duplicate initialize() calls.
          */
-        suspend fun ensureMobileAdsInitialized(context: Context, timeoutMs: Long = 3_500L): Boolean {
+        suspend fun ensureMobileAdsInitialized(context: Context, timeoutMs: Long = 4_000L): Boolean {
             if (_isMobileAdsInitialized.value) return true
             if (isMobileAdsInitStarted.compareAndSet(false, true)) {
                 withContext(Dispatchers.Main.immediate) {
                     try {
-                        com.google.android.gms.ads.MobileAds.initialize(context.applicationContext) {
-                            _isMobileAdsInitialized.value = true
+                        com.google.android.gms.ads.MobileAds.initialize(context.applicationContext) { initStatus ->
+                            handleMobileAdsInitialized(initStatus)
                         }
                     } catch (e: Exception) {
                         isMobileAdsInitStarted.set(false)
@@ -68,8 +87,8 @@ class OvertimeApp : Application() {
         }
         try {
             isMobileAdsInitStarted.set(true)
-            com.google.android.gms.ads.MobileAds.initialize(this) {
-                _isMobileAdsInitialized.value = true
+            com.google.android.gms.ads.MobileAds.initialize(this) { initStatus ->
+                handleMobileAdsInitialized(initStatus)
             }
         } catch (e: Exception) {
             isMobileAdsInitStarted.set(false)

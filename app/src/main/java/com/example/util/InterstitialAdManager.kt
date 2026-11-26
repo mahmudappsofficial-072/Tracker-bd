@@ -31,7 +31,12 @@ sealed class InterstitialOutcome {
     data object SkippedOffline : InterstitialOutcome()
     data object SkippedCooldown : InterstitialOutcome()
     data object SkippedNotResumed : InterstitialOutcome()
-    data class LoadFailed(val code: Int, val message: String) : InterstitialOutcome()
+    data class LoadFailed(
+        val code: Int,
+        val message: String,
+        val adUnitSuffix: String = "",
+        val responseDetail: String = ""
+    ) : InterstitialOutcome()
     data object LoadTimedOut : InterstitialOutcome()
     data class ShowFailed(val code: Int, val message: String) : InterstitialOutcome()
 }
@@ -39,17 +44,17 @@ sealed class InterstitialOutcome {
 /**
  * Pure, testable AdMob + Play Console policy gate for Pay Slip Interstitial ads.
  * Combines Show-Rate-safe intent preloading, 50-minute session cache TTL,
- * 60-second anti-spam cooldown, and transient-error retry guards.
+ * 60-second anti-spam cooldown, and bounded single-retry recovery.
  */
 object InterstitialAdGatePolicy {
     const val DEBUG_TEST_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
     const val RELEASE_GENERAL_AD_UNIT_ID = "ca-app-pub-9027708775227838/6430017173"
     const val AD_LOAD_TIMEOUT_MS = 10_000L
     const val INTERSTITIAL_COOLDOWN_MS = 60_000L
-    const val PRELOAD_DEBOUNCE_MS = 1_500L
-    const val PRELOAD_FAILURE_BACKOFF_MS = 60_000L
+    const val PRELOAD_DEBOUNCE_MS = 600L
+    const val PRELOAD_FAILURE_BACKOFF_MS = 15_000L
     const val AD_CACHE_MAX_AGE_MS = 50L * 60L * 1000L // 50 minutes (inside AdMob's 60m expiry)
-    const val TRANSIENT_RETRY_DELAY_MS = 800L
+    const val TRANSIENT_RETRY_DELAY_MS = 1_200L
 
     fun resolveAdUnitId(isDebug: Boolean = BuildConfig.DEBUG): String {
         return if (isDebug) DEBUG_TEST_AD_UNIT_ID else RELEASE_GENERAL_AD_UNIT_ID
@@ -103,7 +108,8 @@ object InterstitialAdGatePolicy {
     fun shouldRetryTransientLoadError(errorCode: Int, attemptIndex: Int): Boolean {
         if (attemptIndex != 0) return false
         return errorCode == AdRequest.ERROR_CODE_NETWORK_ERROR ||
-            errorCode == AdRequest.ERROR_CODE_INTERNAL_ERROR
+            errorCode == AdRequest.ERROR_CODE_INTERNAL_ERROR ||
+            errorCode == AdRequest.ERROR_CODE_NO_FILL
     }
 
     fun canShowLoadedAd(
@@ -126,7 +132,15 @@ object InterstitialAdGatePolicy {
             InterstitialOutcome.SkippedCooldown -> "Debug AdInfo: 60s ad cooldown active"
             InterstitialOutcome.SkippedNotResumed -> null
             InterstitialOutcome.LoadTimedOut -> "Debug AdInfo: Ad request timed out (10s) — cached when ready"
-            is InterstitialOutcome.LoadFailed -> "Debug AdInfo: Load failed (code ${outcome.code}) — ${outcome.message}"
+            is InterstitialOutcome.LoadFailed -> buildString {
+                append("Debug AdInfo: Load failed (code ${outcome.code}) — ${outcome.message}")
+                if (outcome.adUnitSuffix.isNotBlank()) {
+                    append(" [Unit: ...${outcome.adUnitSuffix}]")
+                }
+                if (outcome.responseDetail.isNotBlank()) {
+                    append(" (${outcome.responseDetail})")
+                }
+            }
             is InterstitialOutcome.ShowFailed -> "Debug AdInfo: Show failed (code ${outcome.code}) — ${outcome.message}"
         }
     }
@@ -151,7 +165,12 @@ object GeneralInterstitialAdManager {
 
     private sealed class LoadAttempt {
         data class Loaded(val ad: InterstitialAd) : LoadAttempt()
-        data class Failed(val code: Int, val message: String) : LoadAttempt()
+        data class Failed(
+            val code: Int,
+            val message: String,
+            val adUnitSuffix: String = "",
+            val responseDetail: String = ""
+        ) : LoadAttempt()
     }
 
     private data class CachedInterstitial(
@@ -220,13 +239,28 @@ object GeneralInterstitialAdManager {
         if (!canPreload) return
 
         val appContext = context.applicationContext
-        OvertimeApp.ensureMobileAdsInitialized(appContext, timeoutMs = 3_500L)
-        val deferred = getOrStartInFlightLoad(appContext, retryOnTransientError = false)
+        OvertimeApp.ensureMobileAdsInitialized(appContext, timeoutMs = 4_000L)
+        val deferred = getOrStartInFlightLoad(appContext, retryOnTransientError = true)
         val result = deferred.await()
         if (result is LoadAttempt.Failed) {
             lastPreloadFailedAtMs = System.currentTimeMillis()
         } else if (result is LoadAttempt.Loaded) {
             lastPreloadFailedAtMs = 0L
+        }
+    }
+
+    fun openAdInspector(context: Context, onResult: (String?) -> Unit) {
+        val activity = context.findActivity()
+        if (activity == null) {
+            onResult("Activity unavailable for Ad Inspector")
+            return
+        }
+        try {
+            com.google.android.gms.ads.MobileAds.openAdInspector(activity) { error ->
+                onResult(error?.message)
+            }
+        } catch (e: Exception) {
+            onResult(e.message ?: "Failed to open Ad Inspector")
         }
     }
 
@@ -261,7 +295,7 @@ object GeneralInterstitialAdManager {
         val appContext = context.applicationContext
         onPreparingChanged(true)
         val loadAttempt: LoadAttempt? = try {
-            OvertimeApp.ensureMobileAdsInitialized(appContext, timeoutMs = 3_500L)
+            OvertimeApp.ensureMobileAdsInitialized(appContext, timeoutMs = 4_000L)
             val deferred = getOrStartInFlightLoad(appContext, retryOnTransientError = true)
             withTimeoutOrNull(InterstitialAdGatePolicy.AD_LOAD_TIMEOUT_MS) {
                 deferred.await()
@@ -272,7 +306,12 @@ object GeneralInterstitialAdManager {
 
         val loadedAd = when (loadAttempt) {
             null -> return InterstitialOutcome.LoadTimedOut
-            is LoadAttempt.Failed -> return InterstitialOutcome.LoadFailed(loadAttempt.code, loadAttempt.message)
+            is LoadAttempt.Failed -> return InterstitialOutcome.LoadFailed(
+                code = loadAttempt.code,
+                message = loadAttempt.message,
+                adUnitSuffix = loadAttempt.adUnitSuffix,
+                responseDetail = loadAttempt.responseDetail
+            )
             is LoadAttempt.Loaded -> loadAttempt.ad
         }
 
@@ -346,6 +385,7 @@ object GeneralInterstitialAdManager {
         appContext: Context,
         adUnitId: String
     ): LoadAttempt = withContext(Dispatchers.Main.immediate) {
+        val suffix = adUnitId.takeLast(6)
         suspendCancellableCoroutine { cont ->
             val finished = AtomicBoolean(false)
             cont.invokeOnCancellation {
@@ -365,18 +405,43 @@ object GeneralInterstitialAdManager {
                         }
 
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                            Log.w(TAG, "Interstitial failed to load (${loadAdError.code}): ${loadAdError.message}")
+                            val adapterStates = loadAdError.responseInfo?.adapterResponses
+                                ?.joinToString(", ") { "${it.adapterClassName.substringAfterLast('.')}:${it.adError?.code ?: "ok"}" }
+                                .orEmpty()
+                            val initSummary = OvertimeApp.lastAdsInitSummary
+                            val detail = listOfNotNull(
+                                adapterStates.takeIf { it.isNotBlank() },
+                                initSummary.takeIf { it.isNotBlank() }
+                            ).joinToString(" | ")
+                            Log.w(
+                                TAG,
+                                "Interstitial failed to load [unit=...$suffix] (${loadAdError.code}): ${loadAdError.message} | responseInfo=${loadAdError.responseInfo}"
+                            )
                             if (finished.compareAndSet(false, true) && cont.isActive) {
-                                cont.resume(LoadAttempt.Failed(loadAdError.code, loadAdError.message))
+                                cont.resume(
+                                    LoadAttempt.Failed(
+                                        code = loadAdError.code,
+                                        message = loadAdError.message,
+                                        adUnitSuffix = suffix,
+                                        responseDetail = detail
+                                    )
+                                )
                             }
                         }
                     }
                 )
             } catch (e: Exception) {
                 val msg = e.message ?: "Unknown exception"
-                Log.w(TAG, "Interstitial load threw exception: $msg")
+                Log.w(TAG, "Interstitial load threw exception [unit=...$suffix]: $msg")
                 if (finished.compareAndSet(false, true) && cont.isActive) {
-                    cont.resume(LoadAttempt.Failed(-1, msg))
+                    cont.resume(
+                        LoadAttempt.Failed(
+                            code = -1,
+                            message = msg,
+                            adUnitSuffix = suffix,
+                            responseDetail = OvertimeApp.lastAdsInitSummary
+                        )
+                    )
                 }
             }
         }

@@ -582,4 +582,5 @@
     <string name="salary_mode_custom_why_desc">Enter your monthly salary and exact company hourly OT rate directly to match your slip.</string>
     <string name="salary_mode_custom_select_btn">Use Custom Mode</string>
     <string name="cd_salary_mode_help">Compare Automatic and Custom calculation modes</string>
+    <string name="debug_open_ad_inspector">Debug: Open Ad Inspector</string>
 </resources>

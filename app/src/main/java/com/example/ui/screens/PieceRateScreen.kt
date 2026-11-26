@@ -82,7 +82,7 @@ fun PieceRateScreen(
     var activePdfDownloadJob by remember { mutableStateOf<Job?>(null) }
     var debugAdDiagnostic by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(selectedTab) {
+    LaunchedEffect(selectedTab, selectedMonth) {
         if (selectedTab == 1) {
             delay(InterstitialAdGatePolicy.PRELOAD_DEBOUNCE_MS)
             GeneralInterstitialAdManager.preloadOnPaySlipIfEligible(context)
@@ -572,16 +572,47 @@ fun PieceRateScreen(
                                 minFontSize = 10.sp
                             )
                         }
-                        if (BuildConfig.DEBUG && debugAdDiagnostic != null) {
+                        if (BuildConfig.DEBUG) {
+                            if (debugAdDiagnostic != null) {
+                                Spacer(modifier = Modifier.height(spacing.rowGapSm))
+                                Text(
+                                    text = debugAdDiagnostic ?: "",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("debug_ad_diagnostic_text")
+                                )
+                            }
                             Spacer(modifier = Modifier.height(spacing.rowGapSm))
-                            Text(
-                                text = debugAdDiagnostic ?: "",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.error,
+                            OutlinedButton(
+                                onClick = {
+                                    GeneralInterstitialAdManager.openAdInspector(context) { errorMsg ->
+                                        if (!errorMsg.isNullOrBlank()) {
+                                            debugAdDiagnostic = "Debug AdInspector: $errorMsg"
+                                        }
+                                    }
+                                },
+                                shape = RoundedCornerShape(spacing.subCardRadius),
+                                contentPadding = spacing.compactButtonContentPadding,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .testTag("debug_ad_diagnostic_text")
-                            )
+                                    .heightIn(min = spacing.compactButtonHeight)
+                                    .testTag("debug_ad_inspector_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.BugReport,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(spacing.iconSm)
+                                )
+                                Spacer(modifier = Modifier.width(spacing.rowGapSm))
+                                AutoFitSingleLineText(
+                                    text = stringResource(R.string.debug_open_ad_inspector),
+                                    maxFontSize = spacing.adaptiveSp(13f, 12f, 11f),
+                                    minFontSize = 9.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
                     }
 

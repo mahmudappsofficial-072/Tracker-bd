@@ -853,18 +853,30 @@ class ExampleUnitTest {
         lastShownAtMs = 0L
       )
     )
+    assertEquals(600L, com.example.util.InterstitialAdGatePolicy.PRELOAD_DEBOUNCE_MS)
+    assertEquals(15_000L, com.example.util.InterstitialAdGatePolicy.PRELOAD_FAILURE_BACKOFF_MS)
     assertFalse(
       com.example.util.InterstitialAdGatePolicy.shouldPreloadOnPaySlip(
         hasInternet = true,
         hasValidCache = false,
         isPreloadInFlight = false,
-        nowMs = 2_020_000L,
+        nowMs = 2_010_000L,
+        lastShownAtMs = 0L,
+        lastPreloadFailedAtMs = 2_000_000L
+      )
+    )
+    assertTrue(
+      com.example.util.InterstitialAdGatePolicy.shouldPreloadOnPaySlip(
+        hasInternet = true,
+        hasValidCache = false,
+        isPreloadInFlight = false,
+        nowMs = 2_016_000L,
         lastShownAtMs = 0L,
         lastPreloadFailedAtMs = 2_000_000L
       )
     )
 
-    // Retry policy: 1 retry only for transient network/internal errors, never for NO_FILL or attempt > 0
+    // Retry policy: 1 retry on transient network/internal errors AND first NO_FILL, never on attempt > 0
     assertTrue(
       com.example.util.InterstitialAdGatePolicy.shouldRetryTransientLoadError(
         com.google.android.gms.ads.AdRequest.ERROR_CODE_NETWORK_ERROR,
@@ -877,10 +889,16 @@ class ExampleUnitTest {
         attemptIndex = 0
       )
     )
-    assertFalse(
+    assertTrue(
       com.example.util.InterstitialAdGatePolicy.shouldRetryTransientLoadError(
         com.google.android.gms.ads.AdRequest.ERROR_CODE_NO_FILL,
         attemptIndex = 0
+      )
+    )
+    assertFalse(
+      com.example.util.InterstitialAdGatePolicy.shouldRetryTransientLoadError(
+        com.google.android.gms.ads.AdRequest.ERROR_CODE_NO_FILL,
+        attemptIndex = 1
       )
     )
     assertFalse(
@@ -921,8 +939,16 @@ class ExampleUnitTest {
     )
 
     // Diagnostics appear ONLY in Debug builds, never in Release builds
-    val failedOutcome = com.example.util.InterstitialOutcome.LoadFailed(3, "No fill")
-    assertNotNull(com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(failedOutcome, isDebug = true))
+    val failedOutcome = com.example.util.InterstitialOutcome.LoadFailed(
+      code = 3,
+      message = "No fill",
+      adUnitSuffix = "017173",
+      responseDetail = "AdMobAdapter:3"
+    )
+    val debugMsg = com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(failedOutcome, isDebug = true)
+    assertNotNull(debugMsg)
+    assertTrue(debugMsg!!.contains("017173"))
+    assertTrue(debugMsg.contains("AdMobAdapter:3"))
     assertNull(com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(failedOutcome, isDebug = false))
     assertNull(
       com.example.util.InterstitialAdGatePolicy.formatDebugDiagnostic(
