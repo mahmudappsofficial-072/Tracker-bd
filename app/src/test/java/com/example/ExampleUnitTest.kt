@@ -1049,7 +1049,7 @@ class ExampleUnitTest {
     assertEquals(
       com.example.util.StartupPopupAction.NONE,
       com.example.util.SalaryOnboardingPolicy.evaluateStartupPopupAction(
-        readyUnconfigured.copy(currentTab = 3)
+        readyUnconfigured.copy(currentTab = com.example.util.SalaryOnboardingPolicy.PROFILE_TAB_INDEX)
       )
     )
 
@@ -1694,6 +1694,94 @@ class ExampleUnitTest {
     assertFalse(skipStaleDelay.shouldShowNotification)
     assertEquals(com.example.receiver.ReminderSchedulePolicy.SKIP_REASON_STALE_DATE, skipStaleDelay.skipReason)
     assertFalse(skipStaleDelay.rescheduleForceTomorrow)
+  }
+
+  @Test
+  fun testRmgInfoHubCatalogAndCalculators() {
+    // 1. Verify Official Bangladesh Gazette Dec 2023 RMG Grades 1-4
+    val grades = com.example.util.RmgInfoCatalog.rmgGrades
+    assertEquals(4, grades.size)
+    assertEquals(15035.0, grades[0].grossSalary, 0.01) // Grade 1: Basic 8390
+    assertEquals(14273.0, grades[1].grossSalary, 0.01) // Grade 2: Basic 7882
+    assertEquals(13550.0, grades[2].grossSalary, 0.01) // Grade 3: Basic 7400
+    assertEquals(12500.0, grades[3].grossSalary, 0.01) // Grade 4: Basic 6700
+    assertEquals(6700.0 / 104.0, grades[3].otHourlyRate, 0.01)
+
+    // 2. Verify curated offline helplines and labor law sections
+    assertTrue(com.example.util.RmgInfoCatalog.helplines.any { it.dialNumber == "16357" })
+    assertTrue(com.example.util.RmgInfoCatalog.helplines.any { it.dialNumber == "16430" })
+    assertEquals(5, com.example.util.RmgInfoCatalog.laborLawTopics.size)
+
+    // 3. Pay Slip Verifier: Exact match vs Underpaid
+    val expectedOtFor50h = (7882.0 / 104.0) * 50.0
+    val expectedGross = 14273.0
+    val matchResult = com.example.util.InfoHubCalculator.comparePaySlip(
+      basicSalary = 7882.0,
+      grossSalary = 0.0,
+      otHours = 50.0,
+      bonusAmount = 1000.0,
+      deductionsAmount = 500.0,
+      paidOtAmount = expectedOtFor50h,
+      paidNetSalary = expectedGross + expectedOtFor50h + 1000.0 - 500.0
+    )
+    assertEquals(com.example.util.PaySlipMatchStatus.MATCH, matchResult.status)
+    assertEquals(0.0, matchResult.differenceAmount, 0.01)
+
+    val underpaidResult = com.example.util.InfoHubCalculator.comparePaySlip(
+      basicSalary = 7882.0,
+      grossSalary = 0.0,
+      otHours = 50.0,
+      bonusAmount = 1000.0,
+      deductionsAmount = 500.0,
+      paidOtAmount = expectedOtFor50h - 400.0,
+      paidNetSalary = expectedGross + expectedOtFor50h + 1000.0 - 500.0 - 400.0
+    )
+    assertEquals(com.example.util.PaySlipMatchStatus.UNDERPAID, underpaidResult.status)
+    assertEquals(-400.0, underpaidResult.differenceAmount, 0.01)
+    assertEquals(-400.0, underpaidResult.otDifferenceAmount, 0.01)
+
+    // 4. Service Benefit & EL Encashment (Bangladesh Labour Act Sec 26 & 27)
+    val resignUnder5 = com.example.util.InfoHubCalculator.calculateServiceBenefit(
+      basicSalary = 9000.0,
+      grossSalary = 15950.0,
+      completedYears = 4,
+      earnedLeaveDays = 15.0,
+      separationType = com.example.util.SeparationType.RESIGNATION
+    )
+    assertEquals(0, resignUnder5.benefitDaysPerYear)
+    assertEquals(0.0, resignUnder5.serviceBenefitAmount, 0.01)
+    assertEquals((15950.0 / 30.0) * 15.0, resignUnder5.earnedLeaveEncashment, 0.01)
+    assertEquals(60, resignUnder5.noticePeriodDays)
+
+    val resign6Years = com.example.util.InfoHubCalculator.calculateServiceBenefit(
+      basicSalary = 9000.0,
+      grossSalary = 0.0,
+      completedYears = 6,
+      earnedLeaveDays = 0.0,
+      separationType = com.example.util.SeparationType.RESIGNATION
+    )
+    assertEquals(14, resign6Years.benefitDaysPerYear)
+    assertEquals(300.0 * 14 * 6, resign6Years.serviceBenefitAmount, 0.01)
+
+    val resign10Years = com.example.util.InfoHubCalculator.calculateServiceBenefit(
+      basicSalary = 9000.0,
+      grossSalary = 0.0,
+      completedYears = 10,
+      earnedLeaveDays = 0.0,
+      separationType = com.example.util.SeparationType.RESIGNATION
+    )
+    assertEquals(30, resign10Years.benefitDaysPerYear)
+    assertEquals(300.0 * 30 * 10, resign10Years.serviceBenefitAmount, 0.01)
+
+    val employerTermination3Years = com.example.util.InfoHubCalculator.calculateServiceBenefit(
+      basicSalary = 9000.0,
+      grossSalary = 0.0,
+      completedYears = 3,
+      earnedLeaveDays = 10.0,
+      separationType = com.example.util.SeparationType.TERMINATION
+    )
+    assertEquals(30, employerTermination3Years.benefitDaysPerYear)
+    assertEquals(300.0 * 30 * 3, employerTermination3Years.serviceBenefitAmount, 0.01)
   }
 }
 

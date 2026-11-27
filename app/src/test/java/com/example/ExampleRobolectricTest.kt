@@ -179,12 +179,24 @@ class ExampleRobolectricTest {
     assertEquals("الرئيسية", arCtx.getString(R.string.tab_home))
     assertEquals(enCtx.getString(R.string.tab_home), frFallbackCtx.getString(R.string.tab_home))
 
+    assertEquals("Info", enCtx.getString(R.string.tab_info))
+    assertEquals("তথ্য", bnCtx.getString(R.string.tab_info))
+    assertEquals("जानकारी", hiCtx.getString(R.string.tab_info))
+    assertEquals("தகவல்", taCtx.getString(R.string.tab_info))
+    assertEquals("معلومات", arCtx.getString(R.string.tab_info))
+
     // Format strings work safely across all 5 languages without FormatConversionException
     assertFalse(enCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
     assertFalse(bnCtx.getString(R.string.leave_limit_inline_fmt, "২").isBlank())
     assertFalse(hiCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
     assertFalse(taCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
     assertFalse(arCtx.getString(R.string.leave_limit_inline_fmt, "2").isBlank())
+
+    listOf(enCtx, bnCtx, hiCtx, taCtx, arCtx).forEach { ctx ->
+      assertFalse(ctx.getString(R.string.info_calc_allowances_breakdown, "1", "2", "3", "4").isBlank())
+      assertFalse(ctx.getString(R.string.info_service_rate_per_year_fmt, 14).isBlank())
+      assertFalse(ctx.getString(R.string.info_slip_status_underpaid_fmt, "100").isBlank())
+    }
 
     // Format grade strips legacy words and localizes cleanly
     assertEquals("Grade 4", com.example.util.LanguageManager.formatDisplayGrade(context, "গ্রেড 4", "en"))

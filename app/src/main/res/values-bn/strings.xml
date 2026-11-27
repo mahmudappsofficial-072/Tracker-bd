@@ -57,6 +57,7 @@
     <string name="tab_home">হোম</string>
     <string name="tab_ot_list">ওটি খাতা</string>
     <string name="tab_piece_rate">পিস রেট ও স্লিপ</string>
+    <string name="tab_info">তথ্য</string>
     <string name="tab_profile">প্রোফাইল</string>
 
     <!-- Language Picker -->
@@ -583,4 +584,163 @@
     <string name="salary_mode_custom_select_btn">কাস্টম মোড বেছে নিন</string>
     <string name="cd_salary_mode_help">স্বয়ংক্রিয় ও কাস্টম হিসাব পদ্ধতির নির্দেশিকা দেখুন</string>
     <string name="profile_running_month_scope_note">পরিবর্তনগুলো রানিং মাস ও নতুন মাসে প্রযোজ্য হবে; পূর্বের বা আলাদা সেট করা মাস অপরিবর্তিত থাকবে।</string>
+
+    <!-- RMG Info & Worker Hub ("তথ্য" Tab) -->
+    <string name="info_hub_title">আরএমজি তথ্য ও শ্রমিক হাব</string>
+    <string name="info_hub_subtitle">কুইক ওটি হিসাব, শ্রমিক হেল্পলাইন, গ্রেড কাঠামো ও শ্রম অধিকার — সব এক জায়গায়</string>
+    <string name="info_offline_badge">১০০% অফলাইন</string>
+
+    <!-- Quick Action Buttons -->
+    <string name="info_quick_actions_title">কুইক অ্যাকশন</string>
+    <string name="info_quick_ot_btn">কুইক ওটি হিসাব</string>
+    <string name="info_quick_call_16357_btn">কল ১৬৩৫৭</string>
+    <string name="info_quick_grades_btn">গ্রেড ১–৪</string>
+    <string name="info_quick_slip_service_btn">স্লিপ ও সার্ভিস</string>
+
+    <!-- Section Filter Chips -->
+    <string name="info_filter_all">সব</string>
+    <string name="info_filter_calculator">কুইক ওটি</string>
+    <string name="info_filter_helplines">হেল্পলাইন</string>
+    <string name="info_filter_grades">গ্রেড ১–৪</string>
+    <string name="info_filter_labor_law">শ্রম আইন</string>
+    <string name="info_filter_slip_service">স্লিপ ও সার্ভিস</string>
+
+    <!-- Section 1: Quick OT & Wage Calculator -->
+    <string name="info_calc_section_title">কুইক ওটি ও মজুরি ক্যালকুলেটর</string>
+    <string name="info_calc_section_subtitle">মাসিক খাতা পরিবর্তন না করেই দ্রুত ওটি ও ভাতার হিসাব দেখুন</string>
+    <string name="info_calc_mode_basic">বেসিক থেকে</string>
+    <string name="info_calc_mode_gross">মোট (Gross) থেকে</string>
+    <string name="info_calc_fill_profile_btn">প্রোফাইল থেকে নিন</string>
+    <string name="info_calc_basic_label">মূল বেতন / বেসিক (৳)</string>
+    <string name="info_calc_gross_label">মোট বেতন / গ্রস (৳)</string>
+    <string name="info_calc_ot_hours_label">ওটি ঘণ্টা</string>
+    <string name="info_calc_hourly_rate_label">ওটি রেট / ঘণ্টা</string>
+    <string name="info_calc_ot_earnings_label">মোট ওটি আয়</string>
+    <string name="info_calc_gross_total_label">মোট গ্রস বেতন</string>
+    <string name="info_calc_total_with_ot_label">গ্রস + ওটি মোট</string>
+    <string name="info_calc_allowances_breakdown">বাড়িভাড়া (৫০%%): %1$s  •  চিকিৎসা: %2$s  •  যাতায়াত: %3$s  •  খাদ্য: %4$s</string>
+    <string name="info_calc_no_profile_salary">আপনার বর্তমান মাসের প্রোফাইলে এখনো বেতন সেট করা হয়নি।</string>
+
+    <!-- Section 2: Worker Helplines & One-Tap Call -->
+    <string name="info_helpline_section_title">শ্রমিক জরুরি হেল্পলাইন ও কল</string>
+    <string name="info_helpline_section_subtitle">কল বাটনে ট্যাপ করলেই ফোনের ডায়ালার খুলবে (কোনো অতিরিক্ত পারমিশন লাগবে না)</string>
+    <string name="info_helpline_toll_free">টোল-ফ্রি</string>
+    <string name="info_helpline_24x7">২৪/৭ খোলা</string>
+    <string name="info_helpline_office_hours">অফিস সময়</string>
+    <string name="info_helpline_call_btn">কল</string>
+    <string name="info_helpline_copy_btn">কপি</string>
+    <string name="info_helpline_copied_fmt">%1$s কপি হয়েছে</string>
+    <string name="info_helpline_dialer_unavailable">এই ফোনে কল ডায়ালার অ্যাপ পাওয়া যায়নি।</string>
+    <string name="info_helpline_checklist_title">শ্রমিক হেল্পলাইনে (১৬৩৫৭) কল করার আগে</string>
+    <string name="info_helpline_checklist_body">কারখানার আইডি কার্ড, হাজিরা/জব কার্ড এবং সর্বশেষ পে-স্লিপ বা ওটি হিসাবের তথ্য হাতের কাছে রাখুন যাতে দ্রুত তদন্ত ও সহায়তা পান।</string>
+
+    <string name="helpline_dife_title">শ্রমিক হেল্পলাইন (DIFE)</string>
+    <string name="helpline_dife_dept">কলকারখানা ও প্রতিষ্ঠান পরিদর্শন অধিদপ্তর</string>
+    <string name="helpline_dife_desc">বেতন ও ওটি বকেয়া, অন্যায় ছাঁটাই, মাতৃত্বকালীন ছুটি বা কারখানার নিরাপত্তাহীনতার অভিযোগ করুন।</string>
+    <string name="helpline_legal_title">সরকারি আইনি সহায়তা</string>
+    <string name="helpline_legal_dept">জাতীয় আইনগত সহায়তা সংস্থা (NLASO)</string>
+    <string name="helpline_legal_desc">শ্রম সংক্রান্ত মামলায় শ্রমিকদের জন্য সম্পূর্ণ বিনামূল্যে সরকারি আইনি পরামর্শ ও আইনজীবী সহায়তা।</string>
+    <string name="helpline_999_title">জাতীয় জরুরি সেবা</string>
+    <string name="helpline_999_dept">পুলিশ, ফায়ার সার্ভিস ও অ্যাম্বুলেন্স</string>
+    <string name="helpline_999_desc">কারখানায় দুর্ঘটনা, নিরাপত্তাজনিত ঝুঁকি বা জরুরি অ্যাম্বুলেন্স সহায়তার জন্য তাৎক্ষণিক সেবা।</string>
+    <string name="helpline_fire_title">ফায়ার সার্ভিস হটলাইন</string>
+    <string name="helpline_fire_dept">বাংলাদেশ ফায়ার সার্ভিস ও সিভিল ডিফেন্স</string>
+    <string name="helpline_fire_desc">কারখানায় অগ্নিকাণ্ড, ধোঁয়া বা জরুরি উদ্ধার তৎপরতার জন্য সরাসরি যোগাযোগ করুন।</string>
+    <string name="helpline_109_title">নারী ও শিশু সহায়তা</string>
+    <string name="helpline_109_dept">মহিলা ও শিশু বিষয়ক মন্ত্রণালয়</string>
+    <string name="helpline_109_desc">কর্মক্ষেত্রে নারী শ্রমিকদের হয়রানি, নির্যাতন বা জরুরি সুরক্ষার জন্য ২৪/৭ সহায়তা।</string>
+    <string name="helpline_health_title">স্বাস্থ্য বাতায়ন</string>
+    <string name="helpline_health_dept">স্বাস্থ্য অধিদপ্তর (২৪/৭ ডাক্তার পরামর্শ)</string>
+    <string name="helpline_health_desc">দিনরাত যেকোনো সময় চিকিৎসকের প্রাথমিক স্বাস্থ্য পরামর্শ ও জরুরি দিকনির্দেশনা।</string>
+    <string name="helpline_333_title">জাতীয় তথ্য ও সেবা</string>
+    <string name="helpline_333_dept">সরকারি নাগরিক সেবা বাতায়ন</string>
+    <string name="helpline_333_desc">সরকারি সেবা তথ্য, সামাজিক নিরাপত্তা ও জেলা প্রশাসনের সহায়তা সংক্রান্ত তথ্য।</string>
+
+    <!-- Section 3: RMG Grades 1-4 Gazette 2023 -->
+    <string name="info_grades_section_title">গার্মেন্টস গ্রেড ও বেতন কাঠামো (১–৪)</string>
+    <string name="info_grades_section_subtitle">সরকারি গেজেট (ডিসেম্বর ২০২৩): মূল বেতন, ৫০% বাড়িভাড়া, চিকিৎসা ৳৭৫০, যাতায়াত ৳৪৫০, খাদ্য ৳১,২৫০</string>
+    <string name="rmg_grade_1_title">গ্রেড ১ (সর্বোচ্চ)</string>
+    <string name="rmg_grade_1_roles">সিনিয়র অপারেটর, সিনিয়র কাটার, সিনিয়র কোয়ালিটি ইন্সপেক্টর</string>
+    <string name="rmg_grade_2_title">গ্রেড ২</string>
+    <string name="rmg_grade_2_roles">অপারেটর, কাটার ম্যান, কোয়ালিটি ইন্সপেক্টর, আয়রন ম্যান</string>
+    <string name="rmg_grade_3_title">গ্রেড ৩</string>
+    <string name="rmg_grade_3_roles">জুনিয়র অপারেটর, জুনিয়র কাটার, জুনিয়র কোয়ালিটি ইন্সপেক্টর</string>
+    <string name="rmg_grade_4_title">গ্রেড ৪ (এন্ট্রি লেভেল)</string>
+    <string name="rmg_grade_4_roles">হেলপার, সুতা কাটা, লাইন অ্যাসিস্ট্যান্ট</string>
+    <string name="info_grade_basic_label">মূল বেতন</string>
+    <string name="info_grade_house_rent_label">বাড়িভাড়া (৫০%)</string>
+    <string name="info_grade_medical_label">চিকিৎসা</string>
+    <string name="info_grade_transport_label">যাতায়াত</string>
+    <string name="info_grade_food_label">খাদ্য</string>
+    <string name="info_grade_gross_label">সর্বমোট ন্যূনতম</string>
+    <string name="info_grade_ot_rate_label">আইনগত ওটি রেট</string>
+    <string name="info_grade_use_in_calc_btn">কুইক ওটিতে বসান</string>
+
+    <!-- Section 4: Bangladesh Labor Law 2006 Guide -->
+    <string name="info_law_section_title">বাংলাদেশ শ্রম আইন ২০০৬ গাইড</string>
+    <string name="info_law_section_subtitle">যেকোনো বিষয়ে ট্যাপ করে শ্রমিকদের মূল অধিকার ও নিয়মাবলি দেখুন</string>
+    <string name="law_topic_ot_title">ওভারটাইম ও কর্মঘণ্টা</string>
+    <string name="law_topic_ot_ref">ধারা ১০০, ১০২ ও ১০৮</string>
+    <string name="law_topic_ot_summary">স্বাভাবিক ডিউটি ৮ ঘণ্টা/দিন ও ৪৮ ঘণ্টা/সপ্তাহ; ওটি মূল বেতনের দ্বিগুণ হারে।</string>
+    <string name="law_topic_ot_p1">স্বাভাবিক কর্মঘণ্টা দৈনিক ৮ ঘণ্টা (সপ্তাহে ৪৮ ঘণ্টা)। ওটিসহ সর্বোচ্চ দৈনিক ১০ ঘণ্টা ও সপ্তাহে ৬০ ঘণ্টা (বছরে গড়ে সপ্তাহে ৫৬ ঘণ্টা)।</string>
+    <string name="law_topic_ot_p2">আইনগত ওটি রেট = (মূল বেতন ÷ ২০৮) × ২ = মূল বেতন ÷ ১০৪ টাকা/ঘণ্টা।</string>
+    <string name="law_topic_ot_p3">সাপ্তাহিক বা উৎসব ছুটির দিনে কাজ করলে ১ দিন বিকল্প ছুটি ও দ্বিগুণ মজুরি প্রাপ্য।</string>
+
+    <string name="law_topic_leave_title">ছুটি ও উৎসব ছুটি</string>
+    <string name="law_topic_leave_ref">ধারা ১০৩ ও ১১৫–১১৮</string>
+    <string name="law_topic_leave_summary">নৈমিত্তিক ১০ দিন, অসুস্থতা ১৪ দিন, অর্জিত ছুটি (প্রতি ১৮ কর্মদিবসে ১ দিন) ও ১১+ উৎসব ছুটি।</string>
+    <string name="law_topic_leave_p1">নৈমিত্তিক ছুটি (CL): বছরে ১০ দিন পূর্ণ বেতনে (পরের বছরে জমা হয় না)।</string>
+    <string name="law_topic_leave_p2">অসুস্থতাজনিত ছুটি (SL): বছরে ১৪ দিন পূর্ণ বেতনে (মেডিকেল সনদ সাপেক্ষে)।</string>
+    <string name="law_topic_leave_p3">অর্জিত ছুটি (EL): ১ বছর পর প্রতি ১৮ কর্মদিবসে ১ দিন করে জমা হয়; চাকরি ছাড়ার সময় নগদায়নযোগ্য।</string>
+    <string name="law_topic_leave_p4">উৎসব ছুটি: বছরে কমপক্ষে ১১ দিন সবেতন উৎসব ছুটি প্রাপ্য।</string>
+
+    <string name="law_topic_maternity_title">মাতৃত্বকালীন ছুটি ও সুরক্ষা</string>
+    <string name="law_topic_maternity_ref">ধারা ৪৫–৫০</string>
+    <string name="law_topic_maternity_summary">১২০ দিন (১৬ সপ্তাহ) সবেতন মাতৃত্বকালীন ছুটি এবং চাকরির নিরাপত্তা।</string>
+    <string name="law_topic_maternity_p1">কারখানায় কমপক্ষে ৬ মাস অবিচ্ছিন্ন চাকরি পূর্ণ হলে এই সুবিধা প্রাপ্য।</string>
+    <string name="law_topic_maternity_p2">সন্তান প্রসবের আগে ও পরে মোট ১২০ দিন (১৬ সপ্তাহ) গড় দৈনিক মজুরি অনুযায়ী সবেতন ছুটি।</string>
+    <string name="law_topic_maternity_p3">মাতৃত্বকালীন ছুটিতে থাকাকালে কোনো নারী শ্রমিককে চাকরিচ্যুত বা ছাঁটাই করা আইনত নিষিদ্ধ।</string>
+
+    <string name="law_topic_bonus_title">উৎসব বোনাস ও হাজিরা বোনাস</string>
+    <string name="law_topic_bonus_ref">শ্রম বিধি ১১১ ও RMG নিয়ম</string>
+    <string name="law_topic_bonus_summary">বছরে ২টি উৎসব বোনাস (১ বছর পূর্ণ হলে মূল বেতনের ১০০%) ও হাজিরা বোনাস।</string>
+    <string name="law_topic_bonus_p1">কমপক্ষে ১ বছর চাকরি পূর্ণ হলে বছরে ২টি উৎসব বোনাস (প্রতিটিতে অন্তত ১ মাসের মূল বেতনের সমান) প্রাপ্য।</string>
+    <string name="law_topic_bonus_p2">১ বছরের কম চাকরির ক্ষেত্রে প্রতিষ্ঠানের নীতিমালা অনুযায়ী আনুপাতিক বোনাস দেওয়া হয়।</string>
+    <string name="law_topic_bonus_p3">হাজিরা বোনাস কারখানার নিজস্ব নিয়ম অনুযায়ী বিনা অনুপস্থিতিতে পূর্ণ মাস কাজের ভিত্তিতে প্রদেয়।</string>
+
+    <string name="law_topic_notice_title">পদত্যাগ ও নোটিশ পিরিয়ড</string>
+    <string name="law_topic_notice_ref">ধারা ২৬ ও ২৭</string>
+    <string name="law_topic_notice_summary">স্থায়ী শ্রমিকের পদত্যাগে ৬০ দিনের নোটিশ; ৫+ বছরে সার্ভিস বেনিফিট সুবিধা।</string>
+    <string name="law_topic_notice_p1">স্থায়ী শ্রমিক পদত্যাগ করতে চাইলে ৬০ দিনের লিখিত নোটিশ দিতে হবে (অথবা নোটিশের পরিবর্তে সমপরিমাণ মজুরি)।</string>
+    <string name="law_topic_notice_p2">পদত্যাগের ক্ষেত্রে: ৫ থেকে &lt;১০ বছর চাকরিতে প্রতি বছর ১৪ দিনের, এবং ১০+ বছরে প্রতি বছর ৩০ দিনের মূল বেতন।</string>
+    <string name="law_topic_notice_p3">মালিক কর্তৃক টার্মিনেশনে (১+ বছর চাকরি) প্রতি পূর্ণ বছরের জন্য ৩০ দিনের মূল বেতন ও অর্জিত ছুটি নগদায়ন প্রাপ্য।</string>
+
+    <!-- Section 5: Pay Slip Verifier & Service Benefit Calculator -->
+    <string name="info_slip_service_title">বেতন-স্লিপ যাচাই ও সার্ভিস বেনিফিট</string>
+    <string name="info_slip_service_subtitle">কারখানার পে-স্লিপ মিলিয়ে দেখুন বা চাকরি ছাড়ার প্রাপ্য হিসাব করুন</string>
+    <string name="info_subtab_slip_verify">স্লিপ যাচাই</string>
+    <string name="info_subtab_service_benefit">সার্ভিস বেনিফিট</string>
+    <string name="info_slip_load_month_btn">চলতি মাস লোড করুন</string>
+    <string name="info_slip_paid_ot_label">কারখানা প্রদত্ত ওটি (৳)</string>
+    <string name="info_slip_paid_net_label">কারখানা প্রদত্ত মোট/নিট বেতন (৳)</string>
+    <string name="info_slip_bonus_label">হাজিরা / অন্যান্য বোনাস (৳)</string>
+    <string name="info_slip_deductions_label">মোট কর্তন (৳)</string>
+    <string name="info_slip_expected_ot_label">প্রাপ্য ওটি (আইন অনুযায়ী)</string>
+    <string name="info_slip_expected_net_label">প্রাপ্য নিট বেতন</string>
+    <string name="info_slip_status_match">হিসাব সঠিক আছে</string>
+    <string name="info_slip_status_underpaid_fmt">প্রাপ্যের চেয়ে %1$s কম দেওয়া হয়েছে</string>
+    <string name="info_slip_status_overpaid_fmt">প্রাপ্যের চেয়ে %1$s বেশি হয়েছে</string>
+    <string name="info_slip_status_hint">যাচাই করতে মূল বেতন, ওটি ঘণ্টা ও কারখানা প্রদত্ত টাকার অঙ্ক লিখুন।</string>
+    <string name="info_slip_ot_diff_fmt">ওটি পার্থক্য: %1$s</string>
+
+    <string name="info_service_resignation">স্বেচ্ছায় পদত্যাগ</string>
+    <string name="info_service_termination">টার্মিনেশন (মালিক কর্তৃক)</string>
+    <string name="info_service_years_label">চাকরির পূর্ণ বছর</string>
+    <string name="info_service_el_days_label">জমা থাকা অর্জিত ছুটি (দিন)</string>
+    <string name="info_service_rate_per_year_fmt">আইনি হার: বছরে %1$d দিনের মূল বেতন</string>
+    <string name="info_service_benefit_amount_label">সার্ভিস বেনিফিট</string>
+    <string name="info_service_el_encashment_label">অর্জিত ছুটি নগদায়ন</string>
+    <string name="info_service_total_receivable_label">সম্ভাব্য মোট প্রাপ্য</string>
+    <string name="info_service_notice_hint_fmt">লিখিত নোটিশ পিরিয়ড: %1$d দিন। কারখানার গ্র্যাচুইটি এর বেশি হলে বড় অঙ্কটি প্রযোজ্য হবে।</string>
+    <string name="info_service_under_5y_note">ধারা ২৭ অনুযায়ী ৫ বছরের কম চাকরিতে পদত্যাগে সার্ভিস বেনিফিট প্রযোজ্য নয় (তবে জমা থাকা অর্জিত ছুটি নগদায়ন পাবেন)।</string>
 </resources>

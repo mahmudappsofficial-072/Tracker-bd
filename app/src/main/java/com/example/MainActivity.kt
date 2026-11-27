@@ -45,9 +45,11 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.AccessTimeFilled
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -94,6 +96,7 @@ import com.example.ui.components.AutoFitSingleLineText
 import com.example.ui.screens.AddPieceRateDialog
 import com.example.ui.screens.ForceUpdateDialog
 import com.example.ui.screens.HomeScreen
+import com.example.ui.screens.InfoHubScreen
 import com.example.ui.screens.InitialPrivacyConsentDialog
 import com.example.ui.screens.LanguagePickerBottomSheet
 import com.example.ui.screens.MissingOtDetector
@@ -178,7 +181,7 @@ fun OvertimeApp(
         }
     }
 
-    var currentTab by rememberSaveable { mutableIntStateOf(0) } // 0: Home, 1: OT List, 2: Piece & Slip, 3: Profile
+    var currentTab by rememberSaveable { mutableIntStateOf(0) } // 0: Home, 1: OT List, 2: Piece & Slip, 3: Info, 4: Profile
 
     val selectedMonth by viewModel.selectedYearMonth.collectAsStateWithLifecycle()
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -326,7 +329,7 @@ fun OvertimeApp(
             hasCheckedMissingSalaryThisSession = true
         } else {
             showMissingOtDialog = false
-            if (currentTab == 3) {
+            if (currentTab == SalaryOnboardingPolicy.PROFILE_TAB_INDEX) {
                 showMissingSalaryDialog = false
             }
         }
@@ -609,10 +612,10 @@ fun OvertimeApp(
                             modifier = Modifier.testTag("tab_piece_item")
                         )
 
-                        // Tab 3: Profile & Settings
-                        val tabProfileLabel = stringResource(R.string.tab_profile)
+                        // Tab 3: Info ("তথ্য")
+                        val tabInfoLabel = stringResource(R.string.tab_info)
                         NavigationBarItem(
-                            selected = currentTab == 3,
+                            selected = currentTab == SalaryOnboardingPolicy.INFO_TAB_INDEX,
                             onClick = {
                                 showQuickOtDialog = false
                                 editingRecordId = null
@@ -621,11 +624,43 @@ fun OvertimeApp(
                                 showMissingSalaryDialog = false
                                 showPieceDialog = false
                                 showTargetDialog = false
-                                currentTab = 3
+                                currentTab = SalaryOnboardingPolicy.INFO_TAB_INDEX
                             },
                             icon = {
                                 Icon(
-                                    if (currentTab == 3) Icons.Filled.Person else Icons.Outlined.Person,
+                                    if (currentTab == SalaryOnboardingPolicy.INFO_TAB_INDEX) Icons.Filled.Info else Icons.Outlined.Info,
+                                    contentDescription = tabInfoLabel,
+                                    modifier = Modifier.size(spacing.iconLg)
+                                )
+                            },
+                            label = {
+                                AutoFitSingleLineText(
+                                    text = tabInfoLabel,
+                                    fontWeight = if (currentTab == SalaryOnboardingPolicy.INFO_TAB_INDEX) FontWeight.Bold else FontWeight.Normal,
+                                    maxFontSize = navLabelMaxSp,
+                                    minFontSize = 7.5.sp
+                                )
+                            },
+                            modifier = Modifier.testTag("tab_info_item")
+                        )
+
+                        // Tab 4: Profile & Settings
+                        val tabProfileLabel = stringResource(R.string.tab_profile)
+                        NavigationBarItem(
+                            selected = currentTab == SalaryOnboardingPolicy.PROFILE_TAB_INDEX,
+                            onClick = {
+                                showQuickOtDialog = false
+                                editingRecordId = null
+                                editingRecordDate = null
+                                showMissingOtDialog = false
+                                showMissingSalaryDialog = false
+                                showPieceDialog = false
+                                showTargetDialog = false
+                                currentTab = SalaryOnboardingPolicy.PROFILE_TAB_INDEX
+                            },
+                            icon = {
+                                Icon(
+                                    if (currentTab == SalaryOnboardingPolicy.PROFILE_TAB_INDEX) Icons.Filled.Person else Icons.Outlined.Person,
                                     contentDescription = tabProfileLabel,
                                     modifier = Modifier.size(spacing.iconLg)
                                 )
@@ -633,7 +668,7 @@ fun OvertimeApp(
                             label = {
                                 AutoFitSingleLineText(
                                     text = tabProfileLabel,
-                                    fontWeight = if (currentTab == 3) FontWeight.Bold else FontWeight.Normal,
+                                    fontWeight = if (currentTab == SalaryOnboardingPolicy.PROFILE_TAB_INDEX) FontWeight.Bold else FontWeight.Normal,
                                     maxFontSize = navLabelMaxSp,
                                     minFontSize = 7.5.sp
                                 )
@@ -755,7 +790,13 @@ fun OvertimeApp(
                                 onSetMonthLock = { locked -> viewModel.setMonthLockStatus(selectedMonth, locked) }
                             )
 
-                            3 -> ProfileScreen(
+                            3 -> InfoHubScreen(
+                                profile = effectiveMonthProfile,
+                                summary = summary,
+                                effectiveLang = effectiveLangTag
+                            )
+
+                            4 -> ProfileScreen(
                                 profile = profile,
                                 effectiveLang = effectiveLangTag,
                                 selectedSettingTag = selectedSettingTag,
@@ -814,7 +855,7 @@ fun OvertimeApp(
                                     hasCheckedMissingSalaryThisSession = true
                                     pendingProfileHighlightField = "SALARY"
                                     profileHighlightTriggerId += 1
-                                    currentTab = 3
+                                    currentTab = SalaryOnboardingPolicy.PROFILE_TAB_INDEX
                                 }
                             )
                         }
@@ -853,7 +894,7 @@ fun OvertimeApp(
                                     editingRecordDate = null
                                     pendingProfileHighlightField = targetField
                                     profileHighlightTriggerId += 1
-                                    currentTab = 3
+                                    currentTab = SalaryOnboardingPolicy.PROFILE_TAB_INDEX
                                 },
                                 onSave = { date, hours, nightBill, tiffinBill, isHoliday, shiftType, note ->
                                     viewModel.addOrUpdateOvertime(

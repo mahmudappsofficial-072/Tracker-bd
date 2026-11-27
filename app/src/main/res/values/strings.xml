@@ -57,6 +57,7 @@
     <string name="tab_home">Home</string>
     <string name="tab_ot_list">OT List</string>
     <string name="tab_piece_rate">Piece &amp; Slip</string>
+    <string name="tab_info">Info</string>
     <string name="tab_profile">Profile</string>
 
     <!-- Language Picker -->
@@ -584,4 +585,163 @@
     <string name="cd_salary_mode_help">Compare Automatic and Custom calculation modes</string>
     <string name="profile_running_month_scope_note">Changes apply to the running month &amp; future defaults; past or customized months stay unchanged.</string>
     <string name="debug_open_ad_inspector">Debug: Open Ad Inspector</string>
+
+    <!-- RMG Info & Worker Hub ("Info" Tab) -->
+    <string name="info_hub_title">RMG Info &amp; Worker Hub</string>
+    <string name="info_hub_subtitle">Quick OT tools, verified worker helplines, wage grades &amp; labor rights offline</string>
+    <string name="info_offline_badge">100% Offline Ready</string>
+
+    <!-- Quick Action Buttons -->
+    <string name="info_quick_actions_title">Quick Actions</string>
+    <string name="info_quick_ot_btn">Quick OT Calc</string>
+    <string name="info_quick_call_16357_btn">Call 16357</string>
+    <string name="info_quick_grades_btn">Grades 1–4</string>
+    <string name="info_quick_slip_service_btn">Slip &amp; Benefit</string>
+
+    <!-- Section Filter Chips -->
+    <string name="info_filter_all">All</string>
+    <string name="info_filter_calculator">Quick OT</string>
+    <string name="info_filter_helplines">Helplines</string>
+    <string name="info_filter_grades">Grades 1–4</string>
+    <string name="info_filter_labor_law">Labor Law</string>
+    <string name="info_filter_slip_service">Slip &amp; Benefit</string>
+
+    <!-- Section 1: Quick OT & Wage Calculator -->
+    <string name="info_calc_section_title">Quick OT &amp; Wage Calculator</string>
+    <string name="info_calc_section_subtitle">Instant scratchpad calculation without changing your monthly OT log</string>
+    <string name="info_calc_mode_basic">From Basic</string>
+    <string name="info_calc_mode_gross">From Gross</string>
+    <string name="info_calc_fill_profile_btn">Fill from Profile</string>
+    <string name="info_calc_basic_label">Basic Salary (৳)</string>
+    <string name="info_calc_gross_label">Gross Salary (৳)</string>
+    <string name="info_calc_ot_hours_label">OT Hours</string>
+    <string name="info_calc_hourly_rate_label">OT Rate / hr</string>
+    <string name="info_calc_ot_earnings_label">Total OT Earnings</string>
+    <string name="info_calc_gross_total_label">Gross Salary</string>
+    <string name="info_calc_total_with_ot_label">Gross + OT Total</string>
+    <string name="info_calc_allowances_breakdown">House Rent (50%%): %1$s  •  Medical: %2$s  •  Transport: %3$s  •  Food: %4$s</string>
+    <string name="info_calc_no_profile_salary">No salary saved in your current month profile yet.</string>
+
+    <!-- Section 2: Worker Helplines & One-Tap Call -->
+    <string name="info_helpline_section_title">Worker Helplines &amp; Emergency</string>
+    <string name="info_helpline_section_subtitle">Tap Call to open your dialer immediately (no extra permission required)</string>
+    <string name="info_helpline_toll_free">Toll-Free</string>
+    <string name="info_helpline_24x7">24/7</string>
+    <string name="info_helpline_office_hours">Office Hours</string>
+    <string name="info_helpline_call_btn">Call</string>
+    <string name="info_helpline_copy_btn">Copy</string>
+    <string name="info_helpline_copied_fmt">Copied %1$s</string>
+    <string name="info_helpline_dialer_unavailable">No phone dialer app found on this device.</string>
+    <string name="info_helpline_checklist_title">Before Calling Labor Helpline (16357)</string>
+    <string name="info_helpline_checklist_body">Keep your Factory ID Card, Job/Attendance Card, and latest Pay Slip or OT screenshots ready so inspectors can verify your complaint faster.</string>
+
+    <string name="helpline_dife_title">DIFE Labor Helpline</string>
+    <string name="helpline_dife_dept">Dept. of Inspection for Factories &amp; Establishments</string>
+    <string name="helpline_dife_desc">Report unpaid salary/OT, illegal termination, maternity benefit denial, or factory safety hazards.</string>
+    <string name="helpline_legal_title">Govt. Legal Aid Helpline</string>
+    <string name="helpline_legal_dept">National Legal Aid Services (NLASO)</string>
+    <string name="helpline_legal_desc">Free government legal advice and lawyer support for workers in labor court disputes.</string>
+    <string name="helpline_999_title">National Emergency</string>
+    <string name="helpline_999_dept">Police, Fire &amp; Ambulance</string>
+    <string name="helpline_999_desc">Immediate emergency response for factory accidents, security threats, or urgent medical rescue.</string>
+    <string name="helpline_fire_title">Fire Service Hotline</string>
+    <string name="helpline_fire_dept">Bangladesh Fire Service &amp; Civil Defence</string>
+    <string name="helpline_fire_desc">Direct hotline for factory fire incidents, chemical smoke, or structural rescue.</string>
+    <string name="helpline_109_title">Women &amp; Child Helpline</string>
+    <string name="helpline_109_dept">Ministry of Women &amp; Children Affairs</string>
+    <string name="helpline_109_desc">24/7 support for female workers facing workplace harassment, violence, or abuse.</string>
+    <string name="helpline_health_title">Shastho Batayon (Health)</string>
+    <string name="helpline_health_dept">Directorate General of Health Services</string>
+    <string name="helpline_health_desc">24/7 doctor consultation and medical guidance for workers and families.</string>
+    <string name="helpline_333_title">National Info &amp; Service</string>
+    <string name="helpline_333_dept">Government Citizen Helpline</string>
+    <string name="helpline_333_desc">General government service information, social safety net queries, and district admin support.</string>
+
+    <!-- Section 3: RMG Grades 1-4 Gazette 2023 -->
+    <string name="info_grades_section_title">RMG Wage Structure (Grades 1–4)</string>
+    <string name="info_grades_section_subtitle">Bangladesh Gazette (Effective Dec 2023): Basic, 50% House Rent, Medical ৳750, Transport ৳450, Food ৳1,250</string>
+    <string name="rmg_grade_1_title">Grade 1 (Highest)</string>
+    <string name="rmg_grade_1_roles">Senior Operator, Senior Cutter, Senior Quality Inspector</string>
+    <string name="rmg_grade_2_title">Grade 2</string>
+    <string name="rmg_grade_2_roles">Operator, Cutter Man, Quality Inspector, Iron Man</string>
+    <string name="rmg_grade_3_title">Grade 3</string>
+    <string name="rmg_grade_3_roles">Junior Operator, Junior Cutter, Junior Quality Inspector</string>
+    <string name="rmg_grade_4_title">Grade 4 (Entry Level)</string>
+    <string name="rmg_grade_4_roles">Helper, Thread Cutter, Line Assistant</string>
+    <string name="info_grade_basic_label">Basic</string>
+    <string name="info_grade_house_rent_label">House Rent (50%)</string>
+    <string name="info_grade_medical_label">Medical</string>
+    <string name="info_grade_transport_label">Transport</string>
+    <string name="info_grade_food_label">Food</string>
+    <string name="info_grade_gross_label">Gross Minimum</string>
+    <string name="info_grade_ot_rate_label">Legal OT Rate</string>
+    <string name="info_grade_use_in_calc_btn">Load in Quick OT Calc</string>
+
+    <!-- Section 4: Bangladesh Labor Law 2006 Guide -->
+    <string name="info_law_section_title">Bangladesh Labor Law Guide</string>
+    <string name="info_law_section_subtitle">Tap any topic to expand key worker rights under the Bangladesh Labour Act 2006</string>
+    <string name="law_topic_ot_title">Overtime &amp; Working Hours</string>
+    <string name="law_topic_ot_ref">Sections 100, 102 &amp; 108</string>
+    <string name="law_topic_ot_summary">Standard 8 hrs/day, 48 hrs/week; OT paid at double basic hourly rate.</string>
+    <string name="law_topic_ot_p1">Regular duty is 8 hours/day (48 hours/week). With OT, max limit is 10 hours/day and 60 hours/week (56 hrs/week yearly average).</string>
+    <string name="law_topic_ot_p2">Legal OT rate = (Basic Salary ÷ 208) × 2 = Basic ÷ 104 per hour.</string>
+    <string name="law_topic_ot_p3">Working on a weekly off day or festival holiday entitles the worker to compensatory leave plus double wages.</string>
+
+    <string name="law_topic_leave_title">Leave &amp; Holidays</string>
+    <string name="law_topic_leave_ref">Sections 103 &amp; 115–118</string>
+    <string name="law_topic_leave_summary">10 Casual, 14 Sick, Earned Leave (1 per 18 workdays) &amp; 11+ Festival Holidays.</string>
+    <string name="law_topic_leave_p1">Casual Leave (CL): 10 days/year with full pay (non-cumulative).</string>
+    <string name="law_topic_leave_p2">Sick Leave (SL): 14 days/year with full pay upon medical certificate.</string>
+    <string name="law_topic_leave_p3">Earned Leave (EL): Accrues 1 day per 18 workdays after 1 year; unused EL can be encashed upon job separation.</string>
+    <string name="law_topic_leave_p4">Festival Holidays: At least 11 paid festival holidays per calendar year.</string>
+
+    <string name="law_topic_maternity_title">Maternity Leave &amp; Protection</string>
+    <string name="law_topic_maternity_ref">Sections 45–50</string>
+    <string name="law_topic_maternity_summary">120 days (16 weeks) paid maternity leave with strict termination protection.</string>
+    <string name="law_topic_maternity_p1">Eligible after at least 6 months of continuous service in the factory.</string>
+    <string name="law_topic_maternity_p2">Entitled to 120 days (16 weeks) paid leave split before and after delivery based on average daily wage.</string>
+    <string name="law_topic_maternity_p3">Employers cannot dismiss or terminate a female worker during her maternity leave period.</string>
+
+    <string name="law_topic_bonus_title">Festival &amp; Attendance Bonus</string>
+    <string name="law_topic_bonus_ref">Labour Rules 111 &amp; RMG Practice</string>
+    <string name="law_topic_bonus_summary">Two festival bonuses per year (100% of basic after 1 year) plus attendance bonus.</string>
+    <string name="law_topic_bonus_p1">Workers completing 1 year of continuous service receive 2 festival bonuses/year, each not less than 1 month\'s Basic Salary.</string>
+    <string name="law_topic_bonus_p2">Workers with less than 1 year service generally receive pro-rata festival bonus as per factory policy.</string>
+    <string name="law_topic_bonus_p3">Attendance bonus is governed by factory policy and requires full monthly presence without unauthorized absence.</string>
+
+    <string name="law_topic_notice_title">Resignation &amp; Service Notice</string>
+    <string name="law_topic_notice_ref">Sections 26 &amp; 27</string>
+    <string name="law_topic_notice_summary">60 days notice for permanent worker resignation; service benefit rules for 5+ years.</string>
+    <string name="law_topic_notice_p1">Permanent workers resigning must give 60 days written notice (or pay wages in lieu of notice).</string>
+    <string name="law_topic_notice_p2">On resignation: 5 to &lt;10 years = 14 days basic wages/year; 10+ years = 30 days basic wages/year.</string>
+    <string name="law_topic_notice_p3">Employer termination (without misconduct) after 1+ year entitles 30 days basic wages per completed year plus EL encashment.</string>
+
+    <!-- Section 5: Pay Slip Verifier & Service Benefit Calculator -->
+    <string name="info_slip_service_title">Pay Slip &amp; Service Benefit</string>
+    <string name="info_slip_service_subtitle">Verify factory pay slip math or estimate resignation/termination settlement</string>
+    <string name="info_subtab_slip_verify">Pay Slip Verifier</string>
+    <string name="info_subtab_service_benefit">Service Benefit</string>
+    <string name="info_slip_load_month_btn">Load Current Month</string>
+    <string name="info_slip_paid_ot_label">Factory Paid OT (৳)</string>
+    <string name="info_slip_paid_net_label">Factory Paid Net Salary (৳)</string>
+    <string name="info_slip_bonus_label">Attendance / Other Bonus (৳)</string>
+    <string name="info_slip_deductions_label">Total Deductions (৳)</string>
+    <string name="info_slip_expected_ot_label">Expected Legal OT</string>
+    <string name="info_slip_expected_net_label">Expected Net Payable</string>
+    <string name="info_slip_status_match">Matches Expected Amount</string>
+    <string name="info_slip_status_underpaid_fmt">Short by %1$s vs Expected</string>
+    <string name="info_slip_status_overpaid_fmt">Higher by %1$s vs Expected</string>
+    <string name="info_slip_status_hint">Enter your Basic Salary, OT Hours, and Factory Paid amount to check for discrepancies.</string>
+    <string name="info_slip_ot_diff_fmt">OT Difference: %1$s</string>
+
+    <string name="info_service_resignation">Resignation</string>
+    <string name="info_service_termination">Termination (By Employer)</string>
+    <string name="info_service_years_label">Completed Service Years</string>
+    <string name="info_service_el_days_label">Unused Earned Leave (Days)</string>
+    <string name="info_service_rate_per_year_fmt">Statutory Rate: %1$d days basic / year</string>
+    <string name="info_service_benefit_amount_label">Service Compensation</string>
+    <string name="info_service_el_encashment_label">Earned Leave Encashment</string>
+    <string name="info_service_total_receivable_label">Estimated Total Receivable</string>
+    <string name="info_service_notice_hint_fmt">Written notice period: %1$d days. If factory gratuity scheme yields more, the higher amount applies.</string>
+    <string name="info_service_under_5y_note">Under Section 27, resignation under 5 years has no statutory service compensation (only unused Earned Leave encashment applies).</string>
 </resources>

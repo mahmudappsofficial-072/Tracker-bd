@@ -26,6 +26,9 @@ data class StartupPopupGateState(
 
 object SalaryOnboardingPolicy {
 
+    const val INFO_TAB_INDEX = 3
+    const val PROFILE_TAB_INDEX = 4
+
     /**
      * Single source of truth for whether a user's salary & OT structure has been configured.
      * Matches ProfileScreen calculation so Home, Profile, and Startup Gate stay strictly consistent.
@@ -80,7 +83,7 @@ object SalaryOnboardingPolicy {
         }
 
         if (!state.isSalaryConfigured) {
-            return if (!state.hasCheckedMissingSalaryThisSession && state.currentTab != 3) {
+            return if (!state.hasCheckedMissingSalaryThisSession && state.currentTab != PROFILE_TAB_INDEX) {
                 StartupPopupAction.SHOW_SALARY_GUIDE
             } else {
                 StartupPopupAction.NONE
