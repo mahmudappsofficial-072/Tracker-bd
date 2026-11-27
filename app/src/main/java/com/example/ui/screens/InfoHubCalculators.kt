@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -47,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -56,12 +57,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.model.UserProfile
-import com.example.ui.theme.NightBlue
-import com.example.ui.theme.SuccessGreen
-import com.example.ui.theme.WarningOrange
 import com.example.ui.viewmodel.MonthlySummaryState
 import com.example.util.AppSpacing
 import com.example.util.InfoHubCalculator
+import com.example.util.InfoHubShareFormatter
 import com.example.util.LaborLawCalculator
 import com.example.util.PaySlipMatchStatus
 import com.example.util.SeparationType
@@ -74,6 +73,7 @@ fun QuickOtCalculatorSection(
     summary: MonthlySummaryState,
     isBengali: Boolean,
     spacing: AppSpacing,
+    palette: InfoHubPalette,
     salaryInput: String,
     onSalaryInputChange: (String) -> Unit,
     isGrossMode: Boolean,
@@ -103,9 +103,9 @@ fun QuickOtCalculatorSection(
             .fillMaxWidth()
             .testTag("info_quick_ot_calculator_card"),
         shape = RoundedCornerShape(spacing.cardRadius),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = palette.card),
+        border = BorderStroke(1.dp, palette.border),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -117,8 +117,9 @@ fun QuickOtCalculatorSection(
                 icon = Icons.Filled.Calculate,
                 title = stringResource(R.string.info_calc_section_title),
                 subtitle = stringResource(R.string.info_calc_section_subtitle),
-                accentColor = MaterialTheme.colorScheme.primary,
-                spacing = spacing
+                palette = palette,
+                spacing = spacing,
+                accentColor = palette.brandEmerald
             )
 
             Row(
@@ -132,8 +133,8 @@ fun QuickOtCalculatorSection(
                     label = { Text(stringResource(R.string.info_calc_mode_basic)) },
                     modifier = Modifier.testTag("info_calc_mode_basic_chip"),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        selectedContainerColor = palette.chipBg,
+                        selectedLabelColor = palette.brandEmerald
                     )
                 )
                 FilterChip(
@@ -142,8 +143,8 @@ fun QuickOtCalculatorSection(
                     label = { Text(stringResource(R.string.info_calc_mode_gross)) },
                     modifier = Modifier.testTag("info_calc_mode_gross_chip"),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        selectedContainerColor = palette.chipBg,
+                        selectedLabelColor = palette.brandEmerald
                     )
                 )
             }
@@ -170,7 +171,11 @@ fun QuickOtCalculatorSection(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 48.dp)
                     .testTag("info_calc_fill_profile_button"),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, palette.border),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = palette.slateAccent),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 Icon(
@@ -181,7 +186,8 @@ fun QuickOtCalculatorSection(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = stringResource(R.string.info_calc_fill_profile_btn),
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -233,74 +239,124 @@ fun QuickOtCalculatorSection(
                         selected = LaborLawCalculator.toEnglishDigits(otHoursInput) == hr,
                         onClick = { otHoursInput = hr },
                         label = { Text(hrDisplay) },
-                        modifier = Modifier.testTag("info_calc_hour_chip_$hr")
+                        modifier = Modifier.testTag("info_calc_hour_chip_$hr"),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = palette.chipBg,
+                            selectedLabelColor = palette.brandEmerald
+                        )
                     )
                 }
             }
 
-            Surface(
+            // Deep Emerald Financial Summary Output Card
+            val emeraldBrush = Brush.linearGradient(listOf(palette.heroStart, palette.heroEnd))
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(spacing.subCardRadius),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(spacing.subCardPadding),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .background(emeraldBrush)
+                        .padding(spacing.subCardPadding)
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        MetricColumn(
-                            label = stringResource(R.string.info_calc_hourly_rate_label),
-                            value = LaborLawCalculator.formatCurrency(allowanceResult.otHourlyRate, isBengali),
-                            valueColor = NightBlue,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricColumn(
-                            label = stringResource(R.string.info_calc_ot_earnings_label),
-                            value = LaborLawCalculator.formatCurrency(otTotal, isBengali),
-                            valueColor = SuccessGreen,
-                            modifier = Modifier.weight(1f)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            MetricColumn(
+                                label = stringResource(R.string.info_calc_hourly_rate_label),
+                                value = LaborLawCalculator.formatCurrency(allowanceResult.otHourlyRate, isBengali),
+                                labelColor = palette.heroSubtext,
+                                valueColor = palette.heroText,
+                                modifier = Modifier.weight(1f)
+                            )
+                            MetricColumn(
+                                label = stringResource(R.string.info_calc_ot_earnings_label),
+                                value = LaborLawCalculator.formatCurrency(otTotal, isBengali),
+                                labelColor = palette.heroSubtext,
+                                valueColor = Color(0xFFA7F3D0),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.16f))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            MetricColumn(
+                                label = stringResource(R.string.info_calc_gross_total_label),
+                                value = LaborLawCalculator.formatCurrency(allowanceResult.grossSalary, isBengali),
+                                labelColor = palette.heroSubtext,
+                                valueColor = palette.heroText,
+                                modifier = Modifier.weight(1f)
+                            )
+                            MetricColumn(
+                                label = stringResource(R.string.info_calc_total_with_ot_label),
+                                value = LaborLawCalculator.formatCurrency(grandTotal, isBengali),
+                                labelColor = palette.heroSubtext,
+                                valueColor = Color.White,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.Black.copy(alpha = 0.18f)
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.info_calc_allowances_breakdown,
+                                    LaborLawCalculator.formatCurrency(allowanceResult.houseRent, isBengali),
+                                    LaborLawCalculator.formatCurrency(allowanceResult.medicalAllowance, isBengali),
+                                    LaborLawCalculator.formatCurrency(allowanceResult.conveyanceAllowance, isBengali),
+                                    LaborLawCalculator.formatCurrency(allowanceResult.foodAllowance, isBengali)
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = palette.heroSubtext,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
                     }
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        MetricColumn(
-                            label = stringResource(R.string.info_calc_gross_total_label),
-                            value = LaborLawCalculator.formatCurrency(allowanceResult.grossSalary, isBengali),
-                            valueColor = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricColumn(
-                            label = stringResource(R.string.info_calc_total_with_ot_label),
-                            value = LaborLawCalculator.formatCurrency(grandTotal, isBengali),
-                            valueColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    Text(
-                        text = stringResource(
-                            R.string.info_calc_allowances_breakdown,
-                            LaborLawCalculator.formatCurrency(allowanceResult.houseRent, isBengali),
-                            LaborLawCalculator.formatCurrency(allowanceResult.medicalAllowance, isBengali),
-                            LaborLawCalculator.formatCurrency(allowanceResult.conveyanceAllowance, isBengali),
-                            LaborLawCalculator.formatCurrency(allowanceResult.foodAllowance, isBengali)
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
+
+            SummaryCopyShareRow(
+                palette = palette,
+                copyTestTag = "info_calc_copy_btn",
+                shareTestTag = "info_calc_share_btn",
+                onCopyClick = {
+                    val summaryText = InfoHubShareFormatter.formatQuickOtSummary(
+                        isBengali = isBengali,
+                        basicSalary = allowanceResult.basicSalary,
+                        grossSalary = allowanceResult.grossSalary,
+                        otHours = parsedHours,
+                        otRate = allowanceResult.otHourlyRate,
+                        otTotal = otTotal,
+                        grandTotal = grandTotal
+                    )
+                    copySummaryToClipboard(context, "quick_ot", summaryText)
+                },
+                onShareClick = {
+                    val summaryText = InfoHubShareFormatter.formatQuickOtSummary(
+                        isBengali = isBengali,
+                        basicSalary = allowanceResult.basicSalary,
+                        grossSalary = allowanceResult.grossSalary,
+                        otHours = parsedHours,
+                        otRate = allowanceResult.otHourlyRate,
+                        otTotal = otTotal,
+                        grandTotal = grandTotal
+                    )
+                    shareSummaryText(context, summaryText)
+                }
+            )
         }
     }
 }
@@ -311,8 +367,10 @@ fun PaySlipAndServiceSection(
     summary: MonthlySummaryState,
     isBengali: Boolean,
     spacing: AppSpacing,
+    palette: InfoHubPalette,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var activeSubTab by rememberSaveable { mutableIntStateOf(0) } // 0: Pay Slip Verifier, 1: Service Benefit
 
     // Pay Slip Verifier state
@@ -334,9 +392,9 @@ fun PaySlipAndServiceSection(
             .fillMaxWidth()
             .testTag("info_slip_service_card"),
         shape = RoundedCornerShape(spacing.cardRadius),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = palette.card),
+        border = BorderStroke(1.dp, palette.border),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -348,8 +406,9 @@ fun PaySlipAndServiceSection(
                 icon = Icons.Filled.AccountBalanceWallet,
                 title = stringResource(R.string.info_slip_service_title),
                 subtitle = stringResource(R.string.info_slip_service_subtitle),
-                accentColor = MaterialTheme.colorScheme.tertiary,
-                spacing = spacing
+                palette = palette,
+                spacing = spacing,
+                accentColor = palette.brandEmerald
             )
 
             Row(
@@ -362,8 +421,8 @@ fun PaySlipAndServiceSection(
                     label = { Text(stringResource(R.string.info_subtab_slip_verify)) },
                     modifier = Modifier.testTag("info_subtab_slip_verify"),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        selectedContainerColor = palette.chipBg,
+                        selectedLabelColor = palette.brandEmerald
                     )
                 )
                 FilterChip(
@@ -372,14 +431,13 @@ fun PaySlipAndServiceSection(
                     label = { Text(stringResource(R.string.info_subtab_service_benefit)) },
                     modifier = Modifier.testTag("info_subtab_service_benefit"),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        selectedContainerColor = palette.chipBg,
+                        selectedLabelColor = palette.brandEmerald
                     )
                 )
             }
 
             if (activeSubTab == 0) {
-                val context = LocalContext.current
                 OutlinedButton(
                     onClick = {
                         val basic = summary.basicSalary.takeIf { it > 0.0 } ?: profile.basicSalary
@@ -404,12 +462,19 @@ fun PaySlipAndServiceSection(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                         .testTag("info_slip_load_month_btn"),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, palette.border),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = palette.slateAccent),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Icon(Icons.Filled.ReceiptLong, contentDescription = null, modifier = Modifier.size(spacing.iconSm))
                     Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.info_slip_load_month_btn))
+                    Text(
+                        text = stringResource(R.string.info_slip_load_month_btn),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
                 Row(
@@ -478,6 +543,8 @@ fun PaySlipAndServiceSection(
                     )
                 }
 
+                val parsedSlipBasic = LaborLawCalculator.parseLocalizedDouble(slipBasicInput, 0.0)
+                val parsedSlipHours = LaborLawCalculator.parseLocalizedDouble(slipOtHoursInput, 0.0)
                 val comparison = remember(
                     slipBasicInput,
                     slipOtHoursInput,
@@ -498,16 +565,16 @@ fun PaySlipAndServiceSection(
                 }
 
                 val statusTint = when (comparison.status) {
-                    PaySlipMatchStatus.MATCH -> SuccessGreen
-                    PaySlipMatchStatus.UNDERPAID -> MaterialTheme.colorScheme.error
-                    PaySlipMatchStatus.OVERPAID -> NightBlue
+                    PaySlipMatchStatus.MATCH -> palette.statusEmerald
+                    PaySlipMatchStatus.UNDERPAID -> palette.statusAlertRed
+                    PaySlipMatchStatus.OVERPAID -> palette.slateAccent
                     PaySlipMatchStatus.EMPTY -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(spacing.subCardRadius),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    color = palette.subCard,
                     border = BorderStroke(1.dp, statusTint.copy(alpha = 0.4f))
                 ) {
                     Column(
@@ -523,18 +590,20 @@ fun PaySlipAndServiceSection(
                             MetricColumn(
                                 label = stringResource(R.string.info_slip_expected_ot_label),
                                 value = LaborLawCalculator.formatCurrency(comparison.expectedOtAmount, isBengali),
-                                valueColor = NightBlue,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                valueColor = palette.slateAccent,
                                 modifier = Modifier.weight(1f)
                             )
                             MetricColumn(
                                 label = stringResource(R.string.info_slip_expected_net_label),
                                 value = LaborLawCalculator.formatCurrency(comparison.expectedNetPayable, isBengali),
-                                valueColor = MaterialTheme.colorScheme.primary,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                valueColor = palette.brandEmerald,
                                 modifier = Modifier.weight(1f)
                             )
                         }
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        HorizontalDivider(color = palette.border)
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -582,8 +651,31 @@ fun PaySlipAndServiceSection(
                         }
                     }
                 }
+
+                SummaryCopyShareRow(
+                    palette = palette,
+                    copyTestTag = "info_slip_copy_btn",
+                    shareTestTag = "info_slip_share_btn",
+                    onCopyClick = {
+                        val slipText = InfoHubShareFormatter.formatPaySlipSummary(
+                            isBengali = isBengali,
+                            basicSalary = parsedSlipBasic,
+                            otHours = parsedSlipHours,
+                            comparison = comparison
+                        )
+                        copySummaryToClipboard(context, "pay_slip", slipText)
+                    },
+                    onShareClick = {
+                        val slipText = InfoHubShareFormatter.formatPaySlipSummary(
+                            isBengali = isBengali,
+                            basicSalary = parsedSlipBasic,
+                            otHours = parsedSlipHours,
+                            comparison = comparison
+                        )
+                        shareSummaryText(context, slipText)
+                    }
+                )
             } else {
-                // Service Benefit & Earned Leave Encashment Calculator
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing.rowGapSm)
@@ -592,13 +684,21 @@ fun PaySlipAndServiceSection(
                         selected = !isTermination,
                         onClick = { isTermination = false },
                         label = { Text(stringResource(R.string.info_service_resignation)) },
-                        modifier = Modifier.testTag("info_service_resignation_chip")
+                        modifier = Modifier.testTag("info_service_resignation_chip"),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = palette.chipBg,
+                            selectedLabelColor = palette.brandEmerald
+                        )
                     )
                     FilterChip(
                         selected = isTermination,
                         onClick = { isTermination = true },
                         label = { Text(stringResource(R.string.info_service_termination)) },
-                        modifier = Modifier.testTag("info_service_termination_chip")
+                        modifier = Modifier.testTag("info_service_termination_chip"),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = palette.chipBg,
+                            selectedLabelColor = palette.brandEmerald
+                        )
                     )
                 }
 
@@ -658,8 +758,8 @@ fun PaySlipAndServiceSection(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(spacing.subCardRadius),
-                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.35f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f))
+                    color = palette.subCard,
+                    border = BorderStroke(1.dp, palette.border)
                 ) {
                     Column(
                         modifier = Modifier
@@ -671,7 +771,7 @@ fun PaySlipAndServiceSection(
                             text = stringResource(R.string.info_service_rate_per_year_fmt, serviceResult.benefitDaysPerYear),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = palette.brandEmerald
                         )
 
                         Row(
@@ -681,23 +781,26 @@ fun PaySlipAndServiceSection(
                             MetricColumn(
                                 label = stringResource(R.string.info_service_benefit_amount_label),
                                 value = LaborLawCalculator.formatCurrency(serviceResult.serviceBenefitAmount, isBengali),
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 valueColor = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                             MetricColumn(
                                 label = stringResource(R.string.info_service_el_encashment_label),
                                 value = LaborLawCalculator.formatCurrency(serviceResult.earnedLeaveEncashment, isBengali),
-                                valueColor = NightBlue,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                valueColor = palette.slateAccent,
                                 modifier = Modifier.weight(1f)
                             )
                         }
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        HorizontalDivider(color = palette.border)
 
                         MetricColumn(
                             label = stringResource(R.string.info_service_total_receivable_label),
                             value = LaborLawCalculator.formatCurrency(serviceResult.totalEstimatedReceivable, isBengali),
-                            valueColor = SuccessGreen,
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            valueColor = palette.statusEmerald,
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -718,54 +821,10 @@ fun PaySlipAndServiceSection(
 }
 
 @Composable
-fun InfoSectionHeader(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    subtitle: String,
-    accentColor: Color,
-    spacing: AppSpacing
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.rowGapMd)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    color = accentColor.copy(alpha = 0.14f),
-                    shape = RoundedCornerShape(10.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = accentColor,
-                modifier = Modifier.size(spacing.iconMd)
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
 private fun MetricColumn(
     label: String,
     value: String,
+    labelColor: Color,
     valueColor: Color,
     modifier: Modifier = Modifier
 ) {
@@ -773,11 +832,11 @@ private fun MetricColumn(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = labelColor
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.Bold,
             color = valueColor
         )

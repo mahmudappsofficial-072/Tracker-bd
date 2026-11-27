@@ -723,4 +723,40 @@
     <string name="info_service_total_receivable_label">إجمالي المستحق التقديري</string>
     <string name="info_service_notice_hint_fmt">فترة الإشعار الخطي: %1$d يوماً. يُصرف الأعلى إذا توفر نظام مكافأة أفضل.</string>
     <string name="info_service_under_5y_note">بموجب المادة 27، الاستقالة قبل 5 سنوات لا تستحق تعويض خدمة (يُصرف بدل الإجازات فقط).</string>
+
+    <!-- Info Hub Redesign -->
+    <string name="info_back_to_hub">العودة للمركز</string>
+    <string name="info_hub_live_rate_fmt">معدل الإضافي بملفك: %1$s/ساعة</string>
+    <string name="info_hub_no_rate_prompt">حدد الراتب الأساسي في الملف الشخصي لمعرفة معدل الإضافي</string>
+    <string name="info_hub_emergency_strip_title">أرقام الطوارئ الأساسية</string>
+    <string name="info_hub_view_all_helplines">الكل (7)</string>
+    <string name="info_hub_directory_title">دليل الأدوات والمراجع</string>
+    <string name="info_hub_tile_calc_sub">حساب سريع للإضافي والبدلات</string>
+    <string name="info_hub_tile_helpline_sub">7 أرقام مساعدة معتمدة</string>
+    <string name="info_hub_tile_grades_sub">قرار 2023 (من ৳12,500)</string>
+    <string name="info_hub_tile_law_sub">5 أدلة قانون العمل وبحث سريع</string>
+    <string name="info_hub_tile_slip_sub">تدقيق قسيمة الراتب وحساب مكافأة نهاية الخدمة</string>
+
+    <string name="info_helpline_filter_all">الكل</string>
+    <string name="info_helpline_filter_labor">حقوق العمل</string>
+    <string name="info_helpline_filter_legal">الدعم القانوني</string>
+    <string name="info_helpline_filter_emergency">الطوارئ والصحة</string>
+    <string name="info_helpline_pinned_badge">أولوية</string>
+
+    <string name="info_grade_table_title">جدول مقارنة الدرجات 4–1</string>
+    <string name="info_grade_col_grade">الدرجة</string>
+    <string name="info_grade_col_basic">الأساسي</string>
+    <string name="info_grade_col_gross">الإجمالي</string>
+    <string name="info_grade_col_ot">إضافي/س</string>
+    <string name="info_grade_tap_hint">اضغط على أي صف لعرض جميع البدلات أو تحميله في الحاسبة</string>
+
+    <string name="info_law_search_hint">ابحث في قانون العمل (إجازة، مكافأة، أمومة)…</string>
+    <string name="info_law_filter_all">كل المواضيع</string>
+    <string name="info_law_no_results">لا توجد نتائج مطابقة</string>
+    <string name="info_law_no_results_hint">جرّب كلمة أخرى أو أعد ضبط الفلتر أعلاه.</string>
+
+    <string name="info_copy_summary_btn">نسخ النتيجة</string>
+    <string name="info_share_summary_btn">مشاركة</string>
+    <string name="info_summary_copied_toast">تم نسخ الملخص إلى الحافظة</string>
+    <string name="info_share_chooser_title">مشاركة الملخص</string>
 </resources>

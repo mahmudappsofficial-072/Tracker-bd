@@ -723,4 +723,40 @@
     <string name="info_service_total_receivable_label">மதிப்பிடப்பட்ட மொத்த தொகை</string>
     <string name="info_service_notice_hint_fmt">எழுத்துப்பூர்வ நோட்டீஸ்: %1$d நாட்கள். கிராஜுவிட்டி அதிகமாக இருந்தால் அதுவே பொருந்தும்.</string>
     <string name="info_service_under_5y_note">பிரிவு 27-ன்படி 5 ஆண்டுகளுக்குக் குறைவான விலகலுக்கு சேவை நன்மை இல்லை (EL மட்டும் பொருந்தும்).</string>
+
+    <!-- Info Hub Redesign -->
+    <string name="info_back_to_hub">ஹப்பிற்குத் திரும்பு</string>
+    <string name="info_hub_live_rate_fmt">உங்கள் சுயவிவர OT விகிதம்: %1$s/மணி</string>
+    <string name="info_hub_no_rate_prompt">OT விகிதத்தைப் பெற சுயவிவரத்தில் அடிப்படைச் சம்பளத்தை அமைக்கவும்</string>
+    <string name="info_hub_emergency_strip_title">முதன்மை உதவி எண்கள்</string>
+    <string name="info_hub_view_all_helplines">அனைத்து 7</string>
+    <string name="info_hub_directory_title">கருவிகள் &amp; தகவல் பட்டியல்</string>
+    <string name="info_hub_tile_calc_sub">உடனடி OT &amp; சம்பளக் கணக்கு</string>
+    <string name="info_hub_tile_helpline_sub">7 சரிபார்க்கப்பட்ட எண்கள்</string>
+    <string name="info_hub_tile_grades_sub">அரசிதழ் 2023 (৳12,500 முதல்)</string>
+    <string name="info_hub_tile_law_sub">5 தொழிலாளர் சட்டங்கள் &amp; தேடல்</string>
+    <string name="info_hub_tile_slip_sub">சம்பள சிலிப் சரிபார்ப்பு அல்லது சேவை நன்மை கணக்கு</string>
+
+    <string name="info_helpline_filter_all">அனைத்தும்</string>
+    <string name="info_helpline_filter_labor">தொழிலாளர் உரிமை</string>
+    <string name="info_helpline_filter_legal">சட்ட உதவி</string>
+    <string name="info_helpline_filter_emergency">அவசரம் &amp; நலம்</string>
+    <string name="info_helpline_pinned_badge">முதன்மை</string>
+
+    <string name="info_grade_table_title">கிரேடு 4–1 ஒப்பீட்டு சம்பள அட்டவணை</string>
+    <string name="info_grade_col_grade">கிரேடு</string>
+    <string name="info_grade_col_basic">அடிப்படை</string>
+    <string name="info_grade_col_gross">மொத்தம்</string>
+    <string name="info_grade_col_ot">OT/மணி</string>
+    <string name="info_grade_tap_hint">முழு படிகளைக் காண அல்லது Quick OT-இல் ஏற்ற வரிசையைத் தட்டவும்</string>
+
+    <string name="info_law_search_hint">தொழிலாளர் சட்டங்களைத் தேடுங்கள் (விடுப்பு, போனஸ்)…</string>
+    <string name="info_law_filter_all">அனைத்து தலைப்புகள்</string>
+    <string name="info_law_no_results">பொருந்தும் முடிவுகள் இல்லை</string>
+    <string name="info_law_no_results_hint">வேறு வார்த்தையை முயற்சிக்கவும் அல்லது வடிகட்டியை மாற்றவும்.</string>
+
+    <string name="info_copy_summary_btn">முடிவை நகலெடு</string>
+    <string name="info_share_summary_btn">பகிர்</string>
+    <string name="info_summary_copied_toast">சுருக்கம் கிளிப்போர்டில் நகலெடுக்கப்பட்டது</string>
+    <string name="info_share_chooser_title">சுருக்கத்தைப் பகிர்</string>
 </resources>

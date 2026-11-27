@@ -196,6 +196,10 @@ class ExampleRobolectricTest {
       assertFalse(ctx.getString(R.string.info_calc_allowances_breakdown, "1", "2", "3", "4").isBlank())
       assertFalse(ctx.getString(R.string.info_service_rate_per_year_fmt, 14).isBlank())
       assertFalse(ctx.getString(R.string.info_slip_status_underpaid_fmt, "100").isBlank())
+      assertFalse(ctx.getString(R.string.info_hub_live_rate_fmt, "৳75").isBlank())
+      assertFalse(ctx.getString(R.string.info_back_to_hub).isBlank())
+      assertFalse(ctx.getString(R.string.info_law_search_hint).isBlank())
+      assertFalse(ctx.getString(R.string.info_copy_summary_btn).isBlank())
     }
 
     // Format grade strips legacy words and localizes cleanly

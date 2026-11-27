@@ -743,4 +743,40 @@
     <string name="info_service_total_receivable_label">সম্ভাব্য মোট প্রাপ্য</string>
     <string name="info_service_notice_hint_fmt">লিখিত নোটিশ পিরিয়ড: %1$d দিন। কারখানার গ্র্যাচুইটি এর বেশি হলে বড় অঙ্কটি প্রযোজ্য হবে।</string>
     <string name="info_service_under_5y_note">ধারা ২৭ অনুযায়ী ৫ বছরের কম চাকরিতে পদত্যাগে সার্ভিস বেনিফিট প্রযোজ্য নয় (তবে জমা থাকা অর্জিত ছুটি নগদায়ন পাবেন)।</string>
+
+    <!-- Info Hub Redesign: Navigation, Filters, Table, Law Search & Export -->
+    <string name="info_back_to_hub">হাব-এ ফিরুন</string>
+    <string name="info_hub_live_rate_fmt">আপনার প্রোফাইল ওটি রেট: %1$s/ঘণ্টা</string>
+    <string name="info_hub_no_rate_prompt">ব্যক্তিগত ওটি রেট পেতে প্রোফাইলে বেসিক বেতন সেট করুন</string>
+    <string name="info_hub_emergency_strip_title">জরুরি ও তাৎক্ষণিক সহায়তা</string>
+    <string name="info_hub_view_all_helplines">সব ৭টি</string>
+    <string name="info_hub_directory_title">টুলস ও তথ্য ডিরেক্টরি</string>
+    <string name="info_hub_tile_calc_sub">তাৎক্ষণিক ওটি ও ভাতার হিসাব</string>
+    <string name="info_hub_tile_helpline_sub">৭টি যাচাইকৃত জরুরি নম্বর</string>
+    <string name="info_hub_tile_grades_sub">গেজেট ২০২৩ (৳১২,৫০০ থেকে)</string>
+    <string name="info_hub_tile_law_sub">৫টি মূল আইন ও দ্রুত সার্চ</string>
+    <string name="info_hub_tile_slip_sub">পে-স্লিপ অঙ্ক মেলান ও চাকরি ছাড়ার প্রাপ্য হিসাব করুন</string>
+
+    <string name="info_helpline_filter_all">সব</string>
+    <string name="info_helpline_filter_labor">শ্রম অধিকার</string>
+    <string name="info_helpline_filter_legal">আইনি ও সুরক্ষা</string>
+    <string name="info_helpline_filter_emergency">জরুরি ও স্বাস্থ্য</string>
+    <string name="info_helpline_pinned_badge">জরুরি পিন</string>
+
+    <string name="info_grade_table_title">গ্রেড ৪–১ তুলনামূলক বেতন টেবিল</string>
+    <string name="info_grade_col_grade">গ্রেড</string>
+    <string name="info_grade_col_basic">বেসিক</string>
+    <string name="info_grade_col_gross">মোট (গ্রস)</string>
+    <string name="info_grade_col_ot">ওটি/ঘণ্টা</string>
+    <string name="info_grade_tap_hint">বিস্তারিত ভাতা দেখতে বা ক্যালকুলেটরে নিতে যেকোনো সারিতে ট্যাপ করুন</string>
+
+    <string name="info_law_search_hint">শ্রম আইন খুঁজুন (যেমন: ছুটি, বোনাস, মাতৃত্ব, নোটিশ)…</string>
+    <string name="info_law_filter_all">সব বিষয়</string>
+    <string name="info_law_no_results">কোনো মিল পাওয়া যায়নি</string>
+    <string name="info_law_no_results_hint">অন্য কীওয়ার্ড লিখে দেখুন অথবা উপরের টপিক ফিল্টার রিসেট করুন।</string>
+
+    <string name="info_copy_summary_btn">রেজাল্ট কপি</string>
+    <string name="info_share_summary_btn">শেয়ার করুন</string>
+    <string name="info_summary_copied_toast">হিসাবের সারাংশ ক্লিপবোর্ডে কপি হয়েছে</string>
+    <string name="info_share_chooser_title">হিসাবের সারাংশ শেয়ার করুন</string>
 </resources>

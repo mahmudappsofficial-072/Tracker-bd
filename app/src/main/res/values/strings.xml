@@ -744,4 +744,40 @@
     <string name="info_service_total_receivable_label">Estimated Total Receivable</string>
     <string name="info_service_notice_hint_fmt">Written notice period: %1$d days. If factory gratuity scheme yields more, the higher amount applies.</string>
     <string name="info_service_under_5y_note">Under Section 27, resignation under 5 years has no statutory service compensation (only unused Earned Leave encashment applies).</string>
+
+    <!-- Info Hub Redesign: Navigation, Filters, Table, Law Search & Export -->
+    <string name="info_back_to_hub">Back to Hub</string>
+    <string name="info_hub_live_rate_fmt">Your Profile OT Rate: %1$s/hr</string>
+    <string name="info_hub_no_rate_prompt">Set your Basic salary in Profile for personalized OT rates</string>
+    <string name="info_hub_emergency_strip_title">Priority Helplines</string>
+    <string name="info_hub_view_all_helplines">All 7</string>
+    <string name="info_hub_directory_title">Tools &amp; Reference Directory</string>
+    <string name="info_hub_tile_calc_sub">Instant OT &amp; wage breakdown</string>
+    <string name="info_hub_tile_helpline_sub">7 verified worker numbers</string>
+    <string name="info_hub_tile_grades_sub">Gazette 2023 (from ৳12,500)</string>
+    <string name="info_hub_tile_law_sub">5 labor law guides &amp; search</string>
+    <string name="info_hub_tile_slip_sub">Verify pay slip math or estimate service &amp; leave settlement</string>
+
+    <string name="info_helpline_filter_all">All</string>
+    <string name="info_helpline_filter_labor">Labor Rights</string>
+    <string name="info_helpline_filter_legal">Legal &amp; Aid</string>
+    <string name="info_helpline_filter_emergency">Emergency &amp; Health</string>
+    <string name="info_helpline_pinned_badge">Priority</string>
+
+    <string name="info_grade_table_title">Grades 4–1 Comparative Wage Matrix</string>
+    <string name="info_grade_col_grade">Grade</string>
+    <string name="info_grade_col_basic">Basic</string>
+    <string name="info_grade_col_gross">Gross</string>
+    <string name="info_grade_col_ot">OT/hr</string>
+    <string name="info_grade_tap_hint">Tap any grade row to view all 5 allowances or load into Quick OT</string>
+
+    <string name="info_law_search_hint">Search labor laws (e.g., leave, bonus, maternity, notice)…</string>
+    <string name="info_law_filter_all">All Topics</string>
+    <string name="info_law_no_results">No matching topics found</string>
+    <string name="info_law_no_results_hint">Try a different keyword or reset the topic filter above.</string>
+
+    <string name="info_copy_summary_btn">Copy Result</string>
+    <string name="info_share_summary_btn">Share</string>
+    <string name="info_summary_copied_toast">Summary copied to clipboard</string>
+    <string name="info_share_chooser_title">Share Summary</string>
 </resources>

@@ -1782,6 +1782,63 @@ class ExampleUnitTest {
     )
     assertEquals(30, employerTermination3Years.benefitDaysPerYear)
     assertEquals(300.0 * 30 * 3, employerTermination3Years.serviceBenefitAmount, 0.01)
+
+    // 5. Helpline category filtering
+    assertEquals(7, com.example.util.InfoHubCalculator.filterHelplines(com.example.util.HelplineFilterGroup.ALL).size)
+    assertTrue(
+      com.example.util.InfoHubCalculator.filterHelplines(com.example.util.HelplineFilterGroup.LABOR)
+        .any { it.dialNumber == "16357" }
+    )
+    assertTrue(
+      com.example.util.InfoHubCalculator.filterHelplines(com.example.util.HelplineFilterGroup.LEGAL)
+        .all { it.category == com.example.util.HelplineCategory.LEGAL }
+    )
+    assertTrue(
+      com.example.util.InfoHubCalculator.filterHelplines(com.example.util.HelplineFilterGroup.EMERGENCY_HEALTH)
+        .any { it.dialNumber == "999" }
+    )
+
+    // 6. Labor law live search matching (case-insensitive & localized digits)
+    assertTrue(
+      com.example.util.InfoHubCalculator.matchesLaborLawSearch(
+        listOf("Maternity Leave", "Sections 45–50", "120 days paid leave"),
+        "maternity"
+      )
+    )
+    assertTrue(
+      com.example.util.InfoHubCalculator.matchesLaborLawSearch(
+        listOf("ধারা ৪৫–৫০", "১২০ দিন ছুটি"),
+        "120"
+      )
+    )
+    assertFalse(
+      com.example.util.InfoHubCalculator.matchesLaborLawSearch(
+        listOf("Overtime", "Section 108"),
+        "gratuity"
+      )
+    )
+
+    // 7. Share summary formatters
+    val otShareBn = com.example.util.InfoHubShareFormatter.formatQuickOtSummary(
+      isBengali = true,
+      basicSalary = 7882.0,
+      grossSalary = 14273.0,
+      otHours = 4.0,
+      otRate = 75.79,
+      otTotal = 303.15,
+      grandTotal = 14576.15
+    )
+    assertTrue(otShareBn.contains("কুইক ওটি"))
+    assertTrue(otShareBn.contains("৪ ঘণ্টা"))
+
+    val slipShareEn = com.example.util.InfoHubShareFormatter.formatPaySlipSummary(
+      isBengali = false,
+      basicSalary = 7882.0,
+      otHours = 50.0,
+      comparison = underpaidResult
+    )
+    assertTrue(slipShareEn.contains("Pay Slip Audit Summary"))
+    assertTrue(slipShareEn.contains("Short by"))
   }
 }
 

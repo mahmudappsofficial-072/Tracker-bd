@@ -723,4 +723,40 @@
     <string name="info_service_total_receivable_label">अनुमानित कुल प्राप्य</string>
     <string name="info_service_notice_hint_fmt">लिखित नोटिस अवधि: %1$d दिन। यदि ग्रेच्युटी अधिक हो तो अधिक राशि लागू होगी।</string>
     <string name="info_service_under_5y_note">धारा 27 के तहत 5 वर्ष से कम सेवा में इस्तीफ़े पर सेवा लाभ देय नहीं है (केवल EL नकदीकरण मिलता है)।</string>
+
+    <!-- Info Hub Redesign -->
+    <string name="info_back_to_hub">हब पर लौटें</string>
+    <string name="info_hub_live_rate_fmt">आपकी प्रोफ़ाइल OT दर: %1$s/घंटा</string>
+    <string name="info_hub_no_rate_prompt">व्यक्तिगत OT दर के लिए प्रोफ़ाइल में बेसिक वेतन सेट करें</string>
+    <string name="info_hub_emergency_strip_title">प्राथमिक हेल्पलाइन</string>
+    <string name="info_hub_view_all_helplines">सभी 7</string>
+    <string name="info_hub_directory_title">टूल्स व जानकारी निर्देशिका</string>
+    <string name="info_hub_tile_calc_sub">तुरंत OT व वेतन गणना</string>
+    <string name="info_hub_tile_helpline_sub">7 सत्यापित श्रमिक नंबर</string>
+    <string name="info_hub_tile_grades_sub">गज़ट 2023 (৳12,500 से)</string>
+    <string name="info_hub_tile_law_sub">5 श्रम कानून व त्वरित खोज</string>
+    <string name="info_hub_tile_slip_sub">पे-स्लिप जांचें या सेवा लाभ की गणना करें</string>
+
+    <string name="info_helpline_filter_all">सभी</string>
+    <string name="info_helpline_filter_labor">श्रम अधिकार</string>
+    <string name="info_helpline_filter_legal">कानूनी सहायता</string>
+    <string name="info_helpline_filter_emergency">आपात व स्वास्थ्य</string>
+    <string name="info_helpline_pinned_badge">प्राथमिक</string>
+
+    <string name="info_grade_table_title">ग्रेड 4–1 तुलनात्मक वेतन तालिका</string>
+    <string name="info_grade_col_grade">ग्रेड</string>
+    <string name="info_grade_col_basic">बेसिक</string>
+    <string name="info_grade_col_gross">सकल</string>
+    <string name="info_grade_col_ot">OT/घंटा</string>
+    <string name="info_grade_tap_hint">पूरे भत्ते देखने या Quick OT में लोड करने के लिए किसी भी पंक्ति पर टैप करें</string>
+
+    <string name="info_law_search_hint">श्रम कानून खोजें (जैसे: छुट्टी, बोनस, मातृत्व)…</string>
+    <string name="info_law_filter_all">सभी विषय</string>
+    <string name="info_law_no_results">कोई मिलता-जुलता विषय नहीं मिला</string>
+    <string name="info_law_no_results_hint">दूसरा शब्द लिखें या ऊपर फ़िल्टर रीसेट करें।</string>
+
+    <string name="info_copy_summary_btn">परिणाम कॉपी</string>
+    <string name="info_share_summary_btn">शेयर करें</string>
+    <string name="info_summary_copied_toast">सारांश क्लिपबोर्ड पर कॉपी हो गया</string>
+    <string name="info_share_chooser_title">सारांश शेयर करें</string>
 </resources>

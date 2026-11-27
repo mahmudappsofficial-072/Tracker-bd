@@ -4,6 +4,15 @@ import androidx.annotation.StringRes
 import com.example.R
 import kotlin.math.abs
 
+enum class InfoHubWorkspace {
+    HUB,
+    CALCULATOR,
+    HELPLINES,
+    GRADES,
+    LABOR_LAW,
+    SLIP_AND_SERVICE
+}
+
 enum class InfoHubSectionFilter {
     ALL,
     CALCULATOR,
@@ -18,6 +27,13 @@ enum class HelplineCategory {
     LEGAL,
     EMERGENCY,
     HEALTH
+}
+
+enum class HelplineFilterGroup {
+    ALL,
+    LABOR,
+    LEGAL,
+    EMERGENCY_HEALTH
 }
 
 data class WorkerHelpline(
@@ -376,4 +392,119 @@ object InfoHubCalculator {
             noticePeriodDays = noticeDays
         )
     }
+
+    fun filterHelplines(group: HelplineFilterGroup): List<WorkerHelpline> {
+        return when (group) {
+            HelplineFilterGroup.ALL -> RmgInfoCatalog.helplines
+            HelplineFilterGroup.LABOR -> RmgInfoCatalog.helplines.filter { it.category == HelplineCategory.LABOR }
+            HelplineFilterGroup.LEGAL -> RmgInfoCatalog.helplines.filter { it.category == HelplineCategory.LEGAL }
+            HelplineFilterGroup.EMERGENCY_HEALTH -> RmgInfoCatalog.helplines.filter {
+                it.category == HelplineCategory.EMERGENCY || it.category == HelplineCategory.HEALTH
+            }
+        }
+    }
+
+    fun matchesLaborLawSearch(
+        searchableChunks: List<String>,
+        query: String
+    ): Boolean {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) return true
+        val normalizedQuery = LaborLawCalculator.toEnglishDigits(trimmed).lowercase()
+        return searchableChunks.any { chunk ->
+            val normalizedChunk = LaborLawCalculator.toEnglishDigits(chunk).lowercase()
+            normalizedChunk.contains(normalizedQuery)
+        }
+    }
 }
+
+object InfoHubShareFormatter {
+
+    fun formatQuickOtSummary(
+        isBengali: Boolean,
+        basicSalary: Double,
+        grossSalary: Double,
+        otHours: Double,
+        otRate: Double,
+        otTotal: Double,
+        grandTotal: Double
+    ): String {
+        val hrsText = LaborLawCalculator.formatEditableNumber(otHours).let {
+            if (isBengali) LaborLawCalculator.toBengaliDigits(it) else it
+        }
+        return if (isBengali) {
+            buildString {
+                appendLine("কুইক ওটি ও মজুরি হিসাব")
+                appendLine("--------------------")
+                appendLine("মূল বেতন (বেসিক): ${LaborLawCalculator.formatCurrency(basicSalary, true)}")
+                appendLine("মোট গ্রস বেতন: ${LaborLawCalculator.formatCurrency(grossSalary, true)}")
+                appendLine("ওটি রেট/ঘণ্টা: ${LaborLawCalculator.formatCurrency(otRate, true)}")
+                appendLine("ওটি সময়: $hrsText ঘণ্টা")
+                appendLine("মোট ওটি আয়: ${LaborLawCalculator.formatCurrency(otTotal, true)}")
+                append("গ্রস + ওটি মোট: ${LaborLawCalculator.formatCurrency(grandTotal, true)}")
+            }
+        } else {
+            buildString {
+                appendLine("Quick OT & Wage Summary")
+                appendLine("--------------------")
+                appendLine("Basic Salary: ${LaborLawCalculator.formatCurrency(basicSalary, false)}")
+                appendLine("Gross Salary: ${LaborLawCalculator.formatCurrency(grossSalary, false)}")
+                appendLine("Legal OT Rate/hr: ${LaborLawCalculator.formatCurrency(otRate, false)}")
+                appendLine("OT Hours: ${hrsText}h")
+                appendLine("Total OT Earnings: ${LaborLawCalculator.formatCurrency(otTotal, false)}")
+                append("Gross + OT Total: ${LaborLawCalculator.formatCurrency(grandTotal, false)}")
+            }
+        }
+    }
+
+    fun formatPaySlipSummary(
+        isBengali: Boolean,
+        basicSalary: Double,
+        otHours: Double,
+        comparison: PaySlipComparisonResult
+    ): String {
+        val hrsText = LaborLawCalculator.formatEditableNumber(otHours).let {
+            if (isBengali) LaborLawCalculator.toBengaliDigits(it) else it
+        }
+        val statusLine = when (comparison.status) {
+            PaySlipMatchStatus.MATCH -> if (isBengali) "অবস্থা: হিসাব সঠিক আছে" else "Status: Matches Expected Amount"
+            PaySlipMatchStatus.UNDERPAID -> {
+                val diff = LaborLawCalculator.formatCurrency(abs(comparison.differenceAmount), isBengali)
+                if (isBengali) "অবস্থা: প্রাপ্যের চেয়ে $diff কম দেওয়া হয়েছে" else "Status: Short by $diff vs Expected"
+            }
+            PaySlipMatchStatus.OVERPAID -> {
+                val diff = LaborLawCalculator.formatCurrency(abs(comparison.differenceAmount), isBengali)
+                if (isBengali) "অবস্থা: প্রাপ্যের চেয়ে $diff বেশি হয়েছে" else "Status: Higher by $diff vs Expected"
+            }
+            PaySlipMatchStatus.EMPTY -> if (isBengali) "অবস্থা: তুলনামূলক তথ্য অসম্পূর্ণ" else "Status: Pending Paid Amount"
+        }
+        return if (isBengali) {
+            buildString {
+                appendLine("বেতন-স্লিপ যাচাই সারাংশ")
+                appendLine("--------------------")
+                appendLine("মূল বেতন: ${LaborLawCalculator.formatCurrency(basicSalary, true)}")
+                appendLine("মোট ওটি: $hrsText ঘণ্টা")
+                appendLine("প্রাপ্য ওটি: ${LaborLawCalculator.formatCurrency(comparison.expectedOtAmount, true)}")
+                appendLine("প্রাপ্য নিট বেতন: ${LaborLawCalculator.formatCurrency(comparison.expectedNetPayable, true)}")
+                if (comparison.paidNetAmount > 0.0) {
+                    appendLine("কারখানা প্রদত্ত নিট: ${LaborLawCalculator.formatCurrency(comparison.paidNetAmount, true)}")
+                }
+                append(statusLine)
+            }
+        } else {
+            buildString {
+                appendLine("Pay Slip Audit Summary")
+                appendLine("--------------------")
+                appendLine("Basic Salary: ${LaborLawCalculator.formatCurrency(basicSalary, false)}")
+                appendLine("OT Hours: ${hrsText}h")
+                appendLine("Expected Legal OT: ${LaborLawCalculator.formatCurrency(comparison.expectedOtAmount, false)}")
+                appendLine("Expected Net Payable: ${LaborLawCalculator.formatCurrency(comparison.expectedNetPayable, false)}")
+                if (comparison.paidNetAmount > 0.0) {
+                    appendLine("Factory Paid Net: ${LaborLawCalculator.formatCurrency(comparison.paidNetAmount, false)}")
+                }
+                append(statusLine)
+            }
+        }
+    }
+}
+
